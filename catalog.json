@@ -821,6 +821,15 @@
         "codex"
       ],
       "summary": "Drive a runbook one step at a time in a real terminal tab beside the agent's own cmux tab: an exit-code receipt per step via a step file + cmux wait-for (no screen scraping, no polling), irreversible or in-session-denied steps staged at the prompt for a human Enter and never fired through the keystroke channel. Ships scripts/cmux-step (open/run/stage/wait/show/close) and the YOLT rule that turns an agent's `cmux send-key enter` into a confirmation. Covers the escape-mangling trap in cmux send, retained wait-for signals, why a sibling tab does not satisfy 'quit every interactive session', and why a driven tab's output is still transcribed."
+    },
+    {
+      "name": "experimental-upstream-for-gated-integration-repo",
+      "path": "skills/experimental-upstream-for-gated-integration-repo/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Keep a high-velocity development loop alive when the repository you integrate into gains a merge gate you cannot satisfy - required reviews, conversation resolution, lost admin - and forking is disabled: an experimental upstream repo, one reviewed fork-sync PR into the integration repo, a pre-push guard, and the issue framing that keeps it change management rather than a revolt."
     }
   ],
   "collections": [
@@ -929,7 +938,8 @@
         "verbatim-social-post-retrieval",
         "wordpress-com-publish",
         "work-on-pr",
-        "cmux-runbook-in-sibling-tab"
+        "cmux-runbook-in-sibling-tab",
+        "experimental-upstream-for-gated-integration-repo"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2090,6 +2100,19 @@
         "cmux-runbook-in-sibling-tab"
       ],
       "summary": "Single-skill plugin: cmux-runbook-in-sibling-tab."
+    },
+    {
+      "name": "experimental-upstream-for-gated-integration-repo",
+      "claude_manifest": "plugins/experimental-upstream-for-gated-integration-repo/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/experimental-upstream-for-gated-integration-repo/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "experimental-upstream-for-gated-integration-repo"
+      ],
+      "summary": "Keep a high-velocity development loop alive when the repository you integrate into gains a merge gate you cannot satisfy and forking is disabled: an experimental upstream repo, one reviewed fork-sync PR into the integration repo, a pre-push guard, and change-management issue framing."
     }
   ],
   "defaults": {

@@ -216,6 +216,8 @@ environments and older Codex versions.
 | [`macos-sandbox-exec-agent-command-confinement` plugin](./plugins/macos-sandbox-exec-agent-command-confinement/) | plugin | Claude, Codex | Single-skill plugin: macos-sandbox-exec-agent-command-confinement |
 | [cmux-runbook-in-sibling-tab](./skills/cmux-runbook-in-sibling-tab/SKILL.md) | skill | Claude, Codex | Drive a runbook step by step in a sibling cmux terminal tab: receipts per step, irreversible steps staged for a human Enter; ships `cmux-step` + the YOLT rule |
 | [`cmux-runbook-in-sibling-tab` plugin](./plugins/cmux-runbook-in-sibling-tab/) | plugin | Claude, Codex | Single-skill plugin: cmux-runbook-in-sibling-tab |
+| [experimental-upstream-for-gated-integration-repo](./skills/experimental-upstream-for-gated-integration-repo/SKILL.md) | skill | Claude, Codex | Keep a high-velocity development loop alive when the repository you integrate into gains a merge gate you cannot satisfy and forking is disabled: experimental upstream, one reviewed fork-sync PR, pre-push guard, change-management issue framing |
+| [`experimental-upstream-for-gated-integration-repo` plugin](./plugins/experimental-upstream-for-gated-integration-repo/) | plugin | Claude, Codex | Single-skill plugin: experimental-upstream-for-gated-integration-repo |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
