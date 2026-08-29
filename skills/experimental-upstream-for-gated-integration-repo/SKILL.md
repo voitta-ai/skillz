@@ -118,13 +118,18 @@ reviewer sees a release boundary, not a click stream. A version-bump check
 still passes as long as the upstream's version outruns the integration
 repo's.
 
-**Realign after every sync merge.** Squash and rebase merges rewrite SHAs, so
-the next sync's three-dot diff would re-show everything unless the upstream
-is reset to the integration `main` (identical content, new SHAs):
+**Merge back after every sync merge.** The integration repo's squash commit
+is not in the upstream's history, so the next sync's three-dot diff would
+re-show everything. Merge it into the upstream `main` - the trees are
+identical, so it merges clean, and nothing is rewritten:
 
 ```bash
-git fetch origin main && git push upstream-exp origin/main:main --force
+git fetch origin main && git checkout main && git merge --no-edit origin/main \
+  && git push upstream-exp main
 ```
+
+Never commit on `fork-sync` itself; it is a mirror. Its PR showing "N
+commits" is the upstream's squash commits not yet on the integration `main`.
 
 ### 5. Make the routing mechanical
 
@@ -173,7 +178,7 @@ Draft the channel announcement for the human to post; do not post it.
 - `gh pr create` from the clone lands in the upstream without `--repo`.
 - A test push of a feature branch to the integration repo is refused by the
   hook; `fork-sync` is not.
-- The sync PR shows only the upstream's new work after a realign.
+- The sync PR shows only the upstream's new work after a merge-back.
 - Installing the plugin from the upstream yields the upstream's version.
 
 ## Notes
