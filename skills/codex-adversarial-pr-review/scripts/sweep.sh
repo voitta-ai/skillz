@@ -14,6 +14,7 @@
 #
 # Usage:
 #   sweep.sh list   --out DIR --author [host:]login [--author ...] [--followup-on-push]
+#                   (login '*', quoted, sweeps the host with no author filter)
 #   sweep.sh review --out DIR --author [host:]login [--author ...] [--followup-on-push] \
 #                   [--clone-root DIR ...] [--workers N] [--min-confidence 0.75]
 #   sweep.sh post   --out DIR [--dry-run] [--approve-clean]
@@ -65,13 +66,13 @@ probe() {
   return 0
 }
 
-MODE=review; OUT=""; AUTHORS=""; ROOTS=(); WORKERS=3; MINCONF=0.75; POSTFLAGS=""; PROBES=8
+MODE=review; OUT=""; AUTHSPECS=(); ROOTS=(); WORKERS=3; MINCONF=0.75; POSTFLAGS=""; PROBES=8
 case "${1:-}" in list|review|post|_probe) MODE=$1; shift;; esac
 if [ "$MODE" = _probe ]; then probe "$@"; exit 0; fi
 while [ $# -gt 0 ]; do
   case "$1" in
     --out) OUT=$2; shift 2;;
-    --author) AUTHORS="$AUTHORS $2"; shift 2;;
+    --author) AUTHSPECS+=("$2"); shift 2;;
     --clone-root) ROOTS+=("$2"); shift 2;;
     --workers) WORKERS=$2; shift 2;;
     --min-confidence) MINCONF=$2; shift 2;;
@@ -81,7 +82,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ -n "$OUT" ] || { echo "--out DIR is required" >&2; exit 2; }
-[ "$MODE" = post ] || [ -n "$AUTHORS" ] || { echo "pass at least one --author [host:]login" >&2; exit 2; }
+[ "$MODE" = post ] || [ ${#AUTHSPECS[@]} -gt 0 ] || { echo "pass at least one --author [host:]login" >&2; exit 2; }
 
 sub_dir() { echo "$OUT/$1/${2//\//__}"; }
 
@@ -100,17 +101,23 @@ clone_dir() {
 enumerate() {
   mkdir -p "$OUT"
   : > "$OUT/queue.tsv"; : > "$OUT/candidates.tsv"
-  local spec host login me
-  for spec in $AUTHORS; do
+  local spec host login me AUTHFLAG
+  for spec in "${AUTHSPECS[@]}"; do
     case "$spec" in *:*) host=${spec%%:*}; login=${spec#*:};; *) host=github.com; login=$spec;; esac
     me=$(GH_HOST=$host gh api user --jq .login)
-    GH_HOST=$host gh search prs --review-requested=@me --author "$login" --state open \
-        --limit 300 --json number,repository --jq '.[]|[.repository.nameWithOwner,.number]|@tsv' \
-      | awk -F'\t' -v h="$host" -v a="$login" '{print h"\t"$1"\t"$2"\t"a"\tpending\trequested"}' >> "$OUT/queue.tsv"
-    GH_HOST=$host gh search prs --reviewed-by=@me --author "$login" --state open \
-        --limit 300 --json number,repository,updatedAt \
-        --jq '.[]|[.repository.nameWithOwner,.number,.updatedAt]|@tsv' \
-      | awk -F'\t' -v h="$host" -v a="$login" -v m="$me" '{print h"\t"$1"\t"$2"\t"a"\t"$3"\t"m}' >> "$OUT/candidates.tsv"
+    # login '*' sweeps the host with no author filter - for an enterprise host
+    # where agent PRs come from every engineer's own login. The author then
+    # comes from each search row, and your own PRs are dropped: an agent
+    # posting from your identity must not sweep you into reviewing yourself.
+    AUTHFLAG=(--author "$login"); [ "$login" = "*" ] && AUTHFLAG=()
+    GH_HOST=$host gh search prs --review-requested=@me ${AUTHFLAG[@]+"${AUTHFLAG[@]}"} --state open \
+        --limit 300 --json number,repository,author \
+        --jq '.[]|[.repository.nameWithOwner,.number,.author.login]|@tsv' \
+      | awk -F'\t' -v h="$host" -v m="$me" '$3!=m {print h"\t"$1"\t"$2"\t"$3"\tpending\trequested"}' >> "$OUT/queue.tsv"
+    GH_HOST=$host gh search prs --reviewed-by=@me ${AUTHFLAG[@]+"${AUTHFLAG[@]}"} --state open \
+        --limit 300 --json number,repository,updatedAt,author \
+        --jq '.[]|[.repository.nameWithOwner,.number,.updatedAt,.author.login]|@tsv' \
+      | awk -F'\t' -v h="$host" -v m="$me" '$4!=m {print h"\t"$1"\t"$2"\t"$4"\t"$3"\t"m}' >> "$OUT/candidates.tsv"
   done
   # A candidate that is already pending needs no probe.
   awk -F'\t' 'NR==FNR {seen[$1 FS $2 FS $3]=1; next} !($1 FS $2 FS $3 in seen)' \
