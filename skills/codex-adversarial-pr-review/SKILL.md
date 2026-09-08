@@ -177,6 +177,17 @@ from each search row, your own PRs are excluded (an agent posting from your
 identity must not sweep you into reviewing yourself), and a named spec plus
 a wildcard on the same host dedupe cleanly.
 
+`--marker 'ghe.example.com:Generated with [Claude Code](https://claude.com/claude-code)'`
+restricts that host's sweep — both classes — to PRs whose **body contains
+the string**. That is the general rule for telling agent PRs from human
+ones when the author login cannot: agent-opened PRs carry their tool's
+attribution line, so match on it. A substring works — leave the leading
+emoji out of the spec, code stays ASCII. The trade-offs are explicit: a
+human PR that quotes the marker gets swept, an agent PR stripped of its
+attribution slips through; the payloads are judged before posting either
+way. Pair it with a `host:*` author wildcard to mean "any agent PR on this
+host that requests me".
+
 Why it is shaped for bulk: this is not the one-PR review flow. The queue is
 routinely dozens of PRs (one sweep found 34 pending plus 114 already-reviewed
 candidates), so enumeration spends nothing on a candidate whose `updatedAt`
