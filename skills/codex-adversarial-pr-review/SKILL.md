@@ -20,7 +20,7 @@ description: |
   degenerate-output shapes (plan-only "zero findings", quiet background-launch
   failure) to judge before posting.
 author: Claude Code
-version: 1.4.0
+version: 1.5.0
 date: 2026-08-24
 source: https://github.com/voitta-ai/skillz
 source_file: skills/codex-adversarial-pr-review/SKILL.md
@@ -168,6 +168,25 @@ github.com and `alice-corp` on an enterprise host, and `@me` resolves per
 host too. `sweep.sh` exports `GH_HOST` per repo; the other two scripts need
 nothing else to work against an enterprise host — `--repo owner/name` stays
 plain.
+
+`--author 'ghe.example.com:*'` (quote the `*`) sweeps a host with **no
+author filter** — for an enterprise host where the agent PRs come from every
+engineer's own login rather than a few bot accounts, so the interesting set
+is "whoever requested me", not a name list. The author column then comes
+from each search row, your own PRs are excluded (an agent posting from your
+identity must not sweep you into reviewing yourself), and a named spec plus
+a wildcard on the same host dedupe cleanly.
+
+`--marker 'ghe.example.com:Generated with [Claude Code](https://claude.com/claude-code)'`
+restricts that host's sweep — both classes — to PRs whose **body contains
+the string**. That is the general rule for telling agent PRs from human
+ones when the author login cannot: agent-opened PRs carry their tool's
+attribution line, so match on it. A substring works — leave the leading
+emoji out of the spec, code stays ASCII. The trade-offs are explicit: a
+human PR that quotes the marker gets swept, an agent PR stripped of its
+attribution slips through; the payloads are judged before posting either
+way. Pair it with a `host:*` author wildcard to mean "any agent PR on this
+host that requests me".
 
 Why it is shaped for bulk: this is not the one-PR review flow. The queue is
 routinely dozens of PRs (one sweep found 34 pending plus 114 already-reviewed
