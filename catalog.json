@@ -328,7 +328,8 @@
       "files": [
         "scripts/codex-adversarial-pr-review.mjs",
         "scripts/batch-review.sh",
-        "scripts/post-batch.sh"
+        "scripts/post-batch.sh",
+        "scripts/sweep.sh"
       ],
       "hosts": [
         "claude",

@@ -20,7 +20,7 @@ description: |
   degenerate-output shapes (plan-only "zero findings", quiet background-launch
   failure) to judge before posting.
 author: Claude Code
-version: 1.3.0
+version: 1.4.0
 date: 2026-08-24
 source: https://github.com/voitta-ai/skillz
 source_file: skills/codex-adversarial-pr-review/SKILL.md
@@ -137,6 +137,70 @@ How it stays out of its own way:
 - **Round-robin chunking**, not a work queue — the PRs are known up front and
   bash job control is the whole scheduler.
 
+### Queue sweep: everything waiting on you, across hosts
+
+The batch above takes one repo and one author. `scripts/sweep.sh` builds the
+queue itself — the PRs *waiting on you* — and runs the batch per repo:
+
+```bash
+scripts/sweep.sh list   --out /tmp/sweep --author some-bot --author ghe.example.com:some-bot-there
+scripts/sweep.sh review --out /tmp/sweep --author ... --clone-root ~/src --workers 3
+scripts/sweep.sh post   --out /tmp/sweep --dry-run --approve-clean
+scripts/sweep.sh post   --out /tmp/sweep --approve-clean
+```
+
+For each `--author [host:]login` it collects two classes of open PR by that
+login:
+
+- **pending** — `gh search prs --review-requested=@me`: a review request
+  for you that you have not answered.
+- **followup** — `gh search prs --reviewed-by=@me`, kept only when the
+  author commented on the PR or replied in a review thread *after* your
+  last review's `submitted_at`. Those are re-reviewed with a follow-up focus
+  line, so round two judges the current diff instead of repeating round one.
+  `--followup-on-push` also counts a head that moved past the commit your
+  review pinned — off by default because agents rebase everything: in one
+  sweep it re-queued 94 of 117 already-reviewed PRs, most with nothing new
+  to say.
+
+Why the host is part of the author spec: the same person is `alice` on
+github.com and `alice-corp` on an enterprise host, and `@me` resolves per
+host too. `sweep.sh` exports `GH_HOST` per repo; the other two scripts need
+nothing else to work against an enterprise host — `--repo owner/name` stays
+plain.
+
+Why it is shaped for bulk: this is not the one-PR review flow. The queue is
+routinely dozens of PRs (one sweep found 34 pending plus 114 already-reviewed
+candidates), so enumeration spends nothing on a candidate whose `updatedAt`
+predates your review — that field comes free with the search — and at most
+three calls on one that does not, with probes running eight wide (42s for
+151 PRs across two hosts). Budget `list` in seconds and `review` at the
+90s-per-PR rate above.
+
+Clones: each `--clone-root DIR` is searched for `<name>`; anything missing
+is cloned under `OUT/clones/`.
+
+### Post: the staleness screen, and approving clean PRs
+
+`post-batch.sh` checks the live PR before every post. Agent-driven authors
+rebase, force-push and merge within minutes — in one batch 3 of 6 payloads
+were stale ten minutes after review and 2 PRs merged mid-batch — so a payload
+whose PR is no longer open, or whose head no longer matches the pinned
+`commit_id`, is moved to `OUT/stale/` instead of being posted (GitHub would
+422 the stale commit anyway). Re-run the review for those.
+
+`--approve-clean` posts a clean payload as an `APPROVE` review: verdict
+`approve`, no inline comments, no out-of-diff findings. Lower-confidence
+findings in the collapsed section do not block it — they are below the
+threshold you chose. `--dry-run` prints `would post N as APPROVE`, so the
+decision is visible before anything goes out. Self-review still cannot
+approve (gotcha 3), so leave the flag off when the posting identity is the
+author.
+
+Posted payloads move to `OUT/posted/pr-N.<sha>.json`. That is what lets the
+next sweep review the same PR again: `batch-review.sh` skips a PR whose
+payload exists, and a follow-up round needs a fresh one.
+
 ### Judge the findings before you post them
 
 Adversarial framing produces confident, well-written, wrong findings, and
@@ -194,6 +258,23 @@ instead.
 Spot-check at least every `critical` finding against the existing tree before
 posting; drop the bad ones with the `jq` filter above. Posting a wrong critical
 costs the author more time than the review saves.
+
+Three more shapes, all seen on agent-authored PRs in bulk sweeps:
+
+1. **Phantom deletion.** A branch behind its base makes Codex (self-collect
+   mode) report "this PR deletes `<file>`" at 0.9+/critical when the file
+   was merely added to the base after the merge-base. Screen with
+   `git diff --name-only --diff-filter=D origin/main..HEAD` (two-dot): a
+   deletion there that is absent from the three-dot diff is phantom.
+2. **"File does not exist in repo."** The sandbox search misses hidden
+   directories (`.deploy/`) and sometimes plain source paths. Run
+   `git ls-files <path>` before trusting it.
+3. **Docs-only PR, `needs-attention` with no findings.** For docs PRs Codex
+   demands code or tests in the diff, or objects to the repo's own citation
+   convention. That is opinion, not a defect; every case seen came with zero
+   findings at or above the threshold. Skip the PR or post the empty inline
+   set and drop the verdict — `--approve-clean` leaves it alone, since the
+   verdict is not `approve`.
 
 ## Why it works the way it does (the gotchas)
 

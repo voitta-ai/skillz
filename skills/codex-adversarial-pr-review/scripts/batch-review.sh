@@ -7,7 +7,7 @@
 # Usage:
 #   batch-review.sh --repo owner/name --repo-dir /path/to/checkout --out DIR \
 #                   [--workers N] [--base origin/main] [--min-confidence 0.75] \
-#                   [--author LOGIN | --prs "1 2 3"]
+#                   [--author LOGIN | --prs "1 2 3"] [--focus TEXT]
 #
 # Then inspect DIR/payloads/pr-N.json and post with post-batch.sh (or by hand).
 #
@@ -15,7 +15,7 @@
 # leaves a zero-byte payload, which is treated as absent.
 set -uo pipefail
 
-REPO=""; REPO_DIR=""; OUT=""; WORKERS=3; BASE=""; MINCONF=0.75; AUTHOR=""; PRS=""
+REPO=""; REPO_DIR=""; OUT=""; WORKERS=3; BASE=""; MINCONF=0.75; AUTHOR=""; PRS=""; FOCUS=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --repo) REPO=$2; shift 2;;
@@ -26,6 +26,7 @@ while [ $# -gt 0 ]; do
     --min-confidence) MINCONF=$2; shift 2;;
     --author) AUTHOR=$2; shift 2;;
     --prs) PRS=$2; shift 2;;
+    --focus) FOCUS=$2; shift 2;;
     *) echo "unknown argument: $1" >&2; exit 2;;
   esac
 done
@@ -56,10 +57,14 @@ cut -f1 "$OUT/meta.tsv" > "$OUT/prs.txt"
 echo "resolved $(wc -l < "$OUT/prs.txt" | tr -d ' ') PRs"
 
 # One fetch of every head ref, so the per-PR checkouts are local and offline.
-mapfile -t HEADREFS < <(cut -f3 "$OUT/meta.tsv")
-if [ ${#HEADREFS[@]} -gt 0 ]; then
-  SPECS=()
-  for h in "${HEADREFS[@]}"; do SPECS+=("+refs/heads/$h:refs/remotes/origin/$h"); done
+# A read loop, not mapfile: macOS ships bash 3.2, where mapfile does not exist
+# and this step used to fail quietly, leaving every head pushed after the
+# clone to die with "FAIL checkout N".
+SPECS=()
+while IFS= read -r h; do
+  [ -n "$h" ] && SPECS+=("+refs/heads/$h:refs/remotes/origin/$h")
+done < <(cut -f3 "$OUT/meta.tsv")
+if [ ${#SPECS[@]} -gt 0 ]; then
   git -C "$REPO_DIR" fetch origin "${SPECS[@]}" >/dev/null 2>&1
 fi
 
@@ -84,7 +89,7 @@ worker() {
     fi
     echo "[$slot] start $n"
     if node "$REVIEW" --pr "$n" --repo "$REPO" --repo-dir "$wt" --base "$base" \
-         --min-confidence "$MINCONF" --dry-run \
+         --min-confidence "$MINCONF" ${FOCUS:+--focus "$FOCUS"} --dry-run \
          > "$OUT/payloads/pr-$n.json" 2> "$OUT/logs/pr-$n.log"; then
       echo "[$slot] ok $n"
     else
