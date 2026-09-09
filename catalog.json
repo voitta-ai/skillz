@@ -878,6 +878,18 @@
         "codex"
       ],
       "summary": "Integration-test an OAuth2 client-credentials caller end to end while counting token mints, by pointing its config-driven token endpoint at a counting pass-through proxy the spec starts (JDK HttpServer, ephemeral port). Proves gateway 401/200/refresh AND N-calls-one-mint in one run; catches per-request-mint and never-refresh defects that stubbed unit specs cannot see."
+    },
+    {
+      "name": "cmux-tmux-compat-gap-probe",
+      "path": "skills/cmux-tmux-compat-gap-probe/SKILL.md",
+      "files": [
+        "scripts/tmux-compat-probe"
+      ],
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Enumerate which tmux verbs a tmux-driving tool needs that cmux's tmux-compat shim lacks, before installing it: grep the tool's source for subcommands and #{format} variables, diff against cmux's docs/cli-contract.md, probe read-only verbs live with cmux __tmux-compat. Explains 'Unsupported tmux compatibility command' and 'Workspace target not found' (tmux sessions map to cmux workspaces), lists the format variables that come back empty, and ships scripts/tmux-compat-probe. Verified on cmux 0.64.22 against workmux v0.1.259."
     }
   ],
   "collections": [
@@ -992,7 +1004,8 @@
         "standalone-typecheck-repro",
         "linkedin-logged-in-browser-read",
         "grafana-terraform-folder-reorg-shared-workspace",
-        "oauth-mint-counting-passthrough-proxy"
+        "oauth-mint-counting-passthrough-proxy",
+        "cmux-tmux-compat-gap-probe"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2231,6 +2244,19 @@
         "oauth-mint-counting-passthrough-proxy"
       ],
       "summary": "Single-skill plugin: oauth-mint-counting-passthrough-proxy."
+    },
+    {
+      "name": "cmux-tmux-compat-gap-probe",
+      "claude_manifest": "plugins/cmux-tmux-compat-gap-probe/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/cmux-tmux-compat-gap-probe/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "cmux-tmux-compat-gap-probe"
+      ],
+      "summary": "Single-skill plugin: cmux-tmux-compat-gap-probe."
     }
   ],
   "defaults": {

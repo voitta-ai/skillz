@@ -475,6 +475,11 @@
       "name": "oauth-mint-counting-passthrough-proxy",
       "source": "./plugins/oauth-mint-counting-passthrough-proxy/",
       "description": "Count OAuth2 client-credentials token mints end to end through a counting pass-through proxy the spec starts; proves gateway 401/200/refresh and N-calls-one-mint in one run."
+    },
+    {
+      "name": "cmux-tmux-compat-gap-probe",
+      "source": "./plugins/cmux-tmux-compat-gap-probe/",
+      "description": "Before installing a tmux-driving tool on a cmux desk, enumerate the tmux verbs it needs that cmux __tmux-compat lacks: grep source, diff the contract, probe read-only verbs live (scripts/tmux-compat-probe)."
     }
   ]
 }

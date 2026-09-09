@@ -228,6 +228,8 @@ environments and older Codex versions.
 | [`grafana-terraform-folder-reorg-shared-workspace` plugin](./plugins/grafana-terraform-folder-reorg-shared-workspace/) | plugin | Claude, Codex | Single-skill plugin: grafana-terraform-folder-reorg-shared-workspace |
 | [oauth-mint-counting-passthrough-proxy](./skills/oauth-mint-counting-passthrough-proxy/SKILL.md) | skill | Claude, Codex | Count OAuth2 client-credentials token mints end to end by routing the config-driven token endpoint through a counting pass-through proxy started in the spec; proves gateway 401/200/refresh and N-calls-one-mint in one run. |
 | [`oauth-mint-counting-passthrough-proxy` plugin](./plugins/oauth-mint-counting-passthrough-proxy/) | plugin | Claude, Codex | Single-skill plugin: oauth-mint-counting-passthrough-proxy |
+| [cmux-tmux-compat-gap-probe](./skills/cmux-tmux-compat-gap-probe/SKILL.md) | skill | Claude, Codex | Before installing a tmux-driving tool on a cmux desk, enumerate the tmux verbs it needs that `cmux __tmux-compat` lacks: grep source, diff the contract, probe read-only verbs live; ships `tmux-compat-probe` |
+| [`cmux-tmux-compat-gap-probe` plugin](./plugins/cmux-tmux-compat-gap-probe/) | plugin | Claude, Codex | Single-skill plugin: cmux-tmux-compat-gap-probe |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
