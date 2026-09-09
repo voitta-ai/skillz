@@ -445,6 +445,11 @@
       "name": "cmux-runbook-in-sibling-tab",
       "source": "./plugins/cmux-runbook-in-sibling-tab/",
       "description": "Run a runbook step by step in a sibling cmux terminal tab with exit-code receipts; stage irreversible steps for a human Enter (scripts/cmux-step + YOLT rule)."
+    },
+    {
+      "name": "experimental-upstream-for-gated-integration-repo",
+      "source": "./plugins/experimental-upstream-for-gated-integration-repo/",
+      "description": "Keep a high-velocity development loop alive when the repository you integrate into gains a merge gate you cannot satisfy and forking is disabled: an experimental upstream repo, one reviewed fork-sync PR into the integration repo, a pre-push guard, and change-management issue framing."
     }
   ]
 }

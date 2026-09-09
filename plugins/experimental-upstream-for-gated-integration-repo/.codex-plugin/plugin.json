@@ -1,0 +1,19 @@
+{
+  "name": "experimental-upstream-for-gated-integration-repo",
+  "version": "1.0.0",
+  "description": "Keep a high-velocity development loop alive when the repository you integrate into gains a merge gate you cannot satisfy and forking is disabled: an experimental upstream repo, one reviewed fork-sync PR into the integration repo, a pre-push guard, and change-management issue framing.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "git",
+    "github",
+    "pull-requests",
+    "codeowners"
+  ],
+  "skills": "./skills/"
+}
