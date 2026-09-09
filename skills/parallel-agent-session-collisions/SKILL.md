@@ -16,12 +16,14 @@ description: |
   they are doing, (9) you are about to run `git worktree add` or `git checkout -b`
   for shared work -- the first act that claims shared state, and the point where
   two sessions given the same issue pick the same branch name, (10) you find
-  uncommitted changes in a working tree that are not yours. Covers the three collision shapes -- duplicate
+  uncommitted changes in a working tree that are not yours, (11) a background
+  pipeline from an earlier run was reported "stopped" by the harness and you
+  are about to relaunch it. Covers the three collision shapes -- duplicate
   work, pre-existing better work, and state changing under you -- the cheap
   pre-flight check for each, and how to reconcile without losing the better
   version.
 author: Claude Code
-version: 1.4.0
+version: 1.5.0
 date: 2026-08-20
 ---
 
@@ -266,6 +268,10 @@ rather than polling `ListAgents` in a loop. Polling burns turns and still races
 the moment it finishes; a one-shot subscription costs the peer nothing and
 fires even if it exits instead of answering.
 
+And one apparent peer can never answer at all: an orphaned process tree with
+no session behind it. It holds no address, so no send reaches it and no
+silence-reading applies — see "The peer that is not a session" below.
+
 ## The collision with no name to check: a shared counter
 
 Every check above finds a collision by **name** — same branch, same worktree,
@@ -391,6 +397,62 @@ to advance past, the file you are about to edit — rather than inferring it fro
 the existence of a check. This is the same discipline as reading the counter at
 merge time, applied to everything the gate is supposed to guarantee.
 
+## The peer that is not a session: your own orphaned predecessor
+
+A session restart can orphan a background pipeline twice over. The harness
+loses track of the task and reports it "stopped" or "[exited with code 144]"
+— a statement about *tracking*, not about the processes. A worker tree
+parented away from the dead session keeps running, keeps writing into its
+state directory, and holds no address: `ListAgents` will never show it, and
+no message can reach it. Meanwhile the restarted session — or a sibling that
+picked up the same "retry" — relaunches the same pipeline. Observed as a
+three-way collision over one adversarial-review batch: a zombie swarm still
+filling the old state dir, a live swarm on a new one, and a third session
+about to launch, all reviewing the same PRs.
+
+Rules, in order:
+
+1. **"Marked stopped" means lost tracking, not dead processes.** Before
+   relaunching any background pipeline reported stopped, check for its
+   worker tree — and check again *after* your own launch, because an orphan
+   can sit mid-phase with an empty state dir at probe time, and a sibling
+   can launch seconds after you looked.
+2. **Detect by state-dir argv, and know the two false readings.** The state
+   dir appears in every worker's argv, so `ps -ww` the matches and compare
+   each process's state-dir argument against yours. A bare `pgrep -f` count
+   lies twice over: pipeline subshells and round-robin workers carry the
+   parent's argv, so one run shows as N identical processes — dedupe by
+   PPID tree and start time, never by counting matches; and the probe's own
+   shell can match its own pattern — exclude yourself before trusting ALIVE.
+3. **Salvage is a pre-launch step.** Relaunching into the *same* state dir
+   is self-deduping for a resumable batch — the artifact-existence skip
+   turns an undetected orphan into an accidental co-worker. The dangerous
+   combination is a fresh dir plus an undetected orphan on the old one. So
+   before starting anywhere new, no-clobber-copy the old dir's finished
+   artifacts (non-empty only; interrupted ones are zero-byte by that
+   design) into the new tree. Then kill by the distinctive path —
+   `pkill -f "<old-state-dir>"` — never by script name, which matches the
+   survivor too.
+4. **Killing the processes does not kill their intentions.** A colliding
+   session may hold a watcher whose firing condition is exactly "workers
+   gone" — and whose action is to relaunch, re-entering the race one cycle
+   after your cleanup. The handoff must reach *every* colliding session,
+   not just the designated owner, and each stand-down session stops its own
+   monitors itself.
+5. **One session owns the publishing tail.** A pipeline whose last step
+   publishes — posts reviews, comments, deploys — must end in exactly one
+   session, designated by the user, however many sessions contributed
+   artifacts. The handoff to the owner carries what was already published
+   (the do-not-repost list), what was salvaged and from where, and what
+   remains gated on the user.
+6. **Resumable state outlives sessions; house it accordingly.** A state
+   directory under `/tmp` loses to reboots and periodic temp cleaning
+   mid-run — observed as an archive of already-published artifacts silently
+   gone between resumes, and as a skill's own `/tmp` example path seeding
+   the next collision. Use `~/.cache/<pipeline>/`, and scope any progress
+   monitor to that dir: liveness is "processes whose argv contains MY state
+   dir", never a script name that a stranger's run also matches.
+
 ## Pre-flight, in one place
 
 Before opening a PR, writing a fix, or applying anything:
@@ -401,6 +463,8 @@ gh pr list --state open --limit 50             # is someone already on this?
 gh issue list --state open --limit 50
 # for infra: re-plan, and apply a saved plan file rather than a bare apply
 # for a shared counter: read its value now, and again at merge time
+# for a background pipeline reported "stopped": ps -ww matches on its state dir,
+#   dedupe by PPID tree, exclude self - and re-check after your own launch
 ```
 
 Cheap. A single `gh pr list` costs seconds; a duplicate PR costs a review cycle
@@ -416,6 +480,8 @@ You have collided if any of these are true. Check before acting, not after:
 - `git log origin/<default-branch>` moved since you branched.
 - A version or counter your branch advances already holds that value on the
   default branch — or has silently disappeared from your diff since the rebase.
+- A process tree from a prior run is still writing into a state directory
+  you are about to reuse (`pgrep -fl <state-dir>` before any relaunch).
 - Work you merged is **gone from the default branch**. A peer acting on a newer
   decision may have reverted it, correctly. Check that the revert is *complete*
   before doing anything else — a partial one leaves the catalog inconsistent —
@@ -451,3 +517,7 @@ You have collided if any of these are true. Check before acting, not after:
   choose the same worktree name from the same issue.
 - `claude-code-plugin-release-automation` — the shared-counter case in full,
   including the merge mechanics that report success and do nothing.
+- `codex-adversarial-pr-review` — the resumable review batch the orphaned-
+  predecessor case was observed on: artifact-existence dedupe is what makes
+  salvage-then-kill lossless, and its post step is the publishing tail that
+  needs a single owner.
