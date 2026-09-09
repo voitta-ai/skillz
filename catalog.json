@@ -821,6 +821,18 @@
         "codex"
       ],
       "summary": "Drive a runbook one step at a time in a real terminal tab beside the agent's own cmux tab: an exit-code receipt per step via a step file + cmux wait-for (no screen scraping, no polling), irreversible or in-session-denied steps staged at the prompt for a human Enter and never fired through the keystroke channel. Ships scripts/cmux-step (open/run/stage/wait/show/close) and the YOLT rule that turns an agent's `cmux send-key enter` into a confirmation. Covers the escape-mangling trap in cmux send, retained wait-for signals, why a sibling tab does not satisfy 'quit every interactive session', and why a driven tab's output is still transcribed."
+    },
+    {
+      "name": "cmux-tmux-compat-gap-probe",
+      "path": "skills/cmux-tmux-compat-gap-probe/SKILL.md",
+      "files": [
+        "scripts/tmux-compat-probe"
+      ],
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Enumerate which tmux verbs a tmux-driving tool needs that cmux's tmux-compat shim lacks, before installing it: grep the tool's source for subcommands and #{format} variables, diff against cmux's docs/cli-contract.md, probe read-only verbs live with cmux __tmux-compat. Explains 'Unsupported tmux compatibility command' and 'Workspace target not found' (tmux sessions map to cmux workspaces), lists the format variables that come back empty, and ships scripts/tmux-compat-probe. Verified on cmux 0.64.22 against workmux v0.1.259."
     }
   ],
   "collections": [
@@ -929,7 +941,8 @@
         "verbatim-social-post-retrieval",
         "wordpress-com-publish",
         "work-on-pr",
-        "cmux-runbook-in-sibling-tab"
+        "cmux-runbook-in-sibling-tab",
+        "cmux-tmux-compat-gap-probe"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2090,6 +2103,19 @@
         "cmux-runbook-in-sibling-tab"
       ],
       "summary": "Single-skill plugin: cmux-runbook-in-sibling-tab."
+    },
+    {
+      "name": "cmux-tmux-compat-gap-probe",
+      "claude_manifest": "plugins/cmux-tmux-compat-gap-probe/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/cmux-tmux-compat-gap-probe/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "cmux-tmux-compat-gap-probe"
+      ],
+      "summary": "Single-skill plugin: cmux-tmux-compat-gap-probe."
     }
   ],
   "defaults": {
