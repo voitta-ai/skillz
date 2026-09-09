@@ -216,6 +216,8 @@ environments and older Codex versions.
 | [`macos-sandbox-exec-agent-command-confinement` plugin](./plugins/macos-sandbox-exec-agent-command-confinement/) | plugin | Claude, Codex | Single-skill plugin: macos-sandbox-exec-agent-command-confinement |
 | [cmux-runbook-in-sibling-tab](./skills/cmux-runbook-in-sibling-tab/SKILL.md) | skill | Claude, Codex | Drive a runbook step by step in a sibling cmux terminal tab: receipts per step, irreversible steps staged for a human Enter; ships `cmux-step` + the YOLT rule |
 | [`cmux-runbook-in-sibling-tab` plugin](./plugins/cmux-runbook-in-sibling-tab/) | plugin | Claude, Codex | Single-skill plugin: cmux-runbook-in-sibling-tab |
+| [cmux-tmux-compat-gap-probe](./skills/cmux-tmux-compat-gap-probe/SKILL.md) | skill | Claude, Codex | Before installing a tmux-driving tool on a cmux desk, enumerate the tmux verbs it needs that `cmux __tmux-compat` lacks: grep source, diff the contract, probe read-only verbs live; ships `tmux-compat-probe` |
+| [`cmux-tmux-compat-gap-probe` plugin](./plugins/cmux-tmux-compat-gap-probe/) | plugin | Claude, Codex | Single-skill plugin: cmux-tmux-compat-gap-probe |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
