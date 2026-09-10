@@ -189,7 +189,7 @@
     {
       "name": "spa-request-capture-and-block",
       "source": "./plugins/spa-request-capture-and-block/",
-      "description": "Capture the exact outbound request body a single-page app sends and block it before it leaves the browser: patch window.fetch AND XMLHttpRequest together (the XHR half is the one usually missed, so a fetch-only wrapper lets the request through), read the parsed payload off window, and disarm with a reload \u2014 including why a hash-route change does not remove the patch. For actions whose side effect costs credits or creates an irreversible record."
+      "description": "Capture the exact outbound request body a single-page app sends and block it before it leaves the browser: patch window.fetch AND XMLHttpRequest together (the XHR half is the one usually missed, so a fetch-only wrapper lets the request through), read the parsed payload off window, and disarm with a reload — including why a hash-route change does not remove the patch. For actions whose side effect costs credits or creates an irreversible record."
     },
     {
       "name": "us-federal-open-data-claim-verification",
@@ -450,6 +450,11 @@
       "name": "experimental-upstream-for-gated-integration-repo",
       "source": "./plugins/experimental-upstream-for-gated-integration-repo/",
       "description": "Keep a high-velocity development loop alive when the repository you integrate into gains a merge gate you cannot satisfy and forking is disabled: an experimental upstream repo, one reviewed fork-sync PR into the integration repo, a pre-push guard, and change-management issue framing."
+    },
+    {
+      "name": "grafana-terraform-folder-reorg-shared-workspace",
+      "source": "./plugins/grafana-terraform-folder-reorg-shared-workspace/",
+      "description": "Single-skill plugin: grafana-terraform-folder-reorg-shared-workspace."
     }
   ]
 }
