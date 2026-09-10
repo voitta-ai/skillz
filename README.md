@@ -224,6 +224,8 @@ environments and older Codex versions.
 | [`standalone-typecheck-repro` plugin](./plugins/standalone-typecheck-repro/) | plugin | Claude, Codex | Single-skill plugin: standalone-typecheck-repro |
 | [linkedin-logged-in-browser-read](./skills/linkedin-logged-in-browser-read/SKILL.md) | skill | Claude, Codex | Audit a LinkedIn presence read-only through the logged-in browser when the API cannot read it: detail URLs, the admin-redirect probe, the app list |
 | [`linkedin-logged-in-browser-read` plugin](./plugins/linkedin-logged-in-browser-read/) | plugin | Claude, Codex | Single-skill plugin: linkedin-logged-in-browser-read |
+| [grafana-terraform-folder-reorg-shared-workspace](./skills/grafana-terraform-folder-reorg-shared-workspace/SKILL.md) | skill | Claude, Codex | Reorganise Grafana folders with terraform when several states share one workspace: API-create + `import` shared folders, in-place moves (only `uid` is ForceNew), retire a folder in two applies (a same-apply destroy cascades the dashboards), `-target` skips imports, pin data-source uids so dashboards do not plan as replaced |
+| [`grafana-terraform-folder-reorg-shared-workspace` plugin](./plugins/grafana-terraform-folder-reorg-shared-workspace/) | plugin | Claude, Codex | Single-skill plugin: grafana-terraform-folder-reorg-shared-workspace |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries

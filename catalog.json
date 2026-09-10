@@ -860,6 +860,15 @@
         "codex"
       ],
       "summary": "Audit a LinkedIn presence read-only through the logged-in browser when the API cannot read it: detail URLs, the admin-redirect probe, the app list."
+    },
+    {
+      "name": "grafana-terraform-folder-reorg-shared-workspace",
+      "path": "skills/grafana-terraform-folder-reorg-shared-workspace/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Move, rename, nest or retire Grafana folders with the terraform provider when several terraform states deploy into ONE workspace, without losing a live dashboard: shared folders are API-created then `import`ed in every state (one state creating them 412s the others), moves are in-place (only `uid` is ForceNew), a folder is retired in two applies (terraform destroys it before re-homing its dashboards and Grafana cascades), `-target` skips import blocks, and a data source with a Grafana-minted uid makes dependent dashboards plan as \"must be replaced\" until its uid is pinned."
     }
   ],
   "collections": [
@@ -972,7 +981,8 @@
         "experimental-upstream-for-gated-integration-repo",
         "graphify-doc-corpus-canonical-ids",
         "standalone-typecheck-repro",
-        "linkedin-logged-in-browser-read"
+        "linkedin-logged-in-browser-read",
+        "grafana-terraform-folder-reorg-shared-workspace"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2185,6 +2195,19 @@
         "linkedin-logged-in-browser-read"
       ],
       "summary": "Single-skill plugin: linkedin-logged-in-browser-read."
+    },
+    {
+      "name": "grafana-terraform-folder-reorg-shared-workspace",
+      "claude_manifest": "plugins/grafana-terraform-folder-reorg-shared-workspace/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/grafana-terraform-folder-reorg-shared-workspace/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "grafana-terraform-folder-reorg-shared-workspace"
+      ],
+      "summary": "Single-skill plugin: grafana-terraform-folder-reorg-shared-workspace."
     }
   ],
   "defaults": {
