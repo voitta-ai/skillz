@@ -869,6 +869,15 @@
         "codex"
       ],
       "summary": "Move, rename, nest or retire Grafana folders with the terraform provider when several terraform states deploy into ONE workspace, without losing a live dashboard: shared folders are API-created then `import`ed in every state (one state creating them 412s the others), moves are in-place (only `uid` is ForceNew), a folder is retired in two applies (terraform destroys it before re-homing its dashboards and Grafana cascades), `-target` skips import blocks, and a data source with a Grafana-minted uid makes dependent dashboards plan as \"must be replaced\" until its uid is pinned."
+    },
+    {
+      "name": "oauth-mint-counting-passthrough-proxy",
+      "path": "skills/oauth-mint-counting-passthrough-proxy/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Integration-test an OAuth2 client-credentials caller end to end while counting token mints, by pointing its config-driven token endpoint at a counting pass-through proxy the spec starts (JDK HttpServer, ephemeral port). Proves gateway 401/200/refresh AND N-calls-one-mint in one run; catches per-request-mint and never-refresh defects that stubbed unit specs cannot see."
     }
   ],
   "collections": [
@@ -982,7 +991,8 @@
         "graphify-doc-corpus-canonical-ids",
         "standalone-typecheck-repro",
         "linkedin-logged-in-browser-read",
-        "grafana-terraform-folder-reorg-shared-workspace"
+        "grafana-terraform-folder-reorg-shared-workspace",
+        "oauth-mint-counting-passthrough-proxy"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2208,6 +2218,19 @@
         "grafana-terraform-folder-reorg-shared-workspace"
       ],
       "summary": "Single-skill plugin: grafana-terraform-folder-reorg-shared-workspace."
+    },
+    {
+      "name": "oauth-mint-counting-passthrough-proxy",
+      "claude_manifest": "plugins/oauth-mint-counting-passthrough-proxy/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/oauth-mint-counting-passthrough-proxy/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "oauth-mint-counting-passthrough-proxy"
+      ],
+      "summary": "Single-skill plugin: oauth-mint-counting-passthrough-proxy."
     }
   ],
   "defaults": {

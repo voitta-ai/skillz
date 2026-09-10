@@ -470,6 +470,11 @@
       "name": "grafana-terraform-folder-reorg-shared-workspace",
       "source": "./plugins/grafana-terraform-folder-reorg-shared-workspace/",
       "description": "Single-skill plugin: grafana-terraform-folder-reorg-shared-workspace."
+    },
+    {
+      "name": "oauth-mint-counting-passthrough-proxy",
+      "source": "./plugins/oauth-mint-counting-passthrough-proxy/",
+      "description": "Count OAuth2 client-credentials token mints end to end through a counting pass-through proxy the spec starts; proves gateway 401/200/refresh and N-calls-one-mint in one run."
     }
   ]
 }
