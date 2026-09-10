@@ -54,6 +54,7 @@ environments and older Codex versions.
 | [gist-to-repo-migration](./skills/gist-to-repo-migration/SKILL.md) | skill | Claude, Codex | Migrate a gist's full revision history into a real git repo |
 | [neon-vercel-db-identify-and-migrate](./skills/neon-vercel-db-identify-and-migrate/SKILL.md) | skill | Claude, Codex | Identify which Neon project backs a Vercel app and migrate/split it; safe non-destructive cutover |
 | [claudeception](./skills/claudeception/SKILL.md) | skill | Claude | Continuous-learning meta-skill: procedures become catalog skills via PR; specifics go to memory (local or shared vault) |
+| [graphify-doc-corpus-canonical-ids](./skills/graphify-doc-corpus-canonical-ids/SKILL.md) | skill | Claude | /graphify on a document corpus about a fixed entity set: canonical shared ids across subagent chunks, CSV detect patch, JSON-key prune, forced export |
 | [claude-code-codex-plugin-parity](./skills/claude-code-codex-plugin-parity/SKILL.md) | skill | Claude, Codex | Port a Claude Code plugin to the Codex CLI (or back); where the two systems match vs diverge |
 | [claude-code-plugin-from-existing-repo](./skills/claude-code-plugin-from-existing-repo/SKILL.md) | skill | Claude, Codex | Convert a repo that ships CC commands/hooks (manual copy-in) into an installable plugin |
 | [claude-code-plugin-python-bootstrap](./skills/claude-code-plugin-python-bootstrap/SKILL.md) | skill | Claude, Codex | Bootstrap Python deps from a CC plugin hook so `/plugin install` is one-click (PEP 668-safe) |
@@ -136,6 +137,7 @@ environments and older Codex versions.
 | [`cmux-claude-codex-cross-runtime-messaging` plugin](./plugins/cmux-claude-codex-cross-runtime-messaging/) | plugin | Claude, Codex | Single-skill plugin: cmux-claude-codex-cross-runtime-messaging |
 | [tamarian](./skills/tamarian/SKILL.md) | skill | Claude | Tamarian mode: Claude speaks as the Children of Tama - metaphor and allusion carry the meaning, the technical substance stays literal; `/tamarian lite\|full\|ultra\|off`, phrasebook in `LEXICON.md` |
 | [`tamarian` plugin](./plugins/tamarian/) | plugin | Claude | tamarian skill plus SessionStart + UserPromptSubmit hooks that persist the level across sessions |
+| [`graphify-doc-corpus-canonical-ids` plugin](./plugins/graphify-doc-corpus-canonical-ids/) | plugin | Claude | Single-skill plugin: graphify-doc-corpus-canonical-ids |
 | [chrome-not-secure-tls-interception](./skills/chrome-not-secure-tls-interception/SKILL.md) | skill | Claude, Codex | Chrome 'not secure' behind a TLS-inspecting proxy: CLI checks miss the PAC, and the forged zero-SCT cert is steady state, usually not the cause. |
 | [cloudwatch-per-host-stat-single-host-vs-fleet](./skills/cloudwatch-per-host-stat-single-host-vs-fleet/SKILL.md) | skill | Claude, Codex | Max/Sum over a per-host gauge: is this number one host'\''s story or the fleet'\''s - answered from the metric alone, before any dashboard exists. |
 | [client-rendered-dashboard-data-blob](./skills/client-rendered-dashboard-data-blob/SKILL.md) | skill | Claude, Codex | Decode a client-rendered dashboard'\''s embedded data blob instead of scraping the DOM or reaching for a headless browser. |
