@@ -1,0 +1,12 @@
+{
+  "name": "oauth-mint-counting-passthrough-proxy",
+  "description": "Integration-test an OAuth2 client-credentials caller END TO END while asserting how often it mints tokens, by pointing its config-driven token endpoint at a counting pass-through proxy the spec starts (JDK com.sun.net.httpserver on an ephemeral port) instead of mocking the transport. Use when: (1) a service caches or refreshes a bearer and its unit specs stub the HTTP layer, so a per-request-mint or never-refresh defect is invisible; (2) you must prove in one run that the real gateway rejects a missing bearer, accepts a minted one, refreshes a stale one, AND that N calls mint once; (3) the token endpoint is read from configuration. Caught a real \"three lookups, three mints\" defect that 22 green unit specs missed.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

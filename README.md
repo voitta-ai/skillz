@@ -38,6 +38,7 @@ environments and older Codex versions.
 
 | Name | Type | Hosts | Purpose |
 |---|---|---|---|
+| [oauth-mint-counting-passthrough-proxy](./skills/oauth-mint-counting-passthrough-proxy/SKILL.md) | skill | Claude, Codex | Count OAuth2 client-credentials token mints end to end by routing the config-driven token endpoint through a counting pass-through proxy started in the spec; proves gateway 401/200/refresh and N-calls-one-mint in one run. |
 | [work-on-pr](./skills/work-on-pr/SKILL.md) | skill | Claude, Codex | Author-side PR iteration loop |
 | [review-pr-loop](./skills/review-pr-loop/SKILL.md) | skill | Claude, Codex | Reviewer-side PR iteration loop |
 | [codex-adversarial-pr-review](./skills/codex-adversarial-pr-review/SKILL.md) | skill | Claude, Codex | Post /codex:adversarial-review findings as a batched GitHub PR review (inline + out-of-diff rollup) |
@@ -218,6 +219,7 @@ environments and older Codex versions.
 | [`cmux-runbook-in-sibling-tab` plugin](./plugins/cmux-runbook-in-sibling-tab/) | plugin | Claude, Codex | Single-skill plugin: cmux-runbook-in-sibling-tab |
 | [experimental-upstream-for-gated-integration-repo](./skills/experimental-upstream-for-gated-integration-repo/SKILL.md) | skill | Claude, Codex | Keep a high-velocity development loop alive when the repository you integrate into gains a merge gate you cannot satisfy and forking is disabled: experimental upstream, one reviewed fork-sync PR, pre-push guard, change-management issue framing |
 | [`experimental-upstream-for-gated-integration-repo` plugin](./plugins/experimental-upstream-for-gated-integration-repo/) | plugin | Claude, Codex | Single-skill plugin: experimental-upstream-for-gated-integration-repo |
+| [`oauth-mint-counting-passthrough-proxy` plugin](./plugins/oauth-mint-counting-passthrough-proxy/) | plugin | Claude, Codex | Single-skill plugin: oauth-mint-counting-passthrough-proxy |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
