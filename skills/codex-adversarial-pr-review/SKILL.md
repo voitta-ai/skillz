@@ -20,7 +20,7 @@ description: |
   degenerate-output shapes (plan-only "zero findings", quiet background-launch
   failure) to judge before posting.
 author: Claude Code
-version: 1.5.0
+version: 1.5.1
 date: 2026-08-24
 source: https://github.com/voitta-ai/skillz
 source_file: skills/codex-adversarial-pr-review/SKILL.md
@@ -143,10 +143,10 @@ The batch above takes one repo and one author. `scripts/sweep.sh` builds the
 queue itself — the PRs *waiting on you* — and runs the batch per repo:
 
 ```bash
-scripts/sweep.sh list   --out /tmp/sweep --author some-bot --author ghe.example.com:some-bot-there
-scripts/sweep.sh review --out /tmp/sweep --author ... --clone-root ~/src --workers 3
-scripts/sweep.sh post   --out /tmp/sweep --dry-run --approve-clean
-scripts/sweep.sh post   --out /tmp/sweep --approve-clean
+scripts/sweep.sh list   --out ~/.cache/pr-sweep --author some-bot --author ghe.example.com:some-bot-there
+scripts/sweep.sh review --out ~/.cache/pr-sweep --author ... --clone-root ~/src --workers 3
+scripts/sweep.sh post   --out ~/.cache/pr-sweep --dry-run --approve-clean
+scripts/sweep.sh post   --out ~/.cache/pr-sweep --approve-clean
 ```
 
 For each `--author [host:]login` it collects two classes of open PR by that
@@ -198,6 +198,10 @@ three calls on one that does not, with probes running eight wide (42s for
 
 Clones: each `--clone-root DIR` is searched for `<name>`; anything missing
 is cloned under `OUT/clones/`.
+
+Keep `OUT` under `~/.cache`, never `/tmp`: the batch is resumable state that
+outlives sessions, and `/tmp` loses to reboots and temp cleaning mid-run
+(see `parallel-agent-session-collisions`, the orphaned-predecessor section).
 
 ### Post: the staleness screen, and approving clean PRs
 

@@ -1,7 +1,7 @@
 {
   "name": "parallel-agent-session-collisions",
   "description": "Avoid duplicating, superseding, or clobbering work done by another agent session on the same repos: the three collision shapes, the pre-flight check for each, and how to reconcile without losing the better version. Also covers the collision that no artifact check can catch -- two sessions both about to do the same work, with nothing pushed for `gh pr list` to find -- detected by enumerating live peer sessions and asking directly, then split into named lanes with an explicit gate and the decision routed through the shared human. v1.2.0 moves the peer check earlier still: to the first act that CLAIMS shared state -- git worktree add / checkout -b -- because two sessions given the same issue derive the same branch name by default, and a live drill showed both colliding there an hour before either noticed. Adds the rule that you never `git add -A` in a tree you do not exclusively own (that is how one session's commit silently absorbed another's work under a wrong message), and how to read a peer's silence from its ListAgents state, where `waiting` means blocked on user input and your message will not be processed until a human interacts.",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "author": {
     "name": "voitta-ai"
   },
