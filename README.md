@@ -38,6 +38,8 @@ environments and older Codex versions.
 
 | Name | Type | Hosts | Purpose |
 |---|---|---|---|
+| [linkedin-logged-in-browser-read](./skills/linkedin-logged-in-browser-read/SKILL.md) | skill | Claude, Codex | Audit a LinkedIn presence read-only through the logged-in browser when the API cannot read it: detail URLs, the admin-redirect probe, the app list |
+| [`linkedin-logged-in-browser-read` plugin](./plugins/linkedin-logged-in-browser-read/) | plugin | Claude, Codex | Single-skill plugin: linkedin-logged-in-browser-read |
 | [work-on-pr](./skills/work-on-pr/SKILL.md) | skill | Claude, Codex | Author-side PR iteration loop |
 | [review-pr-loop](./skills/review-pr-loop/SKILL.md) | skill | Claude, Codex | Reviewer-side PR iteration loop |
 | [codex-adversarial-pr-review](./skills/codex-adversarial-pr-review/SKILL.md) | skill | Claude, Codex | Post /codex:adversarial-review findings as a batched GitHub PR review (inline + out-of-diff rollup) |

@@ -189,7 +189,7 @@
     {
       "name": "spa-request-capture-and-block",
       "source": "./plugins/spa-request-capture-and-block/",
-      "description": "Capture the exact outbound request body a single-page app sends and block it before it leaves the browser: patch window.fetch AND XMLHttpRequest together (the XHR half is the one usually missed, so a fetch-only wrapper lets the request through), read the parsed payload off window, and disarm with a reload — including why a hash-route change does not remove the patch. For actions whose side effect costs credits or creates an irreversible record."
+      "description": "Capture the exact outbound request body a single-page app sends and block it before it leaves the browser: patch window.fetch AND XMLHttpRequest together (the XHR half is the one usually missed, so a fetch-only wrapper lets the request through), read the parsed payload off window, and disarm with a reload \u2014 including why a hash-route change does not remove the patch. For actions whose side effect costs credits or creates an irreversible record."
     },
     {
       "name": "us-federal-open-data-claim-verification",
@@ -455,6 +455,11 @@
       "name": "graphify-doc-corpus-canonical-ids",
       "source": "./plugins/graphify-doc-corpus-canonical-ids/",
       "description": "/graphify on a document corpus about a fixed entity set: canonical shared node ids across parallel subagent chunks, CSV detect patch, Gemini stub-output gate, JSON-key prune, forced export."
+    },
+    {
+      "name": "linkedin-logged-in-browser-read",
+      "source": "./plugins/linkedin-logged-in-browser-read/",
+      "description": "Audit a LinkedIn presence read-only through the logged-in browser when the API cannot read it: detail URLs, the admin-redirect probe, the app list."
     }
   ]
 }
