@@ -61,6 +61,54 @@ def find_xs():
     return retval
 
 
+def _sessions_dir():
+    retval = os.environ.get("CLAUDE_SESSIONS_DIR") or os.path.expanduser("~/.claude/sessions")
+    return retval
+
+
+def _roster():
+    """Live-session records from Claude Code's own registry: one JSON file per
+    session under ~/.claude/sessions/, carrying `name`, `sessionId` and
+    `messagingSocketPath`. This is the same source ListAgents names come from,
+    so resolving against it keeps the log keyed on the names a human sees.
+    Read-only, best-effort: a missing dir or a torn file reads as no entry."""
+    out = []
+    try:
+        entries = os.listdir(_sessions_dir())
+    except OSError:
+        return out
+    for entry in entries:
+        if not entry.endswith(".json"):
+            continue
+        try:
+            with open(os.path.join(_sessions_dir(), entry)) as f:
+                rec = json.load(f)
+        except (OSError, ValueError):
+            continue
+        if isinstance(rec, dict):
+            out.append(rec)
+    retval = out
+    return retval
+
+
+def resolve_peer(to):
+    """A `to` that is already a name passes through. A socket address -- the
+    shape a session gets when it replies by copying the incoming message's
+    `from="uds:/tmp/cc-socks/<pid>.sock"` attribute -- is looked up in the
+    roster, so the log says `-> hq-50` instead of `-> uds:/tmp/...sock`. An
+    address the roster cannot resolve is kept as-is: a wrong name is worse
+    than an ugly one."""
+    peer = to
+    if peer.startswith("uds:"):
+        sock = peer[len("uds:"):]
+        for rec in _roster():
+            if rec.get("messagingSocketPath") == sock and rec.get("name"):
+                retval = rec["name"]
+                return retval
+    retval = peer
+    return retval
+
+
 def read_payload():
     try:
         raw = sys.stdin.read()
@@ -83,8 +131,12 @@ def sender_name(payload):
     the same type (pinger, ponger) both logged as `general-purpose`, and a log
     where every line reads "general-purpose -> pinger" cannot tell who spoke.
     Fall back to the type when there is no name, which still groups a role.
-    Outside a subagent, fall through and let xs apply its own $XS_NAME /
-    $CMUX_TAB_TITLE resolution."""
+
+    A plain session -- no team, no subagent -- has none of those, and used to
+    fall through to xs's env-based guess, which in cmux lands on `ws:<uuid>`:
+    a workspace id, not a speaker. The payload always carries `session_id`,
+    and Claude Code's own session registry maps it to the session's ListAgents
+    name, so look there before giving up. $XS_NAME still overrides all."""
     explicit = os.environ.get("XS_NAME")
     if explicit:
         return explicit
@@ -93,7 +145,17 @@ def sender_name(payload):
         name = agent_id.split("@", 1)[0].strip()
         if name:
             return name
-    retval = payload.get("agent_type") or ""
+    agent_type = payload.get("agent_type") or ""
+    if agent_type:
+        retval = agent_type
+        return retval
+    session_id = payload.get("session_id") or ""
+    if session_id:
+        for rec in _roster():
+            if rec.get("sessionId") == session_id and rec.get("name"):
+                retval = rec["name"]
+                return retval
+    retval = ""
     return retval
 
 
@@ -164,6 +226,7 @@ def main():
     peer = REF_SUFFIX.sub("", (tool_input.get("to") or "").strip())
     if not peer:
         return 0
+    peer = resolve_peer(peer)
 
     kind, topic = parse_summary(tool_input)
     event = classify(tool_input, kind)

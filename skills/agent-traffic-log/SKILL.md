@@ -18,8 +18,8 @@ description: |
   of a ten-message exchange with no agent calling `xs log`. Ships `scripts/xs`
   (log, tail, recent, status, prune) and `scripts/xs-hook`.
 author: Claude Code
-version: 1.4.0
-date: 2026-08-26
+version: 1.5.0
+date: 2026-09-11
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-traffic-log/SKILL.md
 ---
@@ -108,7 +108,9 @@ xs prune --keep 5000
 
 Identity comes from `$XS_NAME`, else `$CMUX_TAB_TITLE`, else
 `$CMUX_WORKSPACE_NAME`, else a short workspace id. Set `XS_NAME` to the same
-name `ListAgents` shows and the log lines up with the address book.
+name `ListAgents` shows and the log lines up with the address book. When the
+hook (below) is doing the logging you rarely need any of these: it resolves
+names from Claude Code's own session registry.
 
 ## The pane
 
@@ -155,6 +157,25 @@ string, not a regex.
 run logged both teammates as `general-purpose` because the hook read only the
 type; two agents of one type are indistinguishable that way, so the name wins
 when it exists. `$XS_NAME` still overrides both.
+
+**Names for plain sessions, both directions.** A session that is neither a
+teammate nor a subagent has no `agent_id`, and used to fall through to the
+env-based guess -- in cmux that logs `ws:<uuid>`, a workspace, not a speaker.
+And a session that *replies* by copying the incoming `from="uds:/tmp/cc-socks/
+<pid>.sock"` attribute used to log a socket path as the recipient. The hook now
+resolves both against Claude Code's session registry (`~/.claude/sessions/
+*.json`, the same source `ListAgents` names come from): the payload's
+`session_id` names the sender, `messagingSocketPath` names a `uds:` recipient.
+Observed before the fix: a real two-session exchange logged as
+`ws:7862422F -> hq-50` and `ws:6D4B9D5E -> uds:/tmp/cc-socks/59961.sock` --
+half-blind in a log whose whole point is who spoke. An address the registry
+cannot resolve is kept verbatim: a wrong name is worse than an ugly one.
+`CLAUDE_SESSIONS_DIR` overrides the registry location (tests use it).
+
+**Do not pin the hook path.** If a settings entry or a wrapper points at the
+plugin cache, glob `~/.claude/plugins/cache/<mkt>/<plugin>/*/...` and take the
+highest version: cache dirs are per-version and prunable, and for a logger a
+dangling pinned path fails silently -- logging just stops.
 
 ### What it maps
 
