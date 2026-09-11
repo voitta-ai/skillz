@@ -1,0 +1,12 @@
+{
+  "name": "graphify-doc-corpus-canonical-ids",
+  "description": "/graphify on a document corpus about a fixed entity set: canonical shared node ids across parallel subagent chunks, CSV detect patch, Gemini stub-output gate, JSON-key prune, forced export.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}
