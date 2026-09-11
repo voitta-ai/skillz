@@ -1,7 +1,7 @@
 {
   "name": "agent-traffic-log",
   "description": "An append-only JSONL event log of agent-to-agent traffic plus a live pane over it, giving a fleet an org-wide view instead of N private conversations. No daemon and no lock: concurrent appends are safe because a single write of under PIPE_BUF bytes to an O_APPEND descriptor cannot interleave, verified at 24 concurrent writers producing 960 lines with zero torn. Ships scripts/xs with log, tail, recent, status (who is waiting on whom, derived from events rather than tracked), and prune. Includes the acceptance test that only a real team run can satisfy.",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "author": {
     "name": "voitta-ai"
   },
