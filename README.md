@@ -220,6 +220,8 @@ environments and older Codex versions.
 | [`cmux-runbook-in-sibling-tab` plugin](./plugins/cmux-runbook-in-sibling-tab/) | plugin | Claude, Codex | Single-skill plugin: cmux-runbook-in-sibling-tab |
 | [experimental-upstream-for-gated-integration-repo](./skills/experimental-upstream-for-gated-integration-repo/SKILL.md) | skill | Claude, Codex | Keep a high-velocity development loop alive when the repository you integrate into gains a merge gate you cannot satisfy and forking is disabled: experimental upstream, one reviewed fork-sync PR, pre-push guard, change-management issue framing |
 | [`experimental-upstream-for-gated-integration-repo` plugin](./plugins/experimental-upstream-for-gated-integration-repo/) | plugin | Claude, Codex | Single-skill plugin: experimental-upstream-for-gated-integration-repo |
+| [standalone-typecheck-repro](./skills/standalone-typecheck-repro/SKILL.md) | skill | Claude, Codex | Typecheck a TS change without installing a big monorepo: minimal standalone repro at the repo's pinned compiler, orig/broken/fixed variants, and exit-code checking so a crashed tool cannot read as a clean pass |
+| [`standalone-typecheck-repro` plugin](./plugins/standalone-typecheck-repro/) | plugin | Claude, Codex | Single-skill plugin: standalone-typecheck-repro |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
