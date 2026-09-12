@@ -1,0 +1,18 @@
+{
+  "name": "standalone-typecheck-repro",
+  "version": "1.0.0",
+  "description": "Typecheck a TypeScript change without installing a large monorepo's node_modules: rebuild a minimal standalone repro at the repo's pinned compiler version, run orig/broken/fixed variants, and check exit codes so a crashed tool cannot read as a clean pass.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "typescript",
+    "monorepo",
+    "tsc"
+  ],
+  "skills": "./skills/"
+}
