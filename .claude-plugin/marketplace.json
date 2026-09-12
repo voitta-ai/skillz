@@ -455,6 +455,11 @@
       "name": "graphify-doc-corpus-canonical-ids",
       "source": "./plugins/graphify-doc-corpus-canonical-ids/",
       "description": "/graphify on a document corpus about a fixed entity set: canonical shared node ids across parallel subagent chunks, CSV detect patch, Gemini stub-output gate, JSON-key prune, forced export."
+    },
+    {
+      "name": "standalone-typecheck-repro",
+      "source": "./plugins/standalone-typecheck-repro/",
+      "description": "Typecheck a TypeScript change without installing a large monorepo's node_modules: rebuild a minimal standalone repro at the repo's pinned compiler version, run orig/broken/fixed variants, and check exit codes so a crashed tool cannot read as a clean pass."
     }
   ]
 }
