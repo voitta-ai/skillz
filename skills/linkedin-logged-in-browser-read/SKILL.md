@@ -119,6 +119,14 @@ credentials.
   bottom, keep the "(current)" headline, switch sharing off, and check the
   sticky header after save.
 
+- Typing long text into LinkedIn's rich-text boxes through browser
+  automation can silently drop characters. Put the text on the system
+  clipboard and send a real Cmd-V instead, then check the field length
+  against the source. A company-page Save that follows an earlier save in
+  the same editor session can fail with "Another admin is trying to make
+  changes to this page at the same time as you" and redraw the form half
+  blank. Do a full reload, refill, and verify on a fresh load.
+
 ## References
 
 - Community Management overview, tiers and the closed `r_member_social`:
