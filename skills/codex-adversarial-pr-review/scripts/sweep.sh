@@ -156,14 +156,22 @@ review() {
   done
 }
 
+# Route by what is on disk, not by queue.tsv: leftover payloads from an
+# earlier round must stay postable after a later enumeration finds nothing
+# (a drained queue truncates queue.tsv to zero bytes, and rounds do not
+# always end aligned).
 post() {
-  [ -s "$OUT/queue.tsv" ] || { echo "no queue.tsv in $OUT; run review first" >&2; exit 2; }
-  cut -f1,2 "$OUT/queue.tsv" | sort -u | while IFS=$'\t' read -r host repo; do
-    local sub; sub=$(sub_dir "$host" "$repo")
+  local sub host repo found=0
+  for sub in "$OUT"/*/*; do
     [ -d "$sub/payloads" ] || continue
+    find "$sub/payloads" -name 'pr-*.json' -size +0 2>/dev/null | grep -q . || continue
+    found=1
+    host=$(basename "$(dirname "$sub")")
+    repo=$(basename "$sub"); repo=${repo//__//}
     echo "== $host $repo"
     GH_HOST=$host "$HERE/post-batch.sh" --repo "$repo" --out "$sub" $POSTFLAGS
   done
+  [ "$found" = 1 ] || echo "nothing to post under $OUT" >&2
 }
 
 case "$MODE" in
