@@ -111,6 +111,14 @@ credentials.
   detail URL stops returning text, screenshot it instead before concluding
   the section is empty.
 
+- If the audit turns into edits: LinkedIn's "Add a role" dialog has, below
+  the fold, an "Update your profile headline" radio that defaults to the new
+  role and a "Share with your network" toggle that defaults to On. Saving
+  without scrolling replaces the headline and notifies connections; skipping
+  the "share this update" modal afterwards undoes neither. Scroll to the
+  bottom, keep the "(current)" headline, switch sharing off, and check the
+  sticky header after save.
+
 ## References
 
 - Community Management overview, tiers and the closed `r_member_social`:
