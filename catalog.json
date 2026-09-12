@@ -68,7 +68,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Determine which caller sends traffic to which ALB listener rule, and how much, before flipping or retiring that rule. Use when: (1) you need to prove a listener rule is safe to change and are looking for a CloudWatch metric per rule — there isn't one, (2) you grouped ALB access logs by `matched_rule_priority` and the numbers look wrong or a single endpoint appears under two priorities, (3) several services share one credential so the ALB cannot tell them apart, (4) you must identify an unknown HTTP client seen only as a User-Agent in access logs, (5) `SHOW PARTITIONS` on an ALB-logs Athena table returns nothing, (6) a windowed total looks low, or the \"same\" query returns different counts on different days — the log bucket's S3 lifecycle expiry (often 3 days) silently truncates any longer window, so a \"weekly\" total is really a retention-window total. Core trap: `matched_rule_priority` is a POSITION, not an identity — inserting a listener rule renumbers every rule below it, so the same priority means different rules on either side of that deploy, and a query spanning the change silently mislabels everything. Attribute by `request_url` + `user_agent` instead, quote per-day rates, and report the window the data has (min/max date), not the one the WHERE clause asked for."
+      "summary": "Determine which caller sends traffic to which ALB listener rule, and how much, before flipping or retiring that rule. Use when: (1) you need to prove a listener rule is safe to change and are looking for a CloudWatch metric per rule \u2014 there isn't one, (2) you grouped ALB access logs by `matched_rule_priority` and the numbers look wrong or a single endpoint appears under two priorities, (3) several services share one credential so the ALB cannot tell them apart, (4) you must identify an unknown HTTP client seen only as a User-Agent in access logs, (5) `SHOW PARTITIONS` on an ALB-logs Athena table returns nothing, (6) a windowed total looks low, or the \"same\" query returns different counts on different days \u2014 the log bucket's S3 lifecycle expiry (often 3 days) silently truncates any longer window, so a \"weekly\" total is really a retention-window total. Core trap: `matched_rule_priority` is a POSITION, not an identity \u2014 inserting a listener rule renumbers every rule below it, so the same priority means different rules on either side of that deploy, and a query spanning the change silently mislabels everything. Attribute by `request_url` + `user_agent` instead, quote per-day rates, and report the window the data has (min/max date), not the one the WHERE clause asked for."
     },
     {
       "name": "archive-today-fetcher-hierarchy",
@@ -104,7 +104,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Diagnose Chrome's \"Your connection to this site is not secure\" on a major site (gmail.com, google.com, github.com) on a machine behind a corporate TLS-inspecting proxy (Zscaler, Netskope, Palo Alto, Blue Coat). Use when: (1) Chrome's site-info bubble shows the red triangle and \"You should not enter any sensitive information on this site\", (2) a CLI `openssl`/`curl` check of the same host looks perfectly clean and you cannot reproduce the browser's complaint, (3) you are about to tell someone their proxy is MITM-ing them. Covers the PAC-proxy blind spot in CLI checks, how to read the intercepted chain, and — critically — why a forged proxy certificate with zero SCTs is the NORMAL steady state and usually NOT the cause."
+      "summary": "Diagnose Chrome's \"Your connection to this site is not secure\" on a major site (gmail.com, google.com, github.com) on a machine behind a corporate TLS-inspecting proxy (Zscaler, Netskope, Palo Alto, Blue Coat). Use when: (1) Chrome's site-info bubble shows the red triangle and \"You should not enter any sensitive information on this site\", (2) a CLI `openssl`/`curl` check of the same host looks perfectly clean and you cannot reproduce the browser's complaint, (3) you are about to tell someone their proxy is MITM-ing them. Covers the PAC-proxy blind spot in CLI checks, how to read the intercepted chain, and \u2014 critically \u2014 why a forged proxy certificate with zero SCTs is the NORMAL steady state and usually NOT the cause."
     },
     {
       "name": "claude-ai-conversation-history-search",
@@ -296,6 +296,18 @@
       "summary": "Make agent-to-agent traffic visible to the human watching: a structured SendMessage envelope (kind + direction + topic in the summary field, plus a one-line header that survives raw transcripts) paired with a cmux sidebar status pill per workspace showing whether a session is waiting on a peer or owes one an answer. Covers why spawned teams are cross-workspace traffic by construction (tmux-compat maps a window to a workspace), why the pill key must not collide with cmux's own claude_code key, and the stale-pill failure mode plus every exit that must clear it."
     },
     {
+      "name": "cmux-runbook-in-sibling-tab",
+      "path": "skills/cmux-runbook-in-sibling-tab/SKILL.md",
+      "files": [
+        "scripts/cmux-step"
+      ],
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Drive a runbook one step at a time in a real terminal tab beside the agent's own cmux tab: an exit-code receipt per step via a step file + cmux wait-for (no screen scraping, no polling), irreversible or in-session-denied steps staged at the prompt for a human Enter and never fired through the keystroke channel. Ships scripts/cmux-step (open/run/stage/wait/show/close) and the YOLT rule that turns an agent's `cmux send-key enter` into a confirmation. Covers the escape-mangling trap in cmux send, retained wait-for signals, why a sibling tab does not satisfy 'quit every interactive session', and why a driven tab's output is still transcribed."
+    },
+    {
       "name": "cmux-search",
       "path": "skills/cmux-search/SKILL.md",
       "hosts": [
@@ -335,7 +347,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Run an adversarial Codex review against a GitHub PR and post its findings as a single batched PR review (inline comments + summary body), instead of letting them die in stdout. Use when: (1) you want `/codex:adversarial-review` output to land ON a pull request where the author can act on it, (2) you are the reviewer role in an agent-team loop (skillz#87) and need the review to close the loop with the developer agent, (3) you want a deterministic, scriptable reviewer rather than an LLM hand-posting comments, (4) you need to sweep a whole PR backlog and post one review per PR. Encodes the codex-companion `--json` call, the finding->diff-line mapping, the GitHub gotchas: inline comments are rejected (422) on lines not in the PR diff (out-of-diff findings are rolled up into the body), self-review forbids APPROVE/REQUEST_CHANGES (default COMMENT), low-confidence findings are demoted to a collapsed section, and a `--dry-run` payload is byte-for-byte the POST body so it can be saved, edited, and posted later without a second Codex pass — plus the recurring false-positive shapes (type-strictness on coerced config, \"missing attribution\" demanding a refactor, stale-branch mass-deletion artifacts) and degenerate-output shapes (plan-only \"zero findings\", quiet background-launch failure) to judge before posting."
+      "summary": "Run an adversarial Codex review against a GitHub PR and post its findings as a single batched PR review (inline comments + summary body), instead of letting them die in stdout. Use when: (1) you want `/codex:adversarial-review` output to land ON a pull request where the author can act on it, (2) you are the reviewer role in an agent-team loop (skillz#87) and need the review to close the loop with the developer agent, (3) you want a deterministic, scriptable reviewer rather than an LLM hand-posting comments, (4) you need to sweep a whole PR backlog and post one review per PR. Encodes the codex-companion `--json` call, the finding->diff-line mapping, the GitHub gotchas: inline comments are rejected (422) on lines not in the PR diff (out-of-diff findings are rolled up into the body), self-review forbids APPROVE/REQUEST_CHANGES (default COMMENT), low-confidence findings are demoted to a collapsed section, and a `--dry-run` payload is byte-for-byte the POST body so it can be saved, edited, and posted later without a second Codex pass \u2014 plus the recurring false-positive shapes (type-strictness on coerced config, \"missing attribution\" demanding a refactor, stale-branch mass-deletion artifacts) and degenerate-output shapes (plan-only \"zero findings\", quiet background-launch failure) to judge before posting."
     },
     {
       "name": "codex-hook-wire-schema-from-binary",
@@ -361,7 +373,25 @@
       "hosts": [
         "codex"
       ],
-      "summary": "Run the end-of-task retrospective that Codex's `Stop` and `UserPromptSubmit` hooks demand, and decide what the session actually produced. Most turns end with `No reusable learning.` Of the rest, most are **memory** — a single cause->fix, an API gotcha, a config detail — and must NOT become a `SKILL.md`; only a repeatable procedure does. Use when a `Stop` hook fires at end-of-task, when a debugging-heavy session ends, or when the user asks \"what did we learn?\". Covers the four gates (discovery cost, recurrence, verifiable trigger, verified result), the skill-vs-memory classification, the install-location choice, and the `No reusable learning.` escape hatch. For an explicitly invoked retrospective, and for the wiring that promotes a skill into the `voitta-ai/skillz` catalog, see `claudeception` — this skill defers to it rather than restating it."
+      "summary": "Run the end-of-task retrospective that Codex's `Stop` and `UserPromptSubmit` hooks demand, and decide what the session actually produced. Most turns end with `No reusable learning.` Of the rest, most are **memory** \u2014 a single cause->fix, an API gotcha, a config detail \u2014 and must NOT become a `SKILL.md`; only a repeatable procedure does. Use when a `Stop` hook fires at end-of-task, when a debugging-heavy session ends, or when the user asks \"what did we learn?\". Covers the four gates (discovery cost, recurrence, verifiable trigger, verified result), the skill-vs-memory classification, the install-location choice, and the `No reusable learning.` escape hatch. For an explicitly invoked retrospective, and for the wiring that promotes a skill into the `voitta-ai/skillz` catalog, see `claudeception` \u2014 this skill defers to it rather than restating it."
+    },
+    {
+      "name": "credential-redactor-audit",
+      "path": "skills/credential-redactor-audit/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Audit a credential-redaction layer you own: find the holes a normal test suite misses (fixtures that hide the bug, patterns that bypass the value guard, dropped overlap spans, non-idempotence, backwards allow-lists, fail-open imports), then scrub what already leaked."
+    },
+    {
+      "name": "experimental-upstream-for-gated-integration-repo",
+      "path": "skills/experimental-upstream-for-gated-integration-repo/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Keep a high-velocity development loop alive when the repository you integrate into gains a merge gate you cannot satisfy - required reviews, conversation resolution, lost admin - and forking is disabled: an experimental upstream repo, one reviewed fork-sync PR into the integration repo, a pre-push guard, and the issue framing that keeps it change management rather than a revolt."
     },
     {
       "name": "gh-pr-merge-delete-branch-closes-dependent-pr",
@@ -380,6 +410,15 @@
         "codex"
       ],
       "summary": "Migrate a gist's full revision history into a real git repo, preserving commits."
+    },
+    {
+      "name": "git-default-branch-detection",
+      "path": "skills/git-default-branch-detection/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Determine a repo's actual default branch: init.defaultBranch is a preference for repos that do not exist yet, not a fact about this one, and origin/HEAD is often absent; treat every source as a candidate verified against a real ref."
     },
     {
       "name": "git-graft-worktree-onto-remote",
@@ -433,7 +472,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Tell a broken workflow file apart from a GitHub Actions outage, and get a PR unstuck without bypassing branch protection. Use when: (1) a workflow run's conclusion is `startup_failure` and you are about to debug YAML you did not change, (2) `gh pr checks` reports \"no checks reported on the '<branch>' branch\" minutes after opening a PR, (3) `commits/<sha>/check-runs` shows a check stuck `queued` while the run itself is already `completed`, (4) `gh run rerun <id>` refuses with \"This workflow run cannot be retried\", (5) a PR sits at `mergeStateStatus: BLOCKED` with `mergeable: MERGEABLE` and a required check that has never reported, (6) you are tempted to force-merge or push an empty commit to make CI notice a PR, (7) a push, force-push, or merge produced NO run at all — `actions/runs` has nothing for the new sha (a dropped push event, not a failed run), (8) close/reopen retriggered nothing because the workflow is `on: [push]`, not `on: pull_request`, (9) `gh workflow run` refuses with HTTP 422 \"Workflow does not have 'workflow_dispatch' trigger\". Covers the three-signal test that identifies an infra failure in one minute, the githubstatus API one-liner that confirms it, the dropped-event variant where no run exists, a retrigger matrix keyed by the workflow's trigger type, why an apply-on-push repo needs `workflow_dispatch` as a recovery path, and why waiting beats an admin bypass."
+      "summary": "Tell a broken workflow file apart from a GitHub Actions outage, and get a PR unstuck without bypassing branch protection. Use when: (1) a workflow run's conclusion is `startup_failure` and you are about to debug YAML you did not change, (2) `gh pr checks` reports \"no checks reported on the '<branch>' branch\" minutes after opening a PR, (3) `commits/<sha>/check-runs` shows a check stuck `queued` while the run itself is already `completed`, (4) `gh run rerun <id>` refuses with \"This workflow run cannot be retried\", (5) a PR sits at `mergeStateStatus: BLOCKED` with `mergeable: MERGEABLE` and a required check that has never reported, (6) you are tempted to force-merge or push an empty commit to make CI notice a PR, (7) a push, force-push, or merge produced NO run at all \u2014 `actions/runs` has nothing for the new sha (a dropped push event, not a failed run), (8) close/reopen retriggered nothing because the workflow is `on: [push]`, not `on: pull_request`, (9) `gh workflow run` refuses with HTTP 422 \"Workflow does not have 'workflow_dispatch' trigger\". Covers the three-signal test that identifies an infra failure in one minute, the githubstatus API one-liner that confirms it, the dropped-event variant where no run exists, a retrigger matrix keyed by the workflow's trigger type, why an apply-on-push repo needs `workflow_dispatch` as a recovery path, and why waiting beats an admin bypass."
     },
     {
       "name": "github-oidc-immutable-subject-claim",
@@ -443,6 +482,18 @@
         "codex"
       ],
       "summary": "Diagnose a GitHub Actions job that cannot assume an AWS role by OIDC (`Not authorized to perform sts:AssumeRoleWithWebIdentity`) while every sibling repo in the same org assumes the same role fine -- GitHub now issues an immutable `sub` (`repo:ORG@ORG_ID/REPO@REPO_ID`) that a `repo:ORG/*` trust policy cannot match, per repo and depending on when it was created"
+    },
+    {
+      "name": "graphify-doc-corpus-canonical-ids",
+      "path": "skills/graphify-doc-corpus-canonical-ids/SKILL.md",
+      "files": [
+        "scripts/merge_chunks.py",
+        "scripts/prune_alias.py"
+      ],
+      "hosts": [
+        "claude"
+      ],
+      "summary": "Run /graphify on a document corpus about a fixed entity set: canonical shared node ids across parallel subagent chunks, CSV detect patch, Gemini stub-output gate, JSON-key prune, forced export"
     },
     {
       "name": "istio-multicluster-endpointless-mesh-service",
@@ -463,6 +514,15 @@
       "summary": "Diagnose and undo a login-environment -> launchd sync that was run from inside a multiplexer pane or an AI-agent session, so PROMPT_COMMAND, CMUX_*, CLAUDECODE/CLAUDE_CODE_*, NODE_OPTIONS and TERMINFO became the user-domain environment of every Spotlight-launched app and every launchd service bootstrapped afterwards. Detection signature (`-bash: _cmux_prompt_command: command not found` in a plain terminal; leaked names in `launchctl print`), who is immune (multiplexer panes) and who is not (Spotlight apps, services), the SKIP denylist, the purge, and the bootout + bootstrap reload order with its I/O-error race."
     },
     {
+      "name": "linkedin-logged-in-browser-read",
+      "path": "skills/linkedin-logged-in-browser-read/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Audit a LinkedIn presence read-only through the logged-in browser when the API cannot read it: detail URLs, the admin-redirect probe, the app list."
+    },
+    {
       "name": "litellm-custom-provider-dispatch-order",
       "path": "skills/litellm-custom-provider-dispatch-order/SKILL.md",
       "hosts": [
@@ -479,6 +539,15 @@
         "codex"
       ],
       "summary": "Serve one LLM call from an ordered list of vendors so a rate limit, a dead key, or an out-of-credits account fails over instead of failing the request. Covers the ordered-config to LiteLLM Router mapping, which Router knobs earn their keep (cooldown_time, allowed_fails, context_window_fallbacks, per-deployment budgets) and which to leave alone, the invisible dead fallback that reads as random flakiness, what must not be waterfalled, and how to prove failover actually happens."
+    },
+    {
+      "name": "macos-sandbox-exec-agent-command-confinement",
+      "path": "skills/macos-sandbox-exec-agent-command-confinement/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Confine agent-run shell commands to one tree with macOS sandbox-exec: reads, writes, symlinks, runtime paths."
     },
     {
       "name": "macos-sparkle-update-quarantine-relaunch",
@@ -550,7 +619,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Audit and clean up personal `~/.claude/skills/` copies that duplicate or shadow skills a plugin bundle also ships, so sessions stop silently running stale versions. Use when: (1) a skill you know was updated upstream behaves like an old version (e.g. it ran at 4.0.0 while the installed bundle ships 4.1.0), (2) you are asked \"can I just delete the local copy?\" of a skill that also exists in a plugin, (3) `~/.claude/skills/` has accumulated copies of skills that later moved into a plugin bundle, (4) a skill appears in the session's skill list bare (no `plugin:` prefix) and you need to know which file on disk that actually is, (5) after installing or updating a bundle plugin you want to retire the loose per-skill installs it replaced. Key trap: `~/.claude/plugins/marketplaces/<mkt>/` is the fetched marketplace source, NOT loaded — only plugins present under `~/.claude/plugins/cache/` serve skills, and a bundle can turn out not installed at all, leaving the personal copies as the sole (stale) provider. Covers the audit commands (version drift table, two-way content diff against the cache copy), the delete / keep decision tree (byte-identical, version-behind with superseded wording, genuine unpushed fork), and the tar backup before any rm."
+      "summary": "Audit and clean up personal `~/.claude/skills/` copies that duplicate or shadow skills a plugin bundle also ships, so sessions stop silently running stale versions. Use when: (1) a skill you know was updated upstream behaves like an old version (e.g. it ran at 4.0.0 while the installed bundle ships 4.1.0), (2) you are asked \"can I just delete the local copy?\" of a skill that also exists in a plugin, (3) `~/.claude/skills/` has accumulated copies of skills that later moved into a plugin bundle, (4) a skill appears in the session's skill list bare (no `plugin:` prefix) and you need to know which file on disk that actually is, (5) after installing or updating a bundle plugin you want to retire the loose per-skill installs it replaced. Key trap: `~/.claude/plugins/marketplaces/<mkt>/` is the fetched marketplace source, NOT loaded \u2014 only plugins present under `~/.claude/plugins/cache/` serve skills, and a bundle can turn out not installed at all, leaving the personal copies as the sole (stale) provider. Covers the audit commands (version drift table, two-way content diff against the cache copy), the delete / keep decision tree (byte-identical, version-behind with superseded wording, genuine unpushed fork), and the tar backup before any rm."
     },
     {
       "name": "playwright-mcp-upload-hidden-file-input",
@@ -671,7 +740,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Capture the exact outbound request body a single-page app sends, and stop it before it reaches the server. Use when: (1) you need the real JSON payload of an action (export, purchase, submit) to compare against an expected fix, (2) triggering the action for real would cost money, credits, or create a record you cannot undo, (3) a fetch-only interceptor \"did not fire\" and the request went out anyway, (4) you must prove which of two endpoints an action actually posts to, (5) you are verifying a frontend fix by observing behaviour rather than reading the bundle, (6) the harness is installed but captures nothing on an Angular/zone.js app — prototype patches are bypassed and you need the constructor-level swap plus a pre-flight proof before any risky click, (7) you must prove a submission actually created something, not just that a request left the browser. Covers patching window.fetch AND XMLHttpRequest together (the XHR half is the one usually missed), the constructor swap for zone.js apps, the pre-flight gate, matcher scope (block the commit call, never the dialog's own reads), recording responses, blocking cleanly, and disarming afterwards — including why a hash-route navigation does not remove the patch."
+      "summary": "Capture the exact outbound request body a single-page app sends, and stop it before it reaches the server. Use when: (1) you need the real JSON payload of an action (export, purchase, submit) to compare against an expected fix, (2) triggering the action for real would cost money, credits, or create a record you cannot undo, (3) a fetch-only interceptor \"did not fire\" and the request went out anyway, (4) you must prove which of two endpoints an action actually posts to, (5) you are verifying a frontend fix by observing behaviour rather than reading the bundle, (6) the harness is installed but captures nothing on an Angular/zone.js app \u2014 prototype patches are bypassed and you need the constructor-level swap plus a pre-flight proof before any risky click, (7) you must prove a submission actually created something, not just that a request left the browser. Covers patching window.fetch AND XMLHttpRequest together (the XHR half is the one usually missed), the constructor swap for zone.js apps, the pre-flight gate, matcher scope (block the commit call, never the dialog's own reads), recording responses, blocking cleanly, and disarming afterwards \u2014 including why a hash-route navigation does not remove the patch."
     },
     {
       "name": "spring-profile-config-overlay-dedupe",
@@ -782,66 +851,6 @@
         "codex"
       ],
       "summary": "Author-side PR iteration loop."
-    },
-    {
-      "name": "credential-redactor-audit",
-      "path": "skills/credential-redactor-audit/SKILL.md",
-      "hosts": [
-        "claude",
-        "codex"
-      ],
-      "summary": "Audit a credential-redaction layer you own: find the holes a normal test suite misses (fixtures that hide the bug, patterns that bypass the value guard, dropped overlap spans, non-idempotence, backwards allow-lists, fail-open imports), then scrub what already leaked."
-    },
-    {
-      "name": "git-default-branch-detection",
-      "path": "skills/git-default-branch-detection/SKILL.md",
-      "hosts": [
-        "claude",
-        "codex"
-      ],
-      "summary": "Determine a repo's actual default branch: init.defaultBranch is a preference for repos that do not exist yet, not a fact about this one, and origin/HEAD is often absent; treat every source as a candidate verified against a real ref."
-    },
-    {
-      "name": "macos-sandbox-exec-agent-command-confinement",
-      "path": "skills/macos-sandbox-exec-agent-command-confinement/SKILL.md",
-      "hosts": [
-        "claude",
-        "codex"
-      ],
-      "summary": "Confine agent-run shell commands to one tree with macOS sandbox-exec: reads, writes, symlinks, runtime paths."
-    },
-    {
-      "name": "cmux-runbook-in-sibling-tab",
-      "path": "skills/cmux-runbook-in-sibling-tab/SKILL.md",
-      "files": [
-        "scripts/cmux-step"
-      ],
-      "hosts": [
-        "claude",
-        "codex"
-      ],
-      "summary": "Drive a runbook one step at a time in a real terminal tab beside the agent's own cmux tab: an exit-code receipt per step via a step file + cmux wait-for (no screen scraping, no polling), irreversible or in-session-denied steps staged at the prompt for a human Enter and never fired through the keystroke channel. Ships scripts/cmux-step (open/run/stage/wait/show/close) and the YOLT rule that turns an agent's `cmux send-key enter` into a confirmation. Covers the escape-mangling trap in cmux send, retained wait-for signals, why a sibling tab does not satisfy 'quit every interactive session', and why a driven tab's output is still transcribed."
-    },
-    {
-      "name": "experimental-upstream-for-gated-integration-repo",
-      "path": "skills/experimental-upstream-for-gated-integration-repo/SKILL.md",
-      "hosts": [
-        "claude",
-        "codex"
-      ],
-      "summary": "Keep a high-velocity development loop alive when the repository you integrate into gains a merge gate you cannot satisfy - required reviews, conversation resolution, lost admin - and forking is disabled: an experimental upstream repo, one reviewed fork-sync PR into the integration repo, a pre-push guard, and the issue framing that keeps it change management rather than a revolt."
-    },
-    {
-      "name": "graphify-doc-corpus-canonical-ids",
-      "path": "skills/graphify-doc-corpus-canonical-ids/SKILL.md",
-      "files": [
-        "scripts/merge_chunks.py",
-        "scripts/prune_alias.py"
-      ],
-      "hosts": [
-        "claude"
-      ],
-      "summary": "Run /graphify on a document corpus about a fixed entity set: canonical shared node ids across parallel subagent chunks, CSV detect patch, Gemini stub-output gate, JSON-key prune, forced export"
     }
   ],
   "collections": [
@@ -897,6 +906,7 @@
         "cmux-claude-codex-cross-runtime-messaging",
         "cmux-config-silent-drop-triage",
         "cmux-cross-session-visibility",
+        "cmux-runbook-in-sibling-tab",
         "cmux-search",
         "cmux-session-restore-forensics",
         "cmux-session-self-identity",
@@ -904,6 +914,7 @@
         "codex-hook-wire-schema-from-binary",
         "confluence-rovo-mcp-readonly-rest-fallback",
         "credential-redactor-audit",
+        "experimental-upstream-for-gated-integration-repo",
         "gh-pr-merge-delete-branch-closes-dependent-pr",
         "gist-to-repo-migration",
         "git-default-branch-detection",
@@ -914,8 +925,10 @@
         "git-worktree-convention",
         "github-actions-startup-failure-triage",
         "github-oidc-immutable-subject-claim",
+        "graphify-doc-corpus-canonical-ids",
         "istio-multicluster-endpointless-mesh-service",
         "launchd-env-sync-session-leak",
+        "linkedin-logged-in-browser-read",
         "litellm-custom-provider-dispatch-order",
         "llm-vendor-waterfall",
         "macos-sandbox-exec-agent-command-confinement",
@@ -949,10 +962,7 @@
         "us-federal-open-data-claim-verification",
         "verbatim-social-post-retrieval",
         "wordpress-com-publish",
-        "work-on-pr",
-        "cmux-runbook-in-sibling-tab",
-        "experimental-upstream-for-gated-integration-repo",
-        "graphify-doc-corpus-canonical-ids"
+        "work-on-pr"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -1705,7 +1715,7 @@
       "skills": [
         "spa-request-capture-and-block"
       ],
-      "summary": "Capture the exact outbound request body a single-page app sends and block it before it leaves the browser: patch window.fetch AND XMLHttpRequest together (the XHR half is the one usually missed, so a fetch-only wrapper lets the request through), read the parsed payload off window, and disarm with a reload — including why a hash-route change does not remove the patch. For actions whose side effect costs credits or creates an irreversible record."
+      "summary": "Capture the exact outbound request body a single-page app sends and block it before it leaves the browser: patch window.fetch AND XMLHttpRequest together (the XHR half is the one usually missed, so a fetch-only wrapper lets the request through), read the parsed payload off window, and disarm with a reload \u2014 including why a hash-route change does not remove the patch. For actions whose side effect costs credits or creates an irreversible record."
     },
     {
       "name": "spring-profile-config-overlay-dedupe",
@@ -2137,6 +2147,19 @@
         "graphify-doc-corpus-canonical-ids"
       ],
       "summary": "Single-skill plugin: graphify-doc-corpus-canonical-ids."
+    },
+    {
+      "name": "linkedin-logged-in-browser-read",
+      "claude_manifest": "plugins/linkedin-logged-in-browser-read/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/linkedin-logged-in-browser-read/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "linkedin-logged-in-browser-read"
+      ],
+      "summary": "Single-skill plugin: linkedin-logged-in-browser-read."
     }
   ],
   "defaults": {
