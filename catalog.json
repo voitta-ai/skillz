@@ -842,6 +842,15 @@
         "claude"
       ],
       "summary": "Run /graphify on a document corpus about a fixed entity set: canonical shared node ids across parallel subagent chunks, CSV detect patch, Gemini stub-output gate, JSON-key prune, forced export"
+    },
+    {
+      "name": "standalone-typecheck-repro",
+      "path": "skills/standalone-typecheck-repro/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Typecheck a TS change without installing a big monorepo: minimal standalone repro with the repo's pinned compiler, orig/broken/fixed variants, and exit-code checking so a crashed tool cannot read as a clean pass"
     }
   ],
   "collections": [
@@ -952,7 +961,8 @@
         "work-on-pr",
         "cmux-runbook-in-sibling-tab",
         "experimental-upstream-for-gated-integration-repo",
-        "graphify-doc-corpus-canonical-ids"
+        "graphify-doc-corpus-canonical-ids",
+        "standalone-typecheck-repro"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2137,6 +2147,21 @@
         "graphify-doc-corpus-canonical-ids"
       ],
       "summary": "Single-skill plugin: graphify-doc-corpus-canonical-ids."
+    },
+    {
+      "name": "standalone-typecheck-repro",
+      "claude_manifest": "plugins/standalone-typecheck-repro/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/standalone-typecheck-repro/.codex-plugin/plugin.json",
+      "claude_marketplace": ".claude-plugin/marketplace.json",
+      "codex_marketplace": ".codex-plugin/marketplace.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "standalone-typecheck-repro"
+      ],
+      "summary": "Single-skill plugin: standalone-typecheck-repro"
     }
   ],
   "defaults": {
