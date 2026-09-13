@@ -226,6 +226,8 @@ environments and older Codex versions.
 | [`linkedin-logged-in-browser-read` plugin](./plugins/linkedin-logged-in-browser-read/) | plugin | Claude, Codex | Single-skill plugin: linkedin-logged-in-browser-read |
 | [grafana-terraform-folder-reorg-shared-workspace](./skills/grafana-terraform-folder-reorg-shared-workspace/SKILL.md) | skill | Claude, Codex | Reorganise Grafana folders with terraform when several states share one workspace: API-create + `import` shared folders, in-place moves (only `uid` is ForceNew), retire a folder in two applies (a same-apply destroy cascades the dashboards), `-target` skips imports, pin data-source uids so dashboards do not plan as replaced |
 | [`grafana-terraform-folder-reorg-shared-workspace` plugin](./plugins/grafana-terraform-folder-reorg-shared-workspace/) | plugin | Claude, Codex | Single-skill plugin: grafana-terraform-folder-reorg-shared-workspace |
+| [oauth-mint-counting-passthrough-proxy](./skills/oauth-mint-counting-passthrough-proxy/SKILL.md) | skill | Claude, Codex | Count OAuth2 client-credentials token mints end to end by routing the config-driven token endpoint through a counting pass-through proxy started in the spec; proves gateway 401/200/refresh and N-calls-one-mint in one run. |
+| [`oauth-mint-counting-passthrough-proxy` plugin](./plugins/oauth-mint-counting-passthrough-proxy/) | plugin | Claude, Codex | Single-skill plugin: oauth-mint-counting-passthrough-proxy |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
