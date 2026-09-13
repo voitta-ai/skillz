@@ -232,6 +232,8 @@ environments and older Codex versions.
 | [`cmux-tmux-compat-gap-probe` plugin](./plugins/cmux-tmux-compat-gap-probe/) | plugin | Claude, Codex | Single-skill plugin: cmux-tmux-compat-gap-probe |
 | [git-rewrite-does-not-unpublish-orphaned-commits](./skills/git-rewrite-does-not-unpublish-orphaned-commits/SKILL.md) | skill | Claude, Codex | A force-push moves a ref, it does not delete objects; GitHub keeps serving orphaned commits by SHA, so a clean `git log` is not evidence |
 | [`git-rewrite-does-not-unpublish-orphaned-commits` plugin](./plugins/git-rewrite-does-not-unpublish-orphaned-commits/) | plugin | Claude, Codex | Single-skill plugin: git-rewrite-does-not-unpublish-orphaned-commits |
+| [cloudwatch-list-metrics-recency-window-hides-history](./skills/cloudwatch-list-metrics-recency-window-hides-history/SKILL.md) | skill | Claude, Codex | `list-metrics` returns only metrics with datapoints in roughly the last two weeks, so absence from it is not absence of history |
+| [`cloudwatch-list-metrics-recency-window-hides-history` plugin](./plugins/cloudwatch-list-metrics-recency-window-hides-history/) | plugin | Claude, Codex | Single-skill plugin: cloudwatch-list-metrics-recency-window-hides-history |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries

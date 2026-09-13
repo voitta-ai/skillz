@@ -899,6 +899,15 @@
         "codex"
       ],
       "summary": "Reach a genuinely clean public repo after sensitive content was already pushed. A force-push moves a ref; it does not delete objects, and GitHub keeps serving the orphaned commits by SHA. Covers the API call that proves the old blob is still retrievable, why a clean local fsck and a clean remote tree are not evidence, rename-plus-recreate as a no-extra-scope substitute for deletion when the token lacks delete_repo, and the fresh repository id as the property that actually matters."
+    },
+    {
+      "name": "cloudwatch-list-metrics-recency-window-hides-history",
+      "path": "skills/cloudwatch-list-metrics-recency-window-hides-history/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Enumerate what a CloudWatch metric has ever reported, given that list-metrics only returns metrics with datapoints in roughly the last two weeks. Covers a verified case of a status code with real history absent from the listing, the exact-dimension-match trap where an under-specified query returns empty rather than erroring, one symbol carrying many dimension sets on Kubernetes, and the live-control pattern that tells a broken query apart from a dead code path."
     }
   ],
   "collections": [
@@ -1015,7 +1024,8 @@
         "grafana-terraform-folder-reorg-shared-workspace",
         "oauth-mint-counting-passthrough-proxy",
         "cmux-tmux-compat-gap-probe",
-        "git-rewrite-does-not-unpublish-orphaned-commits"
+        "git-rewrite-does-not-unpublish-orphaned-commits",
+        "cloudwatch-list-metrics-recency-window-hides-history"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2280,6 +2290,19 @@
         "git-rewrite-does-not-unpublish-orphaned-commits"
       ],
       "summary": "Single-skill plugin: git-rewrite-does-not-unpublish-orphaned-commits."
+    },
+    {
+      "name": "cloudwatch-list-metrics-recency-window-hides-history",
+      "claude_manifest": "plugins/cloudwatch-list-metrics-recency-window-hides-history/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/cloudwatch-list-metrics-recency-window-hides-history/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "cloudwatch-list-metrics-recency-window-hides-history"
+      ],
+      "summary": "Single-skill plugin: cloudwatch-list-metrics-recency-window-hides-history."
     }
   ],
   "defaults": {

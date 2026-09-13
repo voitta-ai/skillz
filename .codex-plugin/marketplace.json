@@ -485,6 +485,11 @@
       "name": "git-rewrite-does-not-unpublish-orphaned-commits",
       "source": "./plugins/git-rewrite-does-not-unpublish-orphaned-commits/",
       "description": "Force-push does not unpublish; orphaned commits stay served by SHA."
+    },
+    {
+      "name": "cloudwatch-list-metrics-recency-window-hides-history",
+      "source": "./plugins/cloudwatch-list-metrics-recency-window-hides-history/",
+      "description": "list-metrics is a 14-day view, not a catalog; absence is not absence."
     }
   ]
 }
