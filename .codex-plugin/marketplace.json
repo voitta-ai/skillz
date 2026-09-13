@@ -465,6 +465,11 @@
       "name": "linkedin-logged-in-browser-read",
       "source": "./plugins/linkedin-logged-in-browser-read/",
       "description": "Audit a LinkedIn presence read-only through the logged-in browser when the API cannot read it: detail URLs, the admin-redirect probe, the app list."
+    },
+    {
+      "name": "grafana-terraform-folder-reorg-shared-workspace",
+      "source": "./plugins/grafana-terraform-folder-reorg-shared-workspace/",
+      "description": "Single-skill plugin: grafana-terraform-folder-reorg-shared-workspace."
     }
   ]
 }
