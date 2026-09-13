@@ -490,6 +490,11 @@
       "name": "cloudwatch-list-metrics-recency-window-hides-history",
       "source": "./plugins/cloudwatch-list-metrics-recency-window-hides-history/",
       "description": "list-metrics is a 14-day view, not a catalog; absence is not absence."
+    },
+    {
+      "name": "jacoco-class-id-mismatch-warns-then-succeeds",
+      "source": "./plugins/jacoco-class-id-mismatch-warns-then-succeeds/",
+      "description": "JaCoCo class-id mismatch warns then succeeds; changed classes read zero."
     }
   ]
 }
