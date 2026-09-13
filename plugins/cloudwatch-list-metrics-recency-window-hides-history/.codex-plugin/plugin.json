@@ -1,0 +1,19 @@
+{
+  "name": "cloudwatch-list-metrics-recency-window-hides-history",
+  "version": "1.0.0",
+  "description": "list-metrics is a 14-day view, not a catalog; absence is not absence.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "aws",
+    "cloudwatch",
+    "metrics",
+    "observability"
+  ],
+  "skills": "./skills/"
+}
