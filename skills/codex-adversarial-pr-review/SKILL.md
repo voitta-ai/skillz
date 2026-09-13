@@ -20,7 +20,7 @@ description: |
   degenerate-output shapes (plan-only "zero findings", quiet background-launch
   failure) to judge before posting.
 author: Claude Code
-version: 1.5.2
+version: 1.6.0
 date: 2026-08-24
 source: https://github.com/voitta-ai/skillz
 source_file: skills/codex-adversarial-pr-review/SKILL.md
@@ -228,6 +228,38 @@ Posted payloads move to `OUT/posted/pr-N.<sha>.json`. That is what lets the
 next sweep review the same PR again: `batch-review.sh` skips a PR whose
 payload exists, and a follow-up round needs a fresh one.
 
+### Driving a multi-hour sweep from an agent session
+
+A full sweep is hours of wall clock under a harness that restarts, loses
+track of background tasks, and sometimes kills them. Rules proven over a
+four-round, 158-review run:
+
+- **Post before you resume.** Posting removes you from
+  `requested_reviewers` and advances your last-review time, so a fresh
+  enumeration subtracts exactly what was posted. Resume first and the new
+  queue re-lists PRs whose payloads the posting pass is about to archive -
+  the batch would review them twice.
+- **A "killed"/"stopped" task notice is a claim about tracking, not about
+  processes.** Verify with pgrep scoped to the state dir before acting: the
+  tree can survive as orphans (seen twice in one run, once still writing
+  payloads at full speed). If it survived, do nothing - a relaunch would
+  twin it. Same-dir state makes an undetected twin mostly harmless (the
+  non-empty-payload skip), but two trees is still doubled spend.
+- **Scope everything to the state dir, never the script name.** Liveness
+  checks, kills, and monitors that match on script names read one run's
+  fork-subshells and round-robin workers as many runs, keep "watching your
+  run" while only a stranger's lives, and kill the survivor along with the
+  loser. The argv carries `--out`; match on that. The multi-session half of
+  this lives in `parallel-agent-session-collisions`.
+- **Empty is not missing.** A drained queue is a zero-byte `queue.tsv`, and
+  `[ -s ]` reads that as "no queue at all" - the bug fixed in `post` at
+  1.5.2, and the same conflation makes a progress monitor report a stalled
+  enumeration when the queue is legitimately empty. Branch on existence and
+  on row count separately.
+- **Repeated external kills: the latest signal wins.** Resume on an
+  explicit instruction; after a kill, hold and report rather than
+  relaunching into what may be a deliberate stop.
+
 ### Judge the findings before you post them
 
 Adversarial framing produces confident, well-written, wrong findings, and
@@ -285,6 +317,14 @@ instead.
 Spot-check at least every `critical` finding against the existing tree before
 posting; drop the bad ones with the `jq` filter above. Posting a wrong critical
 costs the author more time than the review saves.
+
+Expectation at scale: adversarial framing almost never returns `approve` on
+a first pass. One 158-review run produced zero approvals in round one and
+six in later rounds - every one on a PR whose author had addressed the
+previous round's comments - while roughly 70% of round-one payloads were
+`needs-attention` with no findings at or above the confidence floor.
+Budget judgment time for the inline minority, and treat the verdict-only
+majority as a posting-policy choice, not as individual review failures.
 
 Three more shapes, all seen on agent-authored PRs in bulk sweeps:
 
