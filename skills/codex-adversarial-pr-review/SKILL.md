@@ -20,7 +20,7 @@ description: |
   degenerate-output shapes (plan-only "zero findings", quiet background-launch
   failure) to judge before posting.
 author: Claude Code
-version: 1.5.1
+version: 1.5.2
 date: 2026-08-24
 source: https://github.com/voitta-ai/skillz
 source_file: skills/codex-adversarial-pr-review/SKILL.md
@@ -219,6 +219,10 @@ threshold you chose. `--dry-run` prints `would post N as APPROVE`, so the
 decision is visible before anything goes out. Self-review still cannot
 approve (gotcha 3), so leave the flag off when the posting identity is the
 author.
+
+`post` routes by the payload directories on disk, not by `queue.tsv`, so
+payloads left over from an earlier round stay postable even after a later
+enumeration finds an empty queue.
 
 Posted payloads move to `OUT/posted/pr-N.<sha>.json`. That is what lets the
 next sweep review the same PR again: `batch-review.sh` skips a PR whose
