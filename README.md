@@ -222,6 +222,8 @@ environments and older Codex versions.
 | [`experimental-upstream-for-gated-integration-repo` plugin](./plugins/experimental-upstream-for-gated-integration-repo/) | plugin | Claude, Codex | Single-skill plugin: experimental-upstream-for-gated-integration-repo |
 | [standalone-typecheck-repro](./skills/standalone-typecheck-repro/SKILL.md) | skill | Claude, Codex | Typecheck a TS change without installing a big monorepo: minimal standalone repro at the repo's pinned compiler, orig/broken/fixed variants, and exit-code checking so a crashed tool cannot read as a clean pass |
 | [`standalone-typecheck-repro` plugin](./plugins/standalone-typecheck-repro/) | plugin | Claude, Codex | Single-skill plugin: standalone-typecheck-repro |
+| [linkedin-logged-in-browser-read](./skills/linkedin-logged-in-browser-read/SKILL.md) | skill | Claude, Codex | Audit a LinkedIn presence read-only through the logged-in browser when the API cannot read it: detail URLs, the admin-redirect probe, the app list |
+| [`linkedin-logged-in-browser-read` plugin](./plugins/linkedin-logged-in-browser-read/) | plugin | Claude, Codex | Single-skill plugin: linkedin-logged-in-browser-read |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries

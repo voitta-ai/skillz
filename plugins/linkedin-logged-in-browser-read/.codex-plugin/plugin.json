@@ -1,0 +1,18 @@
+{
+  "name": "linkedin-logged-in-browser-read",
+  "version": "1.0.0",
+  "description": "Audit a LinkedIn presence read-only through the logged-in browser when the API cannot read it: detail URLs, the admin-redirect probe, the app list.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "linkedin",
+    "browser",
+    "audit"
+  ],
+  "skills": "./skills/"
+}
