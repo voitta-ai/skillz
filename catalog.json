@@ -935,6 +935,18 @@
         "codex"
       ],
       "summary": "Land a newly captured skill through the ONE peer session already working the skills repo: the capture side classifies, authors skills/<name>/ content only (never registry files), validates + leak-screens it, pushes branch add-skill-<name> and messages that single session; the landing side does registry, versions, validators, PR. Use when a learning flow (claudeception / continuous-learning) fires mid-task in a session whose real work is elsewhere, when two sessions are about to edit catalog/marketplace/README concurrently, or when a handoff message names a content-only branch. Falls back to claudeception's own wiring when no such peer exists."
+    },
+    {
+      "name": "android-adb-device-verification",
+      "path": "skills/android-adb-device-verification/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Verify an Android change on a device or emulator with no test suite: release-build-first, drive the UI by label, read app state back, and calibrate every check so a blind one does not read as a pass.",
+      "files": [
+        "scripts/adb-ui.sh"
+      ]
     }
   ],
   "collections": [
@@ -1055,7 +1067,8 @@
         "cloudwatch-list-metrics-recency-window-hides-history",
         "jacoco-class-id-mismatch-warns-then-succeeds",
         "permission-gate-inherits-operator-allow-list",
-        "skill-capture-pr-handoff"
+        "skill-capture-pr-handoff",
+        "android-adb-device-verification"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2372,6 +2385,19 @@
         "skill-capture-pr-handoff"
       ],
       "summary": "Single-skill plugin: skill-capture-pr-handoff."
+    },
+    {
+      "name": "android-adb-device-verification",
+      "claude_manifest": "plugins/android-adb-device-verification/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/android-adb-device-verification/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "android-adb-device-verification"
+      ],
+      "summary": "Single-skill plugin: android-adb-device-verification."
     }
   ],
   "defaults": {
