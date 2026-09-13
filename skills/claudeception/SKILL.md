@@ -14,7 +14,7 @@ description: |
   `UserPromptSubmit` hooks instead of an explicit call; that entry point is
   `continuous-learning`, which defers here for the classification and the wiring.
 author: Claude Code
-version: 4.1.0
+version: 4.2.0
 date: 2026-06-14
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claudeception/SKILL.md
@@ -247,6 +247,15 @@ specifics to a private vault.
 
 ### Wiring procedure
 
+**Zeroth step - consider handing off.** If this session's actual work is
+not the skills repo and `ListAgents` shows exactly one live session that
+is working it, do not run this procedure here: author the `skills/NAME/`
+content only, push branch `add-skill-NAME`, and message that session to do
+the rest - the registry files are a one-writer surface. The full contract
+(both sides, and when NOT to hand off) is the `skill-capture-pr-handoff`
+skill; the procedure below remains the fallback when no such peer exists,
+and the landing side's checklist when one does.
+
 Let `REPO` = `~/g/git.voitta/skillz`, `NAME` = the skill's kebab-case name. (If the clone
 is missing, clone it first. Always branch from `master`.)
 
@@ -268,12 +277,13 @@ is missing, clone it first. Always branch from `master`.)
    always *also* scans a default `skills/` dir alongside whatever the manifest
    names, so a stray one would re-expose every skill to both hosts.
    `validate-catalog.sh` fails on it by name.
-4. **Single-skill plugin — optional.** It is what lets someone install this one
-   skill without the bundle. Mirror an existing `plugins/<name>/`: both
-   `.claude-plugin` and `.codex-plugin` manifests plus a `skills/NAME` symlink
-   (single-skill plugins use a plain `skills/` dir — the split above is the
-   bundle's problem, not theirs), and add a `catalog.json` `plugins` entry.
-   Skipping it is normal and common; a fifth of the catalog ships bundle-only.
+4. **Single-skill plugin — required.** It is what lets someone install this one
+   skill without the bundle, and `validate-catalog.sh` now ERRORS on a skill
+   that ships only inside the bundle. Mirror an existing `plugins/<name>/`:
+   both `.claude-plugin` and `.codex-plugin` manifests plus a `skills/NAME`
+   symlink (single-skill plugins use a plain `skills/` dir — the split above
+   is the bundle's problem, not theirs), and add a `catalog.json` `plugins`
+   entry. The new plugin starts at `1.0.0`.
 5. **README row.** Add one to the README catalog table. The bundle's
    marketplace description does not enumerate skills, so the two
    `marketplace.json` files need an edit **only if** step 4 produced a plugin —

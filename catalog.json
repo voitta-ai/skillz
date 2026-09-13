@@ -926,6 +926,15 @@
         "codex"
       ],
       "summary": "Audit what a service actually auto-runs when it reuses a permission gate built for an interactive terminal: the gate reads a human's editor settings, so an agent or bot driven by other people's input inherits that human's personal allow-list (measured: 123 Bash() patterns, including gh pr merge and codex exec, auto-running with no approval). Covers locating the discovery paths, measuring and proving the surface with the gate's own verdicts, cutting the inheritance off upstream rather than around it, and asserting at boot that it stayed cut."
+    },
+    {
+      "name": "skill-capture-pr-handoff",
+      "path": "skills/skill-capture-pr-handoff/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Land a newly captured skill through the ONE peer session already working the skills repo: the capture side classifies, authors skills/<name>/ content only (never registry files), validates + leak-screens it, pushes branch add-skill-<name> and messages that single session; the landing side does registry, versions, validators, PR. Use when a learning flow (claudeception / continuous-learning) fires mid-task in a session whose real work is elsewhere, when two sessions are about to edit catalog/marketplace/README concurrently, or when a handoff message names a content-only branch. Falls back to claudeception's own wiring when no such peer exists."
     }
   ],
   "collections": [
@@ -1045,7 +1054,8 @@
         "git-rewrite-does-not-unpublish-orphaned-commits",
         "cloudwatch-list-metrics-recency-window-hides-history",
         "jacoco-class-id-mismatch-warns-then-succeeds",
-        "permission-gate-inherits-operator-allow-list"
+        "permission-gate-inherits-operator-allow-list",
+        "skill-capture-pr-handoff"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2349,6 +2359,19 @@
         "permission-gate-inherits-operator-allow-list"
       ],
       "summary": "Single-skill plugin: permission-gate-inherits-operator-allow-list."
+    },
+    {
+      "name": "skill-capture-pr-handoff",
+      "claude_manifest": "plugins/skill-capture-pr-handoff/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/skill-capture-pr-handoff/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "skill-capture-pr-handoff"
+      ],
+      "summary": "Single-skill plugin: skill-capture-pr-handoff."
     }
   ],
   "defaults": {
