@@ -1,0 +1,19 @@
+{
+  "name": "cmux-tmux-compat-gap-probe",
+  "version": "1.0.0",
+  "description": "Enumerate, before installing, which tmux verbs a tmux-driving tool needs that cmux's tmux-compat shim lacks: grep the tool's source for subcommands and #{format} variables, diff against cmux's docs/cli-contract.md, probe read-only verbs live via cmux __tmux-compat. Explains 'Unsupported tmux compatibility command' and 'Workspace target not found' (sessions map to workspaces). Ships scripts/tmux-compat-probe.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "cmux",
+    "tmux",
+    "compat",
+    "workmux"
+  ],
+  "skills": "./skills/"
+}

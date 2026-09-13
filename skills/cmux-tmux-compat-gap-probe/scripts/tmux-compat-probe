@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# tmux-compat-probe <tool-src-dir>
+#
+# Enumerate the tmux subcommands a source tree emits and probe the read-only
+# ones against cmux's tmux compatibility dispatcher. Prints: verb, use count,
+# cmux verdict. Mutating verbs are reported as "not probed (mutating)".
+# Read-only by construction: only list-*, display-message, capture-pane,
+# has-session, show-*, info and -V are ever sent to cmux.
+set -u
+SRC="${1:-}"
+if [ -z "$SRC" ] || [ ! -d "$SRC" ]; then
+  echo "usage: tmux-compat-probe <tool-src-dir>" >&2
+  exit 2
+fi
+CMUX="${CMUX_BUNDLED_CLI_PATH:-/Applications/cmux.app/Contents/Resources/bin/cmux}"
+if [ ! -x "$CMUX" ]; then
+  echo "cmux CLI not found at $CMUX (set CMUX_BUNDLED_CLI_PATH)" >&2
+  exit 2
+fi
+VERBS='new-window|split-window|rename-window|kill-window|select-window|capture-pane|send-keys|display-message|list-windows|list-panes|list-sessions|has-session|new-session|select-pane|resize-pane|respawn-pane|set-option|set-window-option|show-options|show-environment|set-environment|switch-client|select-layout|run-shell|if-shell|wait-for|paste-buffer|load-buffer|set-buffer|kill-pane|kill-session|kill-server|rename-session|pipe-pane|break-pane|join-pane|swap-pane|info|list-commands|list-buffers'
+READONLY='list-windows list-panes list-sessions list-commands list-buffers display-message capture-pane has-session show-options show-environment info'
+is_readonly() {
+  local v="$1" r
+  for r in $READONLY; do [ "$r" = "$v" ] && return 0; done
+  return 1
+}
+probe() {
+  local v="$1" out rc
+  case "$v" in
+    capture-pane) out=$("$CMUX" __tmux-compat capture-pane -p 2>&1 | head -1) ;;
+    display-message) out=$("$CMUX" __tmux-compat display-message -p '#{session_name}|#{window_id}|#{pane_id}' 2>&1 | head -1) ;;
+    has-session) out=$("$CMUX" __tmux-compat has-session -t __probe__ 2>&1 | head -1) ;;
+    *) out=$("$CMUX" __tmux-compat "$v" 2>&1 | head -1) ;;
+  esac
+  case "$out" in
+    *"Unsupported tmux compatibility command"*) echo "UNSUPPORTED" ;;
+    *"Workspace target not found"*) echo "supported, sessions map to workspaces" ;;
+    Error*) echo "error: $out" ;;
+    *) echo "ok" ;;
+  esac
+}
+echo "cmux $("$CMUX" __tmux-compat -V 2>&1 | head -1) at $CMUX"
+printf '%-20s %5s  %s\n' VERB USES CMUX
+grep -rhoE "\"($VERBS)\"" "$SRC" 2>/dev/null | tr -d '"' | sort | uniq -c | sort -rn \
+| while read -r count verb; do
+    if is_readonly "$verb"; then
+      verdict=$(probe "$verb")
+    else
+      verdict="not probed (mutating); check docs/cli-contract.md"
+    fi
+    printf '%-20s %5s  %s\n' "$verb" "$count" "$verdict"
+  done
+echo
+echo "format variables emitted by the tool:"
+grep -rhoE '#\{[a-z_]+\}' "$SRC" 2>/dev/null | sort | uniq -c | sort -rn | awk '{printf "  %5s %s\n",$1,$2}'
