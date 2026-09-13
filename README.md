@@ -230,6 +230,8 @@ environments and older Codex versions.
 | [`oauth-mint-counting-passthrough-proxy` plugin](./plugins/oauth-mint-counting-passthrough-proxy/) | plugin | Claude, Codex | Single-skill plugin: oauth-mint-counting-passthrough-proxy |
 | [cmux-tmux-compat-gap-probe](./skills/cmux-tmux-compat-gap-probe/SKILL.md) | skill | Claude, Codex | Before installing a tmux-driving tool on a cmux desk, enumerate the tmux verbs it needs that `cmux __tmux-compat` lacks: grep source, diff the contract, probe read-only verbs live; ships `tmux-compat-probe` |
 | [`cmux-tmux-compat-gap-probe` plugin](./plugins/cmux-tmux-compat-gap-probe/) | plugin | Claude, Codex | Single-skill plugin: cmux-tmux-compat-gap-probe |
+| [git-rewrite-does-not-unpublish-orphaned-commits](./skills/git-rewrite-does-not-unpublish-orphaned-commits/SKILL.md) | skill | Claude, Codex | A force-push moves a ref, it does not delete objects; GitHub keeps serving orphaned commits by SHA, so a clean `git log` is not evidence |
+| [`git-rewrite-does-not-unpublish-orphaned-commits` plugin](./plugins/git-rewrite-does-not-unpublish-orphaned-commits/) | plugin | Claude, Codex | Single-skill plugin: git-rewrite-does-not-unpublish-orphaned-commits |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries

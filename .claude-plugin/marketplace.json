@@ -480,6 +480,11 @@
       "name": "cmux-tmux-compat-gap-probe",
       "source": "./plugins/cmux-tmux-compat-gap-probe/",
       "description": "Before installing a tmux-driving tool on a cmux desk, enumerate the tmux verbs it needs that cmux __tmux-compat lacks: grep source, diff the contract, probe read-only verbs live (scripts/tmux-compat-probe)."
+    },
+    {
+      "name": "git-rewrite-does-not-unpublish-orphaned-commits",
+      "source": "./plugins/git-rewrite-does-not-unpublish-orphaned-commits/",
+      "description": "Force-push does not unpublish; orphaned commits stay served by SHA."
     }
   ]
 }

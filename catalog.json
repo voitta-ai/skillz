@@ -890,6 +890,15 @@
         "codex"
       ],
       "summary": "Enumerate which tmux verbs a tmux-driving tool needs that cmux's tmux-compat shim lacks, before installing it: grep the tool's source for subcommands and #{format} variables, diff against cmux's docs/cli-contract.md, probe read-only verbs live with cmux __tmux-compat. Explains 'Unsupported tmux compatibility command' and 'Workspace target not found' (tmux sessions map to cmux workspaces), lists the format variables that come back empty, and ships scripts/tmux-compat-probe. Verified on cmux 0.64.22 against workmux v0.1.259."
+    },
+    {
+      "name": "git-rewrite-does-not-unpublish-orphaned-commits",
+      "path": "skills/git-rewrite-does-not-unpublish-orphaned-commits/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Reach a genuinely clean public repo after sensitive content was already pushed. A force-push moves a ref; it does not delete objects, and GitHub keeps serving the orphaned commits by SHA. Covers the API call that proves the old blob is still retrievable, why a clean local fsck and a clean remote tree are not evidence, rename-plus-recreate as a no-extra-scope substitute for deletion when the token lacks delete_repo, and the fresh repository id as the property that actually matters."
     }
   ],
   "collections": [
@@ -1005,7 +1014,8 @@
         "linkedin-logged-in-browser-read",
         "grafana-terraform-folder-reorg-shared-workspace",
         "oauth-mint-counting-passthrough-proxy",
-        "cmux-tmux-compat-gap-probe"
+        "cmux-tmux-compat-gap-probe",
+        "git-rewrite-does-not-unpublish-orphaned-commits"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2257,6 +2267,19 @@
         "cmux-tmux-compat-gap-probe"
       ],
       "summary": "Single-skill plugin: cmux-tmux-compat-gap-probe."
+    },
+    {
+      "name": "git-rewrite-does-not-unpublish-orphaned-commits",
+      "claude_manifest": "plugins/git-rewrite-does-not-unpublish-orphaned-commits/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/git-rewrite-does-not-unpublish-orphaned-commits/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "git-rewrite-does-not-unpublish-orphaned-commits"
+      ],
+      "summary": "Single-skill plugin: git-rewrite-does-not-unpublish-orphaned-commits."
     }
   ],
   "defaults": {
