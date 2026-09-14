@@ -495,6 +495,11 @@
       "name": "jacoco-class-id-mismatch-warns-then-succeeds",
       "source": "./plugins/jacoco-class-id-mismatch-warns-then-succeeds/",
       "description": "JaCoCo class-id mismatch warns then succeeds; changed classes read zero."
+    },
+    {
+      "name": "permission-gate-inherits-operator-allow-list",
+      "source": "./plugins/permission-gate-inherits-operator-allow-list/",
+      "description": "Single-skill plugin: permission-gate-inherits-operator-allow-list."
     }
   ]
 }
