@@ -18,7 +18,7 @@ description: |
   NOT valid verification, and the release-tagging order for squash-merge
   repos.
 author: Claude Code
-version: 1.3.0
+version: 1.4.0
 date: 2026-08-17
 ---
 
@@ -186,6 +186,22 @@ the old one, containing the merged code.
   `/plugin marketplace update <name>` + `/reload-plugins` or a restart.
   Current builds have working `claude plugin marketplace update` and
   `claude plugin update` CLI subcommands.
+- **Re-pointing a marketplace at a different repo is three places, not
+  one.** The name stays the same (it comes from the repo's
+  `.claude-plugin/marketplace.json`), so nothing looks wrong:
+  1. `~/.claude/settings.json` -> `extraKnownMarketplaces.<name>.source.repo`
+  2. `~/.claude/plugins/known_marketplaces.json` -> the same field
+  3. `~/.claude/plugins/marketplaces/<name>` -> the **cached clone**, whose
+     git `origin` remote still points at the old repo:
+     `git -C ~/.claude/plugins/marketplaces/<name> remote set-url origin <new>`
+     then `git fetch && git reset --hard origin/<default-branch>`.
+
+  Edit only the JSON and `marketplace update` keeps `git pull`-ing the old
+  repo. There is no error: the catalog silently freezes at the old repo's
+  HEAD, which is invisible when the two repos were recently in sync and only
+  diverge later. Verify with
+  `git -C ~/.claude/plugins/marketplaces/<name> remote get-url origin`, not
+  with the settings file you just edited.
 - `marketplace update` is a `git pull` on the clone. Editing files
   under `~/.claude/plugins/marketplaces/<name>/` by hand (don't) can
   make it fail or merge oddly.
