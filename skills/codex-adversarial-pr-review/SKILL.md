@@ -20,7 +20,7 @@ description: |
   degenerate-output shapes (plan-only "zero findings", quiet background-launch
   failure) to judge before posting.
 author: Claude Code
-version: 1.6.0
+version: 1.6.1
 date: 2026-08-24
 source: https://github.com/voitta-ai/skillz
 source_file: skills/codex-adversarial-pr-review/SKILL.md
@@ -317,6 +317,32 @@ instead.
 Spot-check at least every `critical` finding against the existing tree before
 posting; drop the bad ones with the `jq` filter above. Posting a wrong critical
 costs the author more time than the review saves.
+
+A fourth shape: the **subsumed-guard regression**. When a PR replaces a
+denylist with an allowlist, Codex reads the deleted denylist as a removed
+defence and files a `high` "defense-in-depth regression" that asks for the very
+thing the new construction makes unreachable. On a PR that inverted a child
+process's environment — from `os.environ.copy()` minus the names some channel
+declared, to a fixed floor plus the names this channel declares — it demanded
+the deleted subtraction be restored, when under the allowlist those names are
+never in the child to subtract. The same finding claimed the cross-channel test
+had been dropped; that test was still in the diff it was reading, three lines
+below the line it cited, still passing. Two checks settle it: does the new
+construction make the deleted guard a no-op, and does the test it says is
+missing exist (`git show HEAD:<path> | grep`)? The tell is a recommendation to
+re-add code the diff deleted on purpose, argued from a future refactor rather
+than a present path.
+
+A fifth shape: **trust-boundary inflation**. A finding treats an
+operator-authored config file as attacker-controlled input, and escalates
+accordingly — "a malicious policy can exfiltrate credentials" about a key that
+only exists in a root-owned or `chmod 600` file the deployment's owner writes.
+The question to ask is who can write the input: if it is the same principal who
+already controls the process, the finding describes the existing trust model,
+not a new hole, and its recommended denylist usually blocks a legitimate use
+while the neighbouring key bypasses it anyway. Check the write path (in that
+case: the chat-facing setter wrote a fixed key set that did not include the key
+under review) before accepting a `critical` that assumes the config is hostile.
 
 Expectation at scale: adversarial framing almost never returns `approve` on
 a first pass. One 158-review run produced zero approvals in round one and
