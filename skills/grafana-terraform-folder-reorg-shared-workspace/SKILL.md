@@ -12,11 +12,14 @@ description: |
   of a folder and removed that folder ended in
   `[POST /dashboards/db][404] postDashboardNotFound` and the dashboards are gone,
   (6) Grafana refuses a folder move with "a folder with the same name already
-  exists" or a depth error. Covers the API-create-then-import pattern for shared
+  exists" or a depth error, (7) you have to apply a targeted dashboard change to
+  prod by hand and want a gate that refuses replacements, re-homes and uid changes
+  before anything runs. Covers the API-create-then-import pattern for shared
   folders, in-place moves, the two-apply folder retirement, pinning data-source
-  uids, and before/after live snapshots via /api/search.
+  uids, a saved-plan prod apply gate, and before/after live snapshots via
+  /api/search.
 author: Claude Code
-version: 1.0.0
+version: 1.1.0
 date: 2026-09-10
 ---
 
@@ -157,6 +160,33 @@ land in one apply.
   expression touching an unknown attribute prints `(known after apply)`.
 - After the apply, re-take the two snapshots; the dashboard count must be unchanged,
   and each top-level folder count must match the design.
+
+### 8. Gate a manual prod apply on a saved plan
+
+Prod is applied by hand into the workspace the dev state auto-applies into, so never
+`apply -auto-approve` a live plan and never apply a full plan you only skimmed. Save the
+plan, read it by machine, apply the file:
+
+```bash
+terraform plan -var-file=env/prod.tfvars \
+  -target='grafana_dashboard.a[0]' -target='grafana_dashboard.b[0]' \
+  -out=prod.tfplan > plan.txt 2>&1
+sed -e 's/\x1b\[[0-9;]*m//g' plan.txt | grep -E '^Plan:|must be replaced|^Error'
+terraform show -json prod.tfplan | jq -r '
+  .resource_changes[] | select(.change.actions != ["no-op"])
+  | "\(.address) \(.change.actions|join(",")) uid:\(.change.before.uid // "-")->\(.change.after.uid // "-") folder:\(.change.before.folder // "-")->\(.change.after.folder // "-")"'
+terraform apply prod.tfplan
+```
+
+Apply only when the grep prints exactly one line, `Plan: 0 to add, N to change, 0 to
+destroy`, and every `jq` row is `update` with `uid` and `folder` unchanged on both
+sides. A `replace`/`delete`/`create` action, a changed `uid`, or a changed `folder`
+means a dashboard is about to be orphaned or re-homed: discard the plan file and fix
+the config (usually step 6). Read `uid`/`folder` from the JSON plan, not from the text
+diff: inside `config_json` every panel data-source swap also prints as `~ uid = ...`,
+which is expected and is not the resource attribute. Strip ANSI before grepping
+(colour codes defeat the `^` anchors). The saved plan also freezes what you reviewed:
+`terraform apply <planfile>` refuses to run if state or configuration moved in between.
 
 ## Verification
 
