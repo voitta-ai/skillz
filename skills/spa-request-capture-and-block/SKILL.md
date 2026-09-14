@@ -12,15 +12,21 @@ description: |
   nothing on an Angular/zone.js app — prototype patches are bypassed and you
   need the constructor-level swap plus a pre-flight proof before any risky
   click, (7) you must prove a submission actually created something, not just
-  that a request left the browser. Covers patching window.fetch AND
+  that a request left the browser, (8) the same button with a different mode
+  (leads vs accounts, person vs company) posts to a DIFFERENT service and your
+  matcher only covered the one you tested — a real submission slipped through,
+  (9) you widened the matcher to be safe and it started blocking the app's own
+  read traffic, including your own lookups. Covers patching window.fetch AND
   XMLHttpRequest together (the XHR half is the one usually missed), the
-  constructor swap for zone.js apps, the pre-flight gate, matcher scope (block
-  the commit call, never the dialog's own reads), recording responses,
-  blocking cleanly, and disarming afterwards — including why a hash-route
+  constructor swap and the zone-symbol patch for zone.js apps, scoping the
+  block by HTTP METHOD so a wide URL matcher stays safe, enumerating every
+  commit endpoint the action can use, a pre-flight that proves the block
+  against the real endpoint shape with a positive control, recording
+  responses, and disarming afterwards — including why a hash-route
   navigation does not remove the patch.
 author: Claude Code
-version: 1.1.0
-date: 2026-08-28
+version: 1.2.0
+date: 2026-09-14
 ---
 
 # Capture and block a SPA's outbound request
@@ -64,6 +70,51 @@ but nothing happens". Let the dialog's read endpoints pass; block the one
 POST that commits. If you do not know the commit endpoint, find it in the
 minified bundle first (the code usually keeps an endpoint map keyed by mode)
 rather than guessing wide.
+
+### Scope the block by METHOD, not only by URL
+
+The matcher advice above pulls two ways: narrow enough not to wedge the dialog's
+reads, wide enough to catch the commit call. Resolve it by blocking on
+**method plus URL** — reads pass, writes stop:
+
+```js
+const mutating = m => !!m && !/^(GET|HEAD|OPTIONS)$/i.test(m);
+// ... inside each wrapper:
+if (BLOCK.test(url) && mutating(method)) { /* record + refuse */ }
+```
+
+With the method gate in place a deliberately **wide** URL pattern is safe, which
+is what you want given the next section. Without it, widening the pattern breaks
+the app's own configuration reads — and your own read-only lookups against the
+same path, which is a confusing way to discover the problem.
+
+### One action can have SEVERAL commit endpoints — enumerate them all
+
+The most expensive failure in this technique is proving the block against one
+variant of an action and then triggering a sibling variant that posts somewhere
+else entirely. The same menu path, differing only in a mode leaf, routinely maps
+to different services:
+
+```
+Export > Leads   > Excel  ->  POST /<export-service>/api/v1/list-builder/export/person
+Export > Accounts> Excel  ->  POST /<other-service>/export/jobs/export/companies
+```
+
+Same button, same dialog title, same product feature — different host path,
+different service, no shared fragment beyond the word "export". A matcher built
+from the first one silently misses the second, and the click submits for real.
+
+Before any risky click:
+
+1. **List every leaf** the action can reach (each submenu entry, each mode).
+2. **Get each one's endpoint** from the bundle, from a prior capture, or by
+   running the safe variants first.
+3. **Prove the block against every endpoint shape**, not just the one you know.
+4. Prefer a wide URL pattern plus the method gate above, so an endpoint you
+   failed to enumerate is still caught by default.
+
+Treat "I verified the block on this action last time" as covering *that leaf
+only*. A verified block on the leads path is not a block on the accounts path.
 
 ### Standard harness (non-zone.js apps)
 
@@ -171,6 +222,29 @@ your wrapper, which zone.js cannot have saved:
 This variant also records **responses** for the non-blocked traffic — see
 "Capture the response" below.
 
+**Alternative to the constructor swap: patch the zone-saved symbols.** zone.js
+keeps its originals on well-known properties, so you can wrap those directly and
+leave the constructor alone. Patch *both* the plain and the saved name, for both
+transports — six wrappers in total:
+
+```js
+window.fetch                                   // app calls this
+window.__zone_symbol__fetch                    // zone calls this
+XMLHttpRequest.prototype.open  / .send         // app calls these
+XMLHttpRequest.prototype.__zone_symbol__open / .__zone_symbol__send   // zone calls these
+```
+
+Enumerate rather than hard-code the names, since the suffixes vary by version:
+
+```js
+Object.getOwnPropertyNames(XMLHttpRequest.prototype)
+  .filter(k => /^send$|^open$|__zone_symbol__(send|open)/.test(k))
+```
+
+In one observed Angular app the real submit travelled through
+`XMLHttpRequest.prototype.send` while the plain `window.fetch` wrapper never
+fired at all — patch the whole set and you do not have to guess which.
+
 ### Pre-flight gate — prove the hook sees traffic BEFORE the risky click
 
 Never take the destructive click on faith that the harness works. After
@@ -183,6 +257,28 @@ window.__cap.length   // and inspect the URLs — they must be APP calls, not te
 
 Only proceed when the hook has observed real application requests (a passing
 pre-flight looks like "17 app requests observed, including the list search").
+
+**Stronger gate: prove the block itself, against the real endpoint shape.**
+"The hook sees traffic" does not prove the hook stops *your* endpoint. Fire two
+requests of your own and check them against an independent view of the network
+(devtools, or an extension's request log):
+
+```js
+// POSITIVE control — does NOT match the block pattern; must appear in the network log
+await fetch('/zz-control/ping?t=' + Date.now());
+// NEGATIVE probes — match the block pattern, on a harmless nonexistent path,
+// one per commit endpoint shape you enumerated, via every transport
+const U = '/zz-probe/<commit-endpoint-path-shape>';
+for (const send of [
+  () => fetch(U, { method: 'POST', body: '{}' }),
+  () => { const x = new XMLHttpRequest(); x.open('POST', U); x.send('{}'); },
+]) { try { await send(); console.log('NOT BLOCKED'); } catch (e) { console.log('blocked'); } }
+```
+
+The gate passes only when the control **appears** in the network log and none of
+the probes do. Using a nonexistent path means a leak costs a 404, not a real
+submission. Run this again for every endpoint shape from the enumeration above —
+and re-run it after any page load, which wipes the harness.
 Zero entries, or only analytics/telemetry hosts, means the app's traffic is
 bypassing you — a miss on the real click is a real, possibly billable
 submission. This gate is what converted an unexplained "captured nothing" into
@@ -219,6 +315,9 @@ submit, not a slow one.
 
 - The captured entry exists and its `url` is the endpoint you expected — if it
   is *not*, that mismatch is itself the finding.
+- **The endpoint is absent from an independent network log** while a positive
+  control request of your own is present in it. That pairing is the proof the
+  block held; the harness reporting "blocked" is only its own account of itself.
 - The app shows a failure (or nothing) rather than a success toast, and no
   record appears in the product's own list/history UI. Check that UI, not just
   the network panel; "blocked" must mean "nothing was created".
@@ -240,10 +339,15 @@ be merged but not actually serving.
 - **A hash-route change does not reload the document.** Navigating
   `#/a` → `#/b` leaves the harness installed. Verify with
   `!!window.__capInstalled` rather than assuming.
-- **Keep `MATCH` narrow.** A broad regex can block auth or telemetry calls and
-  wedge the app in a way that looks like a product bug — and, worse, it can
-  block the dialog's own configuration reads so the submit is never formed
-  (see "Matcher scope first").
+- **Keep `MATCH` narrow, or gate on method.** A broad regex can block auth or
+  telemetry calls and wedge the app in a way that looks like a product bug —
+  and, worse, it can block the dialog's own configuration reads so the submit is
+  never formed (see "Matcher scope first"). Adding the `mutating(method)` gate
+  lets you keep a wide URL pattern without any of that, which is the safer
+  trade when the action has several commit endpoints.
+- **A verified block covers the leaf you verified, nothing else.** Sibling modes
+  of the same action post to different services often enough that assuming
+  otherwise is how a live submission happens. Enumerate and prove each.
 - **Prototype patch vs constructor swap.** Prefer the standard harness; if
   pre-flight fails on an Angular app, switch to the constructor swap — zone.js
   holds saved native references that prototype patches never intercept.
