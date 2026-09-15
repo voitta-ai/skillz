@@ -500,6 +500,11 @@
       "name": "permission-gate-inherits-operator-allow-list",
       "source": "./plugins/permission-gate-inherits-operator-allow-list/",
       "description": "Single-skill plugin: permission-gate-inherits-operator-allow-list."
+    },
+    {
+      "name": "skill-capture-pr-handoff",
+      "source": "./plugins/skill-capture-pr-handoff/",
+      "description": "Capture side hands a content-only skill branch to the ONE session working the skills repo; that session lands registry+PR."
     }
   ]
 }

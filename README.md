@@ -238,6 +238,8 @@ environments and older Codex versions.
 | [`cloudwatch-list-metrics-recency-window-hides-history` plugin](./plugins/cloudwatch-list-metrics-recency-window-hides-history/) | plugin | Claude, Codex | Single-skill plugin: cloudwatch-list-metrics-recency-window-hides-history |
 | [jacoco-class-id-mismatch-warns-then-succeeds](./skills/jacoco-class-id-mismatch-warns-then-succeeds/SKILL.md) | skill | Claude, Codex | JaCoCo keys exec data by a hash of the class bytes; a mismatch makes changed classes report zero coverage while the build still succeeds |
 | [`jacoco-class-id-mismatch-warns-then-succeeds` plugin](./plugins/jacoco-class-id-mismatch-warns-then-succeeds/) | plugin | Claude, Codex | Single-skill plugin: jacoco-class-id-mismatch-warns-then-succeeds |
+| [skill-capture-pr-handoff](./skills/skill-capture-pr-handoff/SKILL.md) | skill | Claude, Codex | Capture side authors content-only branch and messages the ONE session working the skills repo to land registry+PR; fallback is claudeception wiring |
+| [`skill-capture-pr-handoff` plugin](./plugins/skill-capture-pr-handoff/) | plugin | Claude, Codex | Single-skill plugin: skill-capture-pr-handoff |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
