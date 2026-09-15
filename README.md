@@ -240,6 +240,7 @@ environments and older Codex versions.
 | [`jacoco-class-id-mismatch-warns-then-succeeds` plugin](./plugins/jacoco-class-id-mismatch-warns-then-succeeds/) | plugin | Claude, Codex | Single-skill plugin: jacoco-class-id-mismatch-warns-then-succeeds |
 | [skill-capture-pr-handoff](./skills/skill-capture-pr-handoff/SKILL.md) | skill | Claude, Codex | Capture side authors content-only branch and messages the ONE session working the skills repo to land registry+PR; fallback is claudeception wiring |
 | [`skill-capture-pr-handoff` plugin](./plugins/skill-capture-pr-handoff/) | plugin | Claude, Codex | Single-skill plugin: skill-capture-pr-handoff |
+| [android-adb-device-verification](./skills/android-adb-device-verification/SKILL.md) | skill | Claude, Codex | Verify Android changes on a device with no test suite; calibrate checks so a blind one is not read as a pass |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
