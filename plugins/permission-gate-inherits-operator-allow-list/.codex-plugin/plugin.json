@@ -1,0 +1,21 @@
+{
+  "name": "permission-gate-inherits-operator-allow-list",
+  "version": "1.0.0",
+  "description": "Audit what a service actually auto-runs when it reuses a permission gate built for an interactive terminal. The gate reads a human's editor settings, so an agent or bot driven by other people's input inherits that human's personal allow-list -- measured on one deployment: 123 Bash() patterns, including gh pr merge, gh api and codex exec, auto-running with no approval card. Use when a command you expected to need approval ran without one, when a verdict says \"matches user allow pattern\", when wiring such a gate into a service, or when a suite's verdicts change with whose machine runs it. Covers locating the discovery paths, measuring and proving the surface with the gate's own verdicts, cutting the inheritance off upstream rather than around it, and asserting at boot that it stayed cut.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "llm",
+    "litellm",
+    "router",
+    "failover",
+    "rate-limit",
+    "agents"
+  ]
+}
