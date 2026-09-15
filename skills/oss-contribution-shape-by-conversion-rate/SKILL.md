@@ -61,22 +61,33 @@ its fix attached to a duplicate issue filed four months after the original.
 
 ### 1. Measure four numbers (five minutes, read-only)
 
-Use the search API for counts. `gh pr list --limit N` silently caps at a
-page ceiling (observed: 1000 merged, 3000 open) and gives numbers off by 5x.
+Use the search API's `total_count` for counts, with the date window pinned
+at **both** ends. Two traps, both verified:
+
+- `gh pr list --search ...` rides on the GitHub Search API, which refuses
+  anything past result 1000 (`422 Only the first 1000 search results are
+  available` on page 11). `--limit 3000` silently returns 1000. A count built
+  from that listing was off by 5x.
+- `total_count` is not capped, but an open-ended window (`merged:>=DATE`) is a
+  live number: 1,889 one day, 2,112 six days later, same query. Pin the upper
+  bound and record the date next to the number.
 
 ```bash
-R=owner/repo; SINCE=2026-07-10
+R=owner/repo; WIN=2026-07-10..2026-09-09
 q() { gh api -X GET search/issues -f q="repo:$R $1" --jq .total_count; }
-q "is:pr is:merged merged:>=$SINCE"                           # all merged
-q "is:pr is:merged merged:>=$SINCE author:<maintainer>"       # per maintainer
-q "is:pr is:merged merged:>=$SINCE -author:<m1> -author:<m2>" # everyone else
-q "is:pr is:open -author:<m1> -author:<m2>"                   # outside PRs waiting
+q "is:pr is:merged merged:$WIN"                           # all merged
+q "is:pr is:merged merged:$WIN author:<maintainer>"       # per maintainer
+q "is:pr is:merged merged:$WIN -author:<m1> -author:<m2>" # everyone else
+q "is:pr is:open -author:<m1> -author:<m2>"               # outside PRs waiting
 gh api "repos/$R/releases?per_page=1" --jq '.[0].tag_name'
 gh api "repos/$R/compare/<last-tag>...main" --jq .total_commits # unreleased
 ```
 
 Batch these; the search endpoint secondary-rate-limits (HTTP 403) after
-roughly ten rapid calls.
+roughly ten rapid calls. For an exact count above 1000, paginate REST
+`/repos/$R/pulls?state=closed&sort=updated&direction=desc` or GraphQL
+`repository.pullRequests(states: MERGED)` with cursors and filter on
+`mergedAt` client-side; neither is capped.
 
 Then look at one recent outside PR and one maintainer PR: who reviewed
 (`gh pr view N --json reviews --jq '[.reviews[].author.login]'`) and whether
@@ -141,7 +152,7 @@ people actually find by search. One comment each, no reopening.
 
 ## Example
 
-cmux, measured 2026-09-09: 1,889 PRs merged since July 10, 1,790 by three
+cmux, measured 2026-09-09 (window July 10 to that day): 1,889 PRs merged, 1,790 by three
 maintainers, 99 by everyone else; 3,007 open, 773 from outside; 4,665
 commits since the last release five weeks earlier. Two issues filed in July
 (a `wait` verb and an `agent.state.changed` event) shipped together in a
