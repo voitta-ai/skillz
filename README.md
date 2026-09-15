@@ -243,6 +243,8 @@ environments and older Codex versions.
 | [android-adb-device-verification](./skills/android-adb-device-verification/SKILL.md) | skill | Claude, Codex | Verify Android changes on a device with no test suite; calibrate checks so a blind one is not read as a pass |
 | [oss-contribution-shape-by-conversion-rate](./skills/oss-contribution-shape-by-conversion-rate/SKILL.md) | skill | Claude, Codex | Measure a repo's PR conversion rate before choosing patch vs issue; on maintainer-driven, robot-reviewed repos send a spec-shaped issue with a kill condition, cross-link duplicates, close your superseded PR with a pointer |
 | [`oss-contribution-shape-by-conversion-rate` plugin](./plugins/oss-contribution-shape-by-conversion-rate/) | plugin | Claude, Codex | Single-skill plugin: oss-contribution-shape-by-conversion-rate |
+| [claude-session-three-names](./skills/claude-session-three-names/SKILL.md) | skill | Claude, Codex | One name for a session everywhere: `cc`/`cx` launch wrappers set the peer name, Remote Control name and cmux tab from one value; `cc-names` who/pick/sync + a Stop hook keep the tab equal to the session name after `/rename` |
+| [`claude-session-three-names` plugin](./plugins/claude-session-three-names/) | plugin | Claude, Codex | Single-skill plugin: claude-session-three-names |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
