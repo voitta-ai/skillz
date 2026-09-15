@@ -520,6 +520,11 @@
       "name": "claude-session-three-names",
       "source": "./plugins/claude-session-three-names/",
       "description": "One name for a Claude Code session everywhere: cc/cx launch wrappers, cc-names who/pick/sync, and a Stop hook that keeps the cmux tab title equal to the session's peer name."
+    },
+    {
+      "name": "micronaut-endpoints-config-root-level",
+      "source": "./plugins/micronaut-endpoints-config-root-level/",
+      "description": "Micronaut endpoints.* is root-level; nested under micronaut: it binds to nothing and the endpoint 401s."
     }
   ]
 }

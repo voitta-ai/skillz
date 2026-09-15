@@ -971,6 +971,15 @@
         "codex"
       ],
       "summary": "One name for a Claude Code session in all three places peers and humans look: the ListAgents/SendMessage display name, the Remote Control name and the cmux tab title. Ships cc/cx launch wrappers (resolve name from argument, human-set tab title or folder; prompt only on collision; exec claude -n X --remote-control X with the tab renamed to X), cc-names who/pick/sync over ~/.claude/sessions/<pid>.json joined to cmux tree, and a Stop hook that pushes a mid-session /rename to the tab."
+    },
+    {
+      "name": "micronaut-endpoints-config-root-level",
+      "path": "skills/micronaut-endpoints-config-root-level/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "A Micronaut management endpoint returns 401 with no security library on the classpath because `endpoints.*` is read from the YAML DOCUMENT ROOT, and a copy nested under `micronaut:` (next to `micronaut.metrics.*`, where it looks like it belongs) binds to nothing silently, leaving the endpoint at its default sensitivity."
     }
   ],
   "collections": [
@@ -1094,7 +1103,8 @@
         "skill-capture-pr-handoff",
         "android-adb-device-verification",
         "oss-contribution-shape-by-conversion-rate",
-        "claude-session-three-names"
+        "claude-session-three-names",
+        "micronaut-endpoints-config-root-level"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2450,6 +2460,19 @@
         "claude-session-three-names"
       ],
       "summary": "Single-skill plugin: claude-session-three-names."
+    },
+    {
+      "name": "micronaut-endpoints-config-root-level",
+      "claude_manifest": "plugins/micronaut-endpoints-config-root-level/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/micronaut-endpoints-config-root-level/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "micronaut-endpoints-config-root-level"
+      ],
+      "summary": "Single-skill plugin: micronaut-endpoints-config-root-level."
     }
   ],
   "defaults": {
