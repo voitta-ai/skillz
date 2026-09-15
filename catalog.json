@@ -947,6 +947,15 @@
       "files": [
         "scripts/adb-ui.sh"
       ]
+    },
+    {
+      "name": "oss-contribution-shape-by-conversion-rate",
+      "path": "skills/oss-contribution-shape-by-conversion-rate/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Decide PR vs issue for a repo by measuring its conversion rate first: maintainer share of merged PRs, outside PRs open, commits since the last release, and whether outside PRs get human or bot-only review (search API totals, not gh pr list, which caps silently). Rule: on maintainer-driven, robot-reviewed, thousands-of-commits-unreleased repos, send an issue shaped as a spec (reproduction, verified mechanism, one-PR ask, kill condition), not a patch. Covers reading the maintainer PR's diff before asking scope questions, closing your superseded PR with a pointer, offering the real-workload review bots cannot give, and cross-linking duplicates so the fix closes the canonical issue."
     }
   ],
   "collections": [
@@ -1068,7 +1077,8 @@
         "jacoco-class-id-mismatch-warns-then-succeeds",
         "permission-gate-inherits-operator-allow-list",
         "skill-capture-pr-handoff",
-        "android-adb-device-verification"
+        "android-adb-device-verification",
+        "oss-contribution-shape-by-conversion-rate"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2398,6 +2408,19 @@
         "android-adb-device-verification"
       ],
       "summary": "Single-skill plugin: android-adb-device-verification."
+    },
+    {
+      "name": "oss-contribution-shape-by-conversion-rate",
+      "claude_manifest": "plugins/oss-contribution-shape-by-conversion-rate/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/oss-contribution-shape-by-conversion-rate/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "oss-contribution-shape-by-conversion-rate"
+      ],
+      "summary": "Single-skill plugin: oss-contribution-shape-by-conversion-rate."
     }
   ],
   "defaults": {

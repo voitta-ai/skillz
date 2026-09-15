@@ -1,0 +1,12 @@
+{
+  "name": "oss-contribution-shape-by-conversion-rate",
+  "description": "Measure a repo's conversion rate (maintainer share of merges, outside PRs waiting, unreleased commits, bot-only reviews) before choosing patch vs issue; write the issue as a spec with reproduction, mechanism, one-PR ask and a kill condition; cross-link duplicates; close your superseded PR with a pointer.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

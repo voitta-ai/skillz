@@ -510,6 +510,11 @@
       "name": "android-adb-device-verification",
       "source": "./plugins/android-adb-device-verification",
       "description": "Verify an Android change on a device or emulator when the project has no test suite: release build first because R8 breaks reflection-driven code, drive the UI by element label, read app state back, mock location, and calibrate every check so a blind one is not read as a pass."
+    },
+    {
+      "name": "oss-contribution-shape-by-conversion-rate",
+      "source": "./plugins/oss-contribution-shape-by-conversion-rate/",
+      "description": "Measure a repo's PR conversion rate (maintainer share, outside PRs waiting, unreleased commits, bot-only review) before sending a patch; on maintainer-driven repos send a spec-shaped issue with a kill condition instead."
     }
   ]
 }
