@@ -241,6 +241,8 @@ environments and older Codex versions.
 | [skill-capture-pr-handoff](./skills/skill-capture-pr-handoff/SKILL.md) | skill | Claude, Codex | Capture side authors content-only branch and messages the ONE session working the skills repo to land registry+PR; fallback is claudeception wiring |
 | [`skill-capture-pr-handoff` plugin](./plugins/skill-capture-pr-handoff/) | plugin | Claude, Codex | Single-skill plugin: skill-capture-pr-handoff |
 | [android-adb-device-verification](./skills/android-adb-device-verification/SKILL.md) | skill | Claude, Codex | Verify Android changes on a device with no test suite; calibrate checks so a blind one is not read as a pass |
+| [oss-contribution-shape-by-conversion-rate](./skills/oss-contribution-shape-by-conversion-rate/SKILL.md) | skill | Claude, Codex | Measure a repo's PR conversion rate before choosing patch vs issue; on maintainer-driven, robot-reviewed repos send a spec-shaped issue with a kill condition, cross-link duplicates, close your superseded PR with a pointer |
+| [`oss-contribution-shape-by-conversion-rate` plugin](./plugins/oss-contribution-shape-by-conversion-rate/) | plugin | Claude, Codex | Single-skill plugin: oss-contribution-shape-by-conversion-rate |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
