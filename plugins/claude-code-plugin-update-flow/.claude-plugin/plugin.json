@@ -1,7 +1,7 @@
 {
   "name": "claude-code-plugin-update-flow",
   "description": "Update an installed Claude Code plugin via /plugin marketplace update + /reload-plugins, not the discovery-picker /plugin update.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "voitta-ai"
   },

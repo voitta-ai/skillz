@@ -13,8 +13,12 @@ description: |
   a fight. Sets up an experimental upstream repo, a single reviewed
   `fork-sync` PR into the integration repo, a pre-push guard, and the
   issue framing that keeps it an engineering response rather than a revolt.
+  Also covers (5) winding the split back down once the gate stops binding -
+  final sync, tree-verified merge-back, deleting the guard, re-homing
+  stranded PRs, and archiving the upstream in the order that keeps each
+  step's proof intact.
 author: Claude Code
-version: 1.0.0
+version: 1.1.0
 date: 2026-08-29
 source: https://github.com/voitta-ai/skillz
 ---
@@ -172,6 +176,55 @@ announcement norm. Never write "I tried and got blocked"; write "the current
 branch policy prevents the existing workflow, so development has moved
 upstream while this repository remains the reviewed integration target."
 Draft the channel announcement for the human to post; do not post it.
+
+### 7. Winding it down
+
+The split is temporary by construction. It ends when the gate stops binding
+you - admin restored, or a bypass granted. A bypass is enough: the point was
+never the permission, it was the loop.
+
+Order matters, because each step is the proof the next one is safe.
+
+1. **Confirm the gate actually stopped binding.** Not from a 404 - see
+   `git-pr-merge-unblock` Step 8. `refUpdateRule` returning
+   `requiredApprovingReviewCount: 0` for you, plus one real
+   `gh pr merge --squash` landing with zero approvals, is the confirmation.
+2. **Land the final sync PR.** Nothing else should be in flight.
+3. **Merge back one last time, and verify trees before you push:**
+
+   ```bash
+   git fetch origin && git checkout main && git merge --no-edit origin/main
+   test "$(git rev-parse origin/main^{tree})" = "$(git rev-parse upstream/main^{tree})" \
+     && echo identical
+   ```
+
+   Identical trees mean the plain merge is exact and conflict-free. They
+   diverge only if something landed upstream *after* the sync push - that is
+   the `-s ours` case, and it is a signal you skipped step 2.
+4. **Only now delete the machinery**, in one PR against the integration repo:
+   the `hooks/pre-push` guard block, the two-repo rules in `CLAUDE.md`, the
+   governance section in `README.md`, and the duplicate marketplace install
+   block. **Pushing that PR's own branch to the integration repo is the test
+   that the guard is gone** - it is refused if you got the hook edit wrong.
+5. **Repoint everything downstream**: `git config --unset remote.pushDefault`,
+   `branch.<main>.remote=origin`, `gh repo set-default`, the marketplace (all
+   three places - see `claude-code-plugin-update-flow`), and any agent
+   instruction file or stored memory that names the upstream as the default
+   remote. These are the ones that rot silently.
+6. **Re-home stranded PRs before archiving.** An open PR on the upstream is
+   content that exists in no other history. `git cherry-pick -n <sha>` onto
+   the integration repo's `main` applies cleanly; expect exactly one conflict,
+   the plugin/package version, since both sides bumped it. Close the upstream
+   PR pointing at its replacement.
+7. **Archive the upstream, do not delete it.** Archiving is reversible and
+   read-only: history stays browsable, scheduled workflows stop, no orphaned
+   automation. Before you do, check `ls-remote --heads` and the open-issue
+   list - a regenerated report issue is fine to freeze, unmerged work is not.
+
+Leave the governance issue **open** if only the velocity half was solved. A
+bypass restores your loop; it does not restore your ability to see the rule
+or to be told when it changes. Closing it trades a standing record for
+nothing.
 
 ## Verification
 

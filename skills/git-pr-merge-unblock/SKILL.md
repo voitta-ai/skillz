@@ -15,9 +15,11 @@ description: |
   than whoever the team picker offers first. Also (6) `gh pr merge` fails with
   `the base branch policy prohibits the merge` while every check is green - the
   REST protection endpoint is 404 for non-admins, so read the effective rules via
-  GraphQL `refUpdateRule` and look for an unresolved review thread.
+  GraphQL `refUpdateRule` and look for an unresolved review thread. Covers the
+  inverse too: `refUpdateRule` is viewer-scoped, so after you are added to a
+  bypass list its zeros mean "does not apply to me", never "the rule is gone".
 author: Claude Code
-version: 1.3.0
+version: 1.4.0
 date: 2026-08-29
 source: https://github.com/voitta-ai/skillz
 ---
@@ -203,6 +205,33 @@ Read it in this order:
    `gh pr merge --admin` before you try it.
 3. `requiredStatusCheckContexts` names checks that must exist on the head commit -
    a renamed workflow job leaves the old name required forever.
+
+**The inverse, once you are put on the bypass list.** `refUpdateRule` is
+**viewer-scoped** - it reports the rule *as it applies to you*, not the rule.
+After a bypass it reads `requiredApprovingReviewCount: 0`,
+`requiresConversationResolution: false`, while `requiredStatusCheckContexts`
+and `allowsForcePushes` keep reporting the parts that still bind everyone:
+
+```bash
+gh api graphql -f query='{repository(owner:"{org}",name:"{repo}"){
+  branchProtectionRules(first:5){nodes{pattern requiredApprovingReviewCount}}
+  ref(qualifiedName:"refs/heads/{branch}"){refUpdateRule{
+    requiredApprovingReviewCount requiresConversationResolution
+    requiredStatusCheckContexts allowsForcePushes viewerCanPush}}}}'
+```
+
+Two traps here, and they push in opposite directions:
+
+- A clean `mergeStateStatus` and a `0` from `refUpdateRule` prove **you**
+  bypass the rule. They are not evidence it was removed for anyone else. Do
+  not write "protection was removed" into a README on that basis.
+- `branchProtectionRules` returns an **empty list** to non-admins, the same
+  as the REST 404. An empty list is not evidence of no protection - and the
+  populated `refUpdateRule` beside it proves the rule exists.
+
+The practical read: `refUpdateRule` answers "what applies to me", which is the
+answerable question. "What applies to everyone" still needs admin, so if being
+unable to see the rule was the actual complaint, a bypass does not settle it.
 
 **To date a rule you did not see appear**, compare the repo's `updated_at` with
 `pushed_at`: `gh api repos/{org}/{repo} --jq '{updated_at,pushed_at}'`. Pushes and
