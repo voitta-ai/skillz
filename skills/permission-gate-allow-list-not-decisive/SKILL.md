@@ -9,14 +9,14 @@ description: |
   and gated in the next with no config change between them; (4) you are about
   to loosen a config to get past a gate and want to know first whether that
   config is even being read; (5) a refusal might be masking a second,
-  server-side gate. Records the load-bearing fact that Claude Code auto mode
-  runs `classifyAllShell` and therefore ignores EVERY `Bash(...)` and
-  PowerShell allow rule at runtime, while outside auto mode those same rules
-  apply and bypass `PreToolUse` hooks entirely - so one rule is authoritative
-  in one mode and inert in the other, with nothing at the prompt naming which
-  gate spoke.
+  server-side gate. Records the opt-in setting `autoMode.classifyAllShell`
+  (Claude Code, **default false**), which when enabled suspends EVERY
+  `Bash(...)` and PowerShell allow rule while auto mode is active - and the
+  fact that outside auto mode those same rules apply and bypass `PreToolUse`
+  hooks entirely. Also records the diagnostic order to use when a rule is not
+  taking effect and that setting is off, which is the usual case.
 author: Claude Code
-version: 1.0.0
+version: 1.1.0
 date: 2026-09-16
 source: https://github.com/voitta-ai/skillz
 source_file: skills/permission-gate-allow-list-not-decisive/SKILL.md
@@ -40,13 +40,13 @@ work. The expensive part is the response: with nothing identifying the gate,
 the natural move is to loosen the config further, which changes nothing and
 ratchets the permission surface looser on every attempt.
 
-The concrete instance, read from the shipped Claude Code binary (2.1.273):
+One setting makes an allow-list stop counting, and it is off by default.
+From Claude Code's settings schema in the 2.1.273 binary:
 
 ```
-classifyAllShell is active, so at runtime auto mode ignores every
-Bash/PowerShell allow rule -- a superset of the entries flagged here,
-including any shell entries in the destructive list; outside auto mode
-all of these rules still [apply]
+classifyAllShell: ...describe("When true, every Bash/PowerShell allow rule is
+suspended while auto mode is active so all shell commands are routed through
+the classifier (higher safety, more classifier calls). Default: false.")
 ```
 
 So `Bash(gh pr merge*)` in `~/.claude/settings.json` is:
@@ -54,9 +54,22 @@ So `Bash(gh pr merge*)` in `~/.claude/settings.json` is:
 | mode | effect of the rule |
 |---|---|
 | normal | auto-approves, and **bypasses `PreToolUse` hooks entirely** |
-| auto | **ignored at runtime** - the classifier decides as if it were absent |
+| auto, `classifyAllShell` unset (**default**) | applies, as in normal mode |
+| auto, `classifyAllShell: true` | **suspended** - the classifier decides as if it were absent |
 
-Both behaviours are deliberate. Neither is announced at the prompt.
+All three are deliberate. None is announced at the prompt, which is the whole
+problem: the same rule has three behaviours and the refusal names none of them.
+
+**Check the setting before you believe it is the cause.** `classifyAllShell`
+is opt-in, so on most machines it is off and is *not* why your rule failed.
+
+> **How this skill got that wrong once, which is the trap worth naming.**
+> The binary also carries the sentence *"classifyAllShell is active, so at
+> runtime auto mode ignores every Bash/PowerShell allow rule..."*. That is not
+> a statement about auto mode - it is the consequent of a ternary (its else
+> branch is `""`), emitted by the setup recon only when the setting is already
+> on. Extracted alone it reads as an unconditional rule. When pulling a fact
+> out of a binary, **find the guard before you quote the branch.**
 
 ## Context / Trigger Conditions
 

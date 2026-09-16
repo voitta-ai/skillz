@@ -14,7 +14,7 @@ description: |
   read - generator prompt text for intent, validator function bodies for
   enforced limits - and the `autoMode.environment` worked example.
 author: Claude Code
-version: 1.0.0
+version: 1.1.0
 date: 2026-09-16
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claude-code-settings-spec-from-binary/SKILL.md
@@ -129,6 +129,37 @@ grep -ao 'function validatorName(e,n){.\{0,1200\}' /tmp/cc-strings.txt | head -1
 The prompt says what *should* be written; the validator says what *will be
 accepted*. They routinely differ - a prompt may describe a slot the validator
 never checks, and a validator may cap something the prompt never mentions.
+
+### 5. Find the guard before you quote the branch
+
+A string in a binary is not a statement of fact; it is a value some code path
+produces under some condition. Before quoting one as behaviour, locate what
+decides whether it is emitted at all.
+
+Observed for real, on this binary. It carries:
+
+```
+classifyAllShell is active, so at runtime auto mode ignores every
+Bash/PowerShell allow rule ...
+```
+
+Read alone that is an unconditional rule about auto mode, and it was published
+to a skill as one. In context it is the consequent of a ternary whose else
+branch is the empty string:
+
+```js
+let u = gve() ? `\n_Note: classifyAllShell is active, so at runtime ...` : "",
+```
+
+`gve()` is the guard. The sentence is printed by the setup recon **only when
+the setting is already on**, and the schema a few hundred thousand bytes away
+says `Default: false.` The quoted string and the schema describe the same
+setting and imply opposite defaults; only one of them is a contract.
+
+So: grep for the assignment, not just the literal. Widen the window until you
+can see a `?`, an `if`, or a function boundary. If the guard cannot be found,
+report the string as *"emitted under conditions I could not determine"* rather
+than as behaviour - the distinction is the whole value of the extraction.
 
 ## Verification
 
