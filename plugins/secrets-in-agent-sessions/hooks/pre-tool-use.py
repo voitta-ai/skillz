@@ -96,11 +96,22 @@ _IDENTIFIER_SHAPES = (
     re.compile(r"^[A-Za-z0-9_.\-]*/[A-Za-z0-9_.\-/]*$"),   # a path
     # A dotted reference to a name: process.env.TOKEN, __ENV.TOKEN (k6),
     # config.api_key. The ENV_VAR_NAME shape above anchors on [A-Z], so every
-    # one of these read as a credential. Neither shape below admits "/+=-",
-    # so a base64 or hex blob cannot reach this tier, and both require a
-    # letter to start, so a digit-leading blob cannot either.
+    # one of these read as a credential. The dotted shape is safe from raw
+    # blobs because it REQUIRES a "." and no base64 alphabet contains one.
     re.compile(r"^_*[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+$"),
-    re.compile(r"^_+[A-Za-z][A-Za-z0-9_]*$"),      # _NAME, __dunder__
+    # _NAME, __dunder__ -- split by case on purpose. base64url substitutes
+    # "-" and "_" for "+/", so "_" IS in that alphabet and a single
+    # [A-Za-z0-9_]+ shape exempts any unprefixed base64url token that starts
+    # with "_" and happens to contain no "-": measured at 139 of 20000 random
+    # 40-char tokens (0.69%). Leading-underscore identifiers are single-case
+    # by convention (_SCREAMING_SNAKE or _snake_case) while a base64url blob
+    # is mixed-case by construction, so splitting on case takes that 139 to 0
+    # while _INTERNAL_API_KEY_NAME, __dunder__ and _private_helper_name all
+    # still pass. The cost is a long mixed-case _PascalCaseName read as a
+    # credential; this hook advises rather than blocks, so a missed secret
+    # costs more than an extra notice.
+    re.compile(r"^_+[A-Z][A-Z0-9_]*$"),            # _SCREAMING_SNAKE
+    re.compile(r"^_+[a-z][a-z0-9_]*$"),            # _snake_case, __dunder__
 )
 # Anything matching a real credential shape wins over the name-shaped tests --
 # an AWS key id is [A-Z0-9]{20} end to end and would otherwise read as an
@@ -238,6 +249,11 @@ def selftest():
         ("export DB_PASSWORD=%s" % hexkey, "underscore boundary"),
         ("psql --password %s" % hexkey, "flag value"),
         ("deploy --token %s" % glpat, "shape"),
+        # base64url puts "_" in the alphabet, so a leading-underscore token
+        # used to pass as an identifier. Mixed case is what distinguishes it
+        # from a real _NAME; keep this fixture mixed-case and "-"-free.
+        ("deploy --token _%s" % ("Onxa0DLfPPPpPiQMoo_2o7fSGDf3riFjvltHi"),
+         "base64url blob starting with _"),
     ]
     negative = [
         ('curl -H "X-Api-Key: $MY_API_KEY" https://example.test', "env ref"),
@@ -253,6 +269,7 @@ def selftest():
         ("const TOKEN = %sENV.SIDEWINDER_TOKEN || ''" % ("_" * 2), "k6 env ref"),
         ("const token = process.env.SERVICE_TOKEN", "dotted env ref"),
         ("echo api_key = %sINTERNAL_API_KEY_NAME" % "_", "underscore-prefixed"),
+        ("echo api_key = %sinternal_api_key_name" % "_", "underscore, lower"),
     ]
     bad = 0
     for cmd, why in positive:
