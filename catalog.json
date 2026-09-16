@@ -182,6 +182,15 @@
       "summary": "Why `claude plugin update` reports \"up to date\" while the plugin still runs stale code: the install cache is keyed by plugin.json#version. Authors bump on every shipping merge; verify against the cache dir, never the marketplace clone."
     },
     {
+      "name": "claude-code-settings-spec-from-binary",
+      "path": "skills/claude-code-settings-spec-from-binary/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Recover an undocumented Claude Code settings block from the shipped bun-compiled CLI binary with strings when the public JSON schema omits it: run strings to a file first (a context-window grep at the raw binary times out), then read BOTH the generator prompt text for the slot vocabulary and the validator bodies for the limits actually enforced. Notes that which claude often returns a wrapper shim, and that bundled-JS megalines must be truncated when read."
+    },
+    {
       "name": "claude-json-mcp-migration-slice",
       "path": "skills/claude-json-mcp-migration-slice/SKILL.md",
       "hosts": [
@@ -1033,6 +1042,7 @@
         "claude-code-plugin-python-bootstrap",
         "claude-code-plugin-release-automation",
         "claude-code-plugin-update-flow",
+        "claude-code-settings-spec-from-binary",
         "claude-json-mcp-migration-slice",
         "claude-transcript-permission-mining",
         "claudeception",
@@ -1312,6 +1322,19 @@
         "claude-code-plugin-update-flow"
       ],
       "summary": "Single-skill plugin: claude-code-plugin-update-flow."
+    },
+    {
+      "name": "claude-code-settings-spec-from-binary",
+      "claude_manifest": "plugins/claude-code-settings-spec-from-binary/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/claude-code-settings-spec-from-binary/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "claude-code-settings-spec-from-binary"
+      ],
+      "summary": "Single-skill plugin: claude-code-settings-spec-from-binary."
     },
     {
       "name": "claude-json-mcp-migration-slice",
