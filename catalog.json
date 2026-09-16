@@ -956,6 +956,21 @@
         "codex"
       ],
       "summary": "Decide PR vs issue for a repo by measuring its conversion rate first: maintainer share of merged PRs, outside PRs open, commits since the last release, and whether outside PRs get human or bot-only review (search API totals, not gh pr list, which caps silently). Rule: on maintainer-driven, robot-reviewed, thousands-of-commits-unreleased repos, send an issue shaped as a spec (reproduction, verified mechanism, one-PR ask, kill condition), not a patch. Covers reading the maintainer PR's diff before asking scope questions, closing your superseded PR with a pointer, offering the real-workload review bots cannot give, and cross-linking duplicates so the fix closes the canonical issue."
+    },
+    {
+      "name": "claude-session-three-names",
+      "path": "skills/claude-session-three-names/SKILL.md",
+      "files": [
+        "scripts/cc",
+        "scripts/cx",
+        "scripts/cc-names",
+        "scripts/cc-who"
+      ],
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "One name for a Claude Code session in all three places peers and humans look: the ListAgents/SendMessage display name, the Remote Control name and the cmux tab title. Ships cc/cx launch wrappers (resolve name from argument, human-set tab title or folder; prompt only on collision; exec claude -n X --remote-control X with the tab renamed to X), cc-names who/pick/sync over ~/.claude/sessions/<pid>.json joined to cmux tree, and a Stop hook that pushes a mid-session /rename to the tab."
     }
   ],
   "collections": [
@@ -1078,7 +1093,8 @@
         "permission-gate-inherits-operator-allow-list",
         "skill-capture-pr-handoff",
         "android-adb-device-verification",
-        "oss-contribution-shape-by-conversion-rate"
+        "oss-contribution-shape-by-conversion-rate",
+        "claude-session-three-names"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2421,6 +2437,19 @@
         "oss-contribution-shape-by-conversion-rate"
       ],
       "summary": "Single-skill plugin: oss-contribution-shape-by-conversion-rate."
+    },
+    {
+      "name": "claude-session-three-names",
+      "claude_manifest": "plugins/claude-session-three-names/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/claude-session-three-names/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "claude-session-three-names"
+      ],
+      "summary": "Single-skill plugin: claude-session-three-names."
     }
   ],
   "defaults": {

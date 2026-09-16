@@ -515,6 +515,11 @@
       "name": "oss-contribution-shape-by-conversion-rate",
       "source": "./plugins/oss-contribution-shape-by-conversion-rate/",
       "description": "Measure a repo's PR conversion rate (maintainer share, outside PRs waiting, unreleased commits, bot-only review) before sending a patch; on maintainer-driven repos send a spec-shaped issue with a kill condition instead."
+    },
+    {
+      "name": "claude-session-three-names",
+      "source": "./plugins/claude-session-three-names/",
+      "description": "One name for a Claude Code session everywhere: cc/cx launch wrappers, cc-names who/pick/sync, and a Stop hook that keeps the cmux tab title equal to the session's peer name."
     }
   ]
 }

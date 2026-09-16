@@ -1,0 +1,12 @@
+{
+  "name": "claude-session-three-names",
+  "description": "One name for a Claude Code session everywhere: cc/cx launch wrappers, cc-names who/pick/sync, and a Stop hook that keeps the cmux tab title equal to the session's peer name.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}
