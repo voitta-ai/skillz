@@ -18,12 +18,15 @@ description: |
   two sessions given the same issue pick the same branch name, (10) you find
   uncommitted changes in a working tree that are not yours, (11) a background
   pipeline from an earlier run was reported "stopped" by the harness and you
-  are about to relaunch it. Covers the three collision shapes -- duplicate
-  work, pre-existing better work, and state changing under you -- the cheap
-  pre-flight check for each, and how to reconcile without losing the better
-  version.
+  are about to relaunch it, (12) you are about to merge a PR you did not open --
+  a merge moves the base under every other open PR, so it is the act that costs
+  live peers the most, and the owner should usually be the one to press it.
+  Covers the three collision shapes -- duplicate work, pre-existing better work,
+  and state changing under you -- the cheap pre-flight check for each, how to
+  reconcile without losing the better version, and what to audit when you have
+  already merged under a peer.
 author: Claude Code
-version: 1.5.0
+version: 1.6.0
 date: 2026-08-20
 ---
 
@@ -161,6 +164,39 @@ dependency, and without a gate the second lane races the first.
    output already. Hand it over rather than discarding it — in the case above the
    stood-down session's dry-run findings were folded into the surviving review as
    an independently-produced corroborating pass.
+
+### Merging is the act that costs the other sessions most
+
+Opening a PR is additive; merging is not. A merge moves the base every other
+open PR is measured against, so every in-flight branch now owes a rebase — and
+where the repo has a shared counter (a version, a `CHANGELOG`, a registry file)
+every one of them owes a new number too. The session that owns the PR is the one
+holding its worktree, its context and the knowledge of what it re-bumped. A third
+party merging under it invalidates that session's green checks without saying so,
+and can leave it force-pushing to a branch whose PR has just closed.
+
+So before `gh pr merge`, run the same enumeration and hand the merge back:
+
+```
+ListAgents                     # who is live
+SendMessage -> <peer name>     # "you own #N - merging it yourself, or shall I?"
+```
+
+**Ask when the concurrency is accidental; do not ask when it is assigned.** If
+the lanes were named up front — an orchestrated team where one session owns the
+merge lane — that session merges without re-asking, because ownership was settled
+before the work began and re-asking each time is the coordination cost the lanes
+existed to remove. The check is for the undeclared case: two sessions that each
+believe they are alone in the repo.
+
+**If you have already merged under a peer, audit — do not revert.** Reverting a
+squash merge is its own hazard and it re-races whatever the peer is doing at that
+moment. Verify the merged result instead: that shared counters advanced
+monotonically and none was flattened by a rebase that resolved cleanly, that
+shared registry files took only the entries the PR added, that no build artifact
+rode along, and that whatever fires on merge actually fired. Then tell the peer
+what landed and what their branch now owes. A merge you audited is recoverable; a
+revert issued while a peer is mid-push is a second collision.
 
 ### Treat a peer's claim as evidence, not authority
 
