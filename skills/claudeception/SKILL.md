@@ -14,7 +14,7 @@ description: |
   `UserPromptSubmit` hooks instead of an explicit call; that entry point is
   `continuous-learning`, which defers here for the classification and the wiring.
 author: Claude Code
-version: 4.2.1
+version: 4.2.2
 date: 2026-06-14
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claudeception/SKILL.md
@@ -296,9 +296,10 @@ is missing, clone it first. Always branch from `master`.)
    entry. The new plugin starts at `1.0.0`.
 5. **README row.** Add one to the README catalog table. The bundle's
    marketplace description does not enumerate skills, so the two
-   `marketplace.json` files need an edit **only if** step 4 produced a plugin —
-   in which case add its entry to *both* of them, since a plugin advertised on
-   one host and not the other is installable on one host only.
+   `marketplace.json` files also need the new plugin's entry — in *both* of
+   them, since a plugin advertised on one host and not the other is
+   installable on one host only. (This used to be conditional on step 4
+   producing a plugin; step 4 is now required, so it always applies.)
 6. **Bump versions. CI fails the PR without this.** A version is the install
    cache key, so leaving one unchanged means no install ever re-extracts and
    every user silently keeps the old copy:
@@ -309,8 +310,27 @@ is missing, clone it first. Always branch from `master`.)
    - Editing an *existing* skill also bumps that `SKILL.md`'s own frontmatter
      `version:`, which is separate from the packaging version.
 
-   `python3 scripts/check-plugin-version-bumps.py origin/master` is the same
-   check CI runs, and it reads the working tree, so run it before committing.
+   `python3 scripts/check-plugin-version-bumps.py origin/master` reads the
+   working tree, so run it before committing — but it is **not** the same
+   check CI runs. It derives what to check from the diff: the bundle ships
+   every skill, so any `skills/` edit does implicate it, but a PR that touches
+   only a plugin directory — a hook, a manifest, a script under `plugins/` —
+   implicates that plugin alone. The bundle gate lives separately in
+   `release.yml` and still demands a bump, so such a PR prints `OK: N
+   implicated plugin(s) bumped` and CI then fails with:
+
+       ##[error]plugins/skillz/.claude-plugin/plugin.json#version is still
+       1.108.0 - bump it.
+
+   Bump `plugins/skillz` in both manifests on every content PR, whether or not
+   a single-skill plugin was implicated. Note also that the bundle version is a
+   global counter: two open PRs cannot both claim the next number. If yours is
+   higher, the rebase conflicts on that line and you resolve it. **If the two
+   numbers are identical, the rebase resolves cleanly and your bump silently
+   vanishes** — git sees the same edit on both sides, drops the hunk as already
+   applied, and the manifest disappears from your diff entirely. That is the
+   dangerous case, because nothing reports it: re-read the bundle version after
+   every rebase rather than trusting a check that went green before it.
 7. **Validate**: run `REPO/scripts/validate-catalog.sh`; fix until it prints `OK`.
 8. **Branch, commit, PR**: from `master`, branch `add-skill-NAME`, commit, push, open a
    PR with `gh pr create`. The PR is the review gate — do **not** self-merge; report the
