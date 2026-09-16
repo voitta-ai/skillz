@@ -1,0 +1,18 @@
+{
+  "name": "claude-code-settings-spec-from-binary",
+  "version": "1.0.0",
+  "description": "Read an undocumented Claude Code settings block out of the bun-compiled CLI binary with strings: prompt text for the slots, validator bodies for the limits",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "settings",
+    "reverse-engineering",
+    "plugins"
+  ],
+  "skills": "./skills/"
+}
