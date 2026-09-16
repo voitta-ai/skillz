@@ -38,6 +38,8 @@ environments and older Codex versions.
 
 | Name | Type | Hosts | Purpose |
 |---|---|---|---|
+| [consumed-gate-major-upgrade](./skills/consumed-gate-major-upgrade/SKILL.md) | skill | Claude, Codex | Decide whether a new major of a gate you consume is safe to adopt, when you depend on a distinction its own host does not |
+| [`consumed-gate-major-upgrade` plugin](./plugins/consumed-gate-major-upgrade/) | plugin | Claude, Codex | Single-skill plugin: consumed-gate-major-upgrade |
 | [permission-gate-inherits-operator-allow-list](./skills/permission-gate-inherits-operator-allow-list/SKILL.md) | skill | Claude, Codex | Audit what a service auto-runs when it reuses a permission gate built for an interactive terminal -- it inherits that human's personal allow-list |
 | [`permission-gate-inherits-operator-allow-list` plugin](./plugins/permission-gate-inherits-operator-allow-list/) | plugin | Claude, Codex | Single-skill plugin: permission-gate-inherits-operator-allow-list |
 | [work-on-pr](./skills/work-on-pr/SKILL.md) | skill | Claude, Codex | Author-side PR iteration loop |
