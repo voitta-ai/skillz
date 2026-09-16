@@ -934,7 +934,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Diagnose which permission gate refused a command when two are active, and why a standing allow rule did not stop it. Records that Claude Code auto mode runs classifyAllShell and ignores every Bash/PowerShell allow rule at runtime, while outside auto mode the same rule applies and bypasses PreToolUse hooks entirely. Pairs with permission-gate-inherits-operator-allow-list as the opposite symptom of one design gap."
+      "summary": "Diagnose which permission gate refused a command when two are active, and why a standing allow rule did not stop it. Records the opt-in setting autoMode.classifyAllShell (default false), which when enabled suspends every Bash/PowerShell allow rule while auto mode is active, and the diagnostic order to use when it is off - which is the usual case. Pairs with permission-gate-inherits-operator-allow-list as the opposite symptom of one design gap."
     },
     {
       "name": "permission-gate-inherits-operator-allow-list",
