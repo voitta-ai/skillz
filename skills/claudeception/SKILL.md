@@ -14,7 +14,7 @@ description: |
   `UserPromptSubmit` hooks instead of an explicit call; that entry point is
   `continuous-learning`, which defers here for the classification and the wiring.
 author: Claude Code
-version: 4.2.0
+version: 4.2.1
 date: 2026-06-14
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claudeception/SKILL.md
@@ -265,6 +265,16 @@ is missing, clone it first. Always branch from `master`.)
 2. **Register in `catalog.json`**: add a `skills` entry
    (`{ "name", "path": "skills/NAME/SKILL.md", "hosts": [...], "summary": "..." }`) and
    add `NAME` to the `skillz` bundle plugin's `skills` list.
+
+   **Insert the entry as text; never round-trip the file through a JSON
+   load/dump.** `catalog.json` is deliberately unsorted, so re-serializing it
+   sorts and re-indents everything: observed twice in one day, turning a ~25-line
+   addition into diffs of +1157 and +1591/-1370 lines of pure reordering, which
+   buries the actual change and conflicts with every other open skill PR. Same
+   for both `marketplace.json` files. If a rebase leaves these files conflicted,
+   `python3 scripts/merge-skill-registry.py` resolves them correctly *and* undoes
+   an earlier round-trip, since it takes the base file wholesale and re-splices
+   only the entries the branch adds.
 3. **Symlink into the bundle, once per host.** The bundle keeps a separate
    directory per host and the symlinks must match the `hosts` declared in step 2:
 
