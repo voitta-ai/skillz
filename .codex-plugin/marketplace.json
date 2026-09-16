@@ -502,6 +502,11 @@
       "description": "JaCoCo class-id mismatch warns then succeeds; changed classes read zero."
     },
     {
+      "name": "permission-gate-allow-list-not-decisive",
+      "source": "./plugins/permission-gate-allow-list-not-decisive/",
+      "description": "Diagnose WHICH permission gate refused a command when two are active, and why a standing allow rule did not stop it: Claude Code auto mode runs classifyAllShell and ignores every Bash/PowerShell allow rule at runtime, while outside auto mode the same rule applies and bypasses PreToolUse hooks entirely"
+    },
+    {
       "name": "permission-gate-inherits-operator-allow-list",
       "source": "./plugins/permission-gate-inherits-operator-allow-list/",
       "description": "Single-skill plugin: permission-gate-inherits-operator-allow-list."

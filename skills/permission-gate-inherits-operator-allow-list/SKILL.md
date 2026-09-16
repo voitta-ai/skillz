@@ -17,7 +17,7 @@ description: |
   verdicts, cutting the inheritance off, and asserting at boot that it stayed
   cut.
 author: Claude Code
-version: 1.0.0
+version: 1.1.0
 date: 2026-09-14
 ---
 
@@ -204,3 +204,16 @@ every command parks, which is safe and completely unusable, so it must be loud.
   measured 123-pattern surface.
 - voitta-ai/shmobster#148 -- the consumer side: passing the flag, and the boot
   preflight above.
+
+## Related
+
+- `permission-gate-allow-list-not-decisive` -- **the other end of this same
+  design gap; read the two as a pair.** This skill covers an allow-list that is
+  too decisive: a service inherits one human's permissions and applies them to
+  other people's input, the confused-deputy direction. That one covers the
+  inverse, where the allow-list is read and is *not* decisive -- a standing
+  `Bash(...)` rule ignored outright because Claude Code auto mode runs
+  `classifyAllShell`, with no surface naming which gate refused. Same root
+  cause, opposite symptom: an allow-list authoritative in one direction and
+  advisory in the other. Read singly they look like contradictory advice about
+  whether to trust an allow-list; read together they are one gap.
