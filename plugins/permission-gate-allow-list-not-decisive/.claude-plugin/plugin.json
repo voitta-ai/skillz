@@ -1,0 +1,12 @@
+{
+  "name": "permission-gate-allow-list-not-decisive",
+  "description": "Diagnose WHICH permission gate refused a command when two are active, and why a standing allow rule did not stop it: Claude Code auto mode runs classifyAllShell and ignores every Bash/PowerShell allow rule at runtime, while outside auto mode the same rule applies and bypasses PreToolUse hooks entirely",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}
