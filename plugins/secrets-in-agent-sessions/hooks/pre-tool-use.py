@@ -94,6 +94,13 @@ _IDENTIFIER_SHAPES = (
     re.compile(r"^[A-Z][A-Z0-9_]*$"),              # ENV_VAR_NAME
     re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)+$"),  # kebab-or-snake resource name
     re.compile(r"^[A-Za-z0-9_.\-]*/[A-Za-z0-9_.\-/]*$"),   # a path
+    # A dotted reference to a name: process.env.TOKEN, __ENV.TOKEN (k6),
+    # config.api_key. The ENV_VAR_NAME shape above anchors on [A-Z], so every
+    # one of these read as a credential. Neither shape below admits "/+=-",
+    # so a base64 or hex blob cannot reach this tier, and both require a
+    # letter to start, so a digit-leading blob cannot either.
+    re.compile(r"^_*[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+$"),
+    re.compile(r"^_+[A-Za-z][A-Za-z0-9_]*$"),      # _NAME, __dunder__
 )
 # Anything matching a real credential shape wins over the name-shaped tests --
 # an AWS key id is [A-Z0-9]{20} end to end and would otherwise read as an
@@ -243,6 +250,9 @@ def selftest():
         ("git clone https://oauth2:${CI_JOB_TOKEN}@gitlab.test/t/s.git", "the recommended form"),
         ("git clone https://USERNAME:PASSWORD@host/o/r.git", "placeholders"),
         ("curl -X POST https://slack.com/api/auth.test", "plain url"),
+        ("const TOKEN = %sENV.SIDEWINDER_TOKEN || ''" % ("_" * 2), "k6 env ref"),
+        ("const token = process.env.SERVICE_TOKEN", "dotted env ref"),
+        ("echo api_key = %sINTERNAL_API_KEY_NAME" % "_", "underscore-prefixed"),
     ]
     bad = 0
     for cmd, why in positive:
