@@ -525,6 +525,11 @@
       "name": "micronaut-endpoints-config-root-level",
       "source": "./plugins/micronaut-endpoints-config-root-level/",
       "description": "Micronaut endpoints.* is root-level; nested under micronaut: it binds to nothing and the endpoint 401s."
+    },
+    {
+      "name": "consumed-gate-major-upgrade",
+      "source": "./plugins/consumed-gate-major-upgrade/",
+      "description": "Single-skill plugin: consumed-gate-major-upgrade."
     }
   ]
 }

@@ -1,0 +1,12 @@
+{
+  "name": "consumed-gate-major-upgrade",
+  "description": "Decide whether a new major of a security gate you consume is safe to adopt, when your product depends on a distinction the gate's own host does not -- a vendor's honest 'zero drift' can be true for their host and catastrophic for yours. Use when a dependency you gate on ships a major or a rule-set cut, when release notes quantify an improvement you cannot map onto your own semantics, or when writing the startup check that decides whether a dependency is usable. Covers replaying against your own boundary in both directions, the delegated-versus-unreadable collapse, verifying the tree a drift number was measured on, drawing the startup probe from the affected population rather than the survivors, and asking the vendor to report what the verdict depended on.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

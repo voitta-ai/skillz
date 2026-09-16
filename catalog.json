@@ -980,6 +980,15 @@
         "codex"
       ],
       "summary": "A Micronaut management endpoint returns 401 with no security library on the classpath because `endpoints.*` is read from the YAML DOCUMENT ROOT, and a copy nested under `micronaut:` (next to `micronaut.metrics.*`, where it looks like it belongs) binds to nothing silently, leaving the endpoint at its default sensitivity."
+    },
+    {
+      "name": "consumed-gate-major-upgrade",
+      "path": "skills/consumed-gate-major-upgrade/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Decide whether a new major of a security gate you consume is safe to adopt, when your product depends on a distinction the gate's own host does not. Covers replaying in your own semantics rather than the vendor's, the delegated-versus-unreadable collapse that makes a fail-closed consumer park everything, checking the tree a drift number was measured on, drawing the startup probe from the population the change affected rather than from the survivors, and asking the vendor to report what the verdict depended on."
     }
   ],
   "collections": [
@@ -1104,7 +1113,8 @@
         "android-adb-device-verification",
         "oss-contribution-shape-by-conversion-rate",
         "claude-session-three-names",
-        "micronaut-endpoints-config-root-level"
+        "micronaut-endpoints-config-root-level",
+        "consumed-gate-major-upgrade"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2473,6 +2483,19 @@
         "micronaut-endpoints-config-root-level"
       ],
       "summary": "Single-skill plugin: micronaut-endpoints-config-root-level."
+    },
+    {
+      "name": "consumed-gate-major-upgrade",
+      "claude_manifest": "plugins/consumed-gate-major-upgrade/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/consumed-gate-major-upgrade/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "consumed-gate-major-upgrade"
+      ],
+      "summary": "Single-skill plugin: consumed-gate-major-upgrade."
     }
   ],
   "defaults": {
