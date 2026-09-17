@@ -9,8 +9,9 @@ description: |
   fast-moving repo (thousands of merged PRs a quarter, one to three
   maintainers, agent-generated PRs) and want to know if it will be read,
   (2) your PR has sat for weeks with green bot checks and no human review,
-  (3) required checks never ran on your fork branch so the PR shows BLOCKED
-  with nothing to fix, (4) a maintainer opened their own PR for the thing you
+  (3) required checks never ran on your PR so it shows BLOCKED with nothing
+  to fix (usually because the ruleset's workflows were added after your last
+  push), (4) a maintainer opened their own PR for the thing you
   filed, with or without crediting the issue, (5) several competing fix PRs
   for one bug are rotting while a duplicate issue gets the fix, (6) you are
   writing an issue and want it to convert. Covers the four numbers, the
@@ -18,7 +19,7 @@ description: |
   an issue convert, cross-linking duplicates so the fix closes the canonical
   issue, and closing your own superseded PR with a pointer.
 author: Claude Code
-version: 1.1.0
+version: 1.2.0
 date: 2026-09-14
 source: cmux contribution record Jul-Sep 2026 (hq#145); aiqrank/plugin Aug 2026
 source_file: skills/oss-contribution-shape-by-conversion-rate/SKILL.md
@@ -41,9 +42,10 @@ Sending the wrong shape costs you the work and costs the maintainer triage.
 
 Measured on one such repo over two months: the two features asked for in
 issues shipped together in one maintainer PR; the patch sent for one of those
-features sat 32 days with seven green bot checks, zero workflow runs (the
-required checks do not run on fork branches), and no human review, then was
-superseded. A bug with nine competing fix PRs, four by the maintainer, got
+features sat 32 days with seven green bot checks, none of the required
+workflows ever run, and no human review, then was superseded. The required
+workflows had been added to the repo after the PR's last push; nothing ever
+asked them to run. A bug with nine competing fix PRs, four by the maintainer, got
 its fix attached to a duplicate issue filed four months after the original.
 
 ## Context / Trigger Conditions
@@ -51,7 +53,10 @@ its fix attached to a duplicate issue filed four months after the original.
 - Before writing a patch for a repo you do not maintain.
 - A PR of yours shows `BLOCKED` with green bot checks and no runs of the
   required checks; or `mergeStateStatus` stays `UNKNOWN`/`UNSTABLE` with
-  nobody assigned.
+  nobody assigned. Check the dates before blaming the fork: a workflow added
+  to the base branch after your last push never fires on your PR, and a
+  ruleset that requires its context then waits forever. A rebase and push
+  (or close and reopen) fires it.
 - The review log on a maintainer PR reads "automated pre-merge suggestion
   triage", CodeRabbit, Cursor, greptile ("too many files"), Bugbot ("spend
   limit reached"): the repo reviews by robot.
@@ -92,8 +97,13 @@ roughly ten rapid calls. For an exact count above 1000, paginate REST
 Then look at one recent outside PR and one maintainer PR: who reviewed
 (`gh pr view N --json reviews --jq '[.reviews[].author.login]'`) and whether
 the required checks ran (`--json statusCheckRollup`; compare against the
-ruleset's required names). A fork branch where required checks never run is
-a structural block, not something to fix in your PR.
+ruleset's required names, `gh api repos/O/R/rules/branches/main`). If a
+required context has no run at all, compare the workflow file's first commit
+date with your PR's last push (`gh api 'repos/O/R/commits?path=.github/workflows/<f>'`
+and `gh api 'repos/O/R/actions/runs?head_sha=<sha>'`); a missing run is
+usually a workflow that postdates your push, not a fork restriction, and a
+push fixes it. `pull_request_target` workflows are not held by the
+fork-approval gate either.
 
 ### 2. Read the numbers
 
@@ -131,8 +141,9 @@ be superseded and say so in the body.
   while `grep -c wait-until` on the diff answered it in one second.
 - If your own PR is superseded, **close it yourself with a pointer** to the
   maintainer PR, credit what they did better, and state the block you hit
-  (required checks never ran) as a fact for the next contributor, not as a
-  grievance.
+  (required checks added after your push never ran) as a fact for the next
+  contributor, not as a grievance, and correct it if you got the mechanism
+  wrong the first time.
 - Offer the review the bots cannot give: build the branch and run it against
   your real workload. On a repo that reviews by robot, that is the one thing
   only an outside user can contribute.
@@ -157,7 +168,10 @@ maintainers, 99 by everyone else; 3,007 open, 773 from outside; 4,665
 commits since the last release five weeks earlier. Two issues filed in July
 (a `wait` verb and an `agent.state.changed` event) shipped together in a
 maintainer PR of 111 files; the outside PR for the event sat 32 days at
-BLOCKED with zero workflow runs and was closed by its author with a pointer.
+BLOCKED because all five required workflows were created after its only
+commit, and was closed by its author with a pointer. The author first blamed
+the fork; a Slack agent (shmobster) re-derived the real mechanism from the
+runs API and the workflow files' first-commit dates on 2026-09-17.
 Decision recorded: issues with field data and a kill condition, not PRs, for
 that repo from then on.
 
