@@ -1,6 +1,6 @@
 {
   "name": "wordpress-com-publish",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Acquire a WordPress.com OAuth2 token (authorization-code flow) and publish/update posts via public-api.wordpress.com.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",
