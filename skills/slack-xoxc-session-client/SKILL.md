@@ -207,6 +207,11 @@ Gotchas, each one an error string you will otherwise meet:
 - **The composer slot may already be taken by the person's own draft.**
   `drafts.list` returns their hand-typed drafts too. Never update or delete a
   draft you did not create; route yours elsewhere.
+- **A draft the person deleted in the app can keep holding the slot.** It
+  lists with `is_deleted: true`, yet `drafts.create` to that destination still
+  gives `attached_draft_exists`, and `drafts.update` / `drafts.delete` on it
+  give `draft_update_invalid` / `draft_delete_invalid`. The API cannot free
+  it: ask the person to open that composer and clear it, then retry.
 - **Editing: `drafts.update`** with `draft_id` plus the same fields as create.
   A DM destination read back from `drafts.list` carries both `channel_id` and
   `user_ids`; passing both back gives
