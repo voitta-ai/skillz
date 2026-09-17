@@ -9,14 +9,17 @@ description: |
   and the token must be re-minted, (4) a token exchange fails with
   invalid_client or invalid_grant, (5) a published post comes out mangled
   (newlines inside headings, missing code blocks) - author in Markdown and
-  convert to Gutenberg block markup, (6) you need to update/append to an
+  convert to Gutenberg block markup, (6) a table, list, quote or horizontal rule
+  lands as raw HTML or as a block the editor flags as invalid, (7) you are
+  drafting a multi-post series and need the posts to cross-link before the
+  publish dates exist, (8) you need to update/append to an
   existing post by ID without clobbering it. Operating contract: resolve a
   token (env then Keychain); if present, publish; if absent, run the
   authorization-code flow, store the token, then publish. NOT for self-hosted
   WordPress using application-password REST - this targets public-api.wordpress.com.
 author: Claude Code
-version: 1.3.0
-date: 2026-06-24
+version: 1.4.0
+date: 2026-09-16
 source: https://github.com/voitta-ai/skillz
 source_file: skills/wordpress-com-publish/SKILL.md
 ---
@@ -78,6 +81,21 @@ code blocks. The fix: send **Gutenberg block markup** (`<!-- wp:heading -->`,
 `<!-- wp:paragraph -->`, `<!-- wp:code -->`, `<!-- wp:list -->`), which WordPress
 stores verbatim. Author in Markdown, then convert with `md2wp.py` below.
 
+**Emit the shape the editor itself saves**, or the block shows up flagged as
+"unexpected or invalid content" and the author has to click through a recovery
+prompt. The converter below covers paragraph, heading, code, list, quote, table
+and separator; anything else falls through to `wp:html`, which renders but is
+opaque to the editor. Three shapes are easy to get subtly wrong:
+- **Lists** need `wp:list-item` inner blocks, not a bare `<ul>` inside
+  `wp:list`. Same for **quotes**: inner `wp:paragraph` blocks, not a bare `<p>`.
+- **Tables** are `<figure class="wp-block-table">` wrapping the `<table>`. Pass
+  `{"hasFixedLayout":false}` explicitly rather than relying on the default,
+  which has changed across WordPress versions and decides whether the saved
+  `<table>` is expected to carry `has-fixed-layout`. Strip pandoc's
+  `<tr class="header|odd|even">` and the whitespace between tags.
+- **Horizontal rules** are `wp:separator` with
+  `class="wp-block-separator has-alpha-channel-opacity"`.
+
 **Two non-obvious traps (each cost real time):**
 - pandoc's default `--wrap=auto` line-wraps the HTML output - that is what
   injects `\n` into long headings (it is NOT WordPress doing it). You MUST pass
@@ -96,6 +114,21 @@ stores verbatim. Author in Markdown, then convert with `md2wp.py` below.
 import subprocess, sys, re
 from html.parser import HTMLParser
 
+def _items(raw, tag):
+    """<li> children -> wp:list-item inner blocks (what the editor itself saves)."""
+    body = re.sub(rf"</{tag}>$", "", re.sub(rf"^<{tag}\b[^>]*>", "", raw, count=1), count=1)
+    if re.search(r"<(ul|ol)\b", body):
+        raise SystemExit("nested list: convert by hand")
+    out = []
+    for item in re.findall(r"<li>(.*?)</li>", body, flags=re.S):
+        paras = re.findall(r"<p>(.*?)</p>", item.strip(), flags=re.S)  # loose list
+        if len(paras) > 1:
+            raise SystemExit("multi-paragraph list item: convert by hand")
+        text = paras[0] if paras else item.strip()
+        out.append(f"<!-- wp:list-item -->\n<li>{text}</li>\n<!-- /wp:list-item -->")
+    retval = "".join(out)
+    return retval
+
 def to_blocks(md_path, shift=1):
     html = subprocess.run(
         ["pandoc", "-f", "gfm", "-t", "html", "--no-highlight",
@@ -110,7 +143,9 @@ def to_blocks(md_path, shift=1):
             if self.depth == 0: self.curtag = tag; self.cur = ""
             self.cur += self.get_starttag_text() or ""; self.depth += 1
         def handle_startendtag(self, tag, attrs):
-            self.cur += self.get_starttag_text() or ""
+            text = self.get_starttag_text() or ""
+            if self.depth == 0: self.blocks.append((tag, text))   # <hr />
+            else: self.cur += text
         def handle_endtag(self, tag):
             self.depth -= 1; self.cur += f"</{tag}>"
             if self.depth == 0:
@@ -136,13 +171,25 @@ def to_blocks(md_path, shift=1):
             raw = re.sub(r"^<pre\b[^>]*>", '<pre class="wp-block-code">', raw, count=1)
             out.append(f"<!-- wp:code -->\n{raw}\n<!-- /wp:code -->")
         elif tag == "ul":
-            raw = re.sub(r"^<ul\b[^>]*>", '<ul class="wp-block-list">', raw, count=1)
-            out.append(f"<!-- wp:list -->\n{raw}\n<!-- /wp:list -->")
+            out.append('<!-- wp:list -->\n<ul class="wp-block-list">'
+                       f"{_items(raw, 'ul')}</ul>\n<!-- /wp:list -->")
         elif tag == "ol":
-            raw = re.sub(r"^<ol\b[^>]*>", '<ol class="wp-block-list">', raw, count=1)
-            out.append(f'<!-- wp:list {{"ordered":true}} -->\n{raw}\n<!-- /wp:list -->')
+            out.append('<!-- wp:list {"ordered":true} -->\n<ol class="wp-block-list">'
+                       f"{_items(raw, 'ol')}</ol>\n<!-- /wp:list -->")
         elif tag == "blockquote":
-            out.append(f"<!-- wp:quote -->\n{raw}\n<!-- /wp:quote -->")
+            ps = "".join(f"<!-- wp:paragraph -->\n<p>{p}</p>\n<!-- /wp:paragraph -->"
+                         for p in re.findall(r"<p>(.*?)</p>", raw, flags=re.S))
+            out.append('<!-- wp:quote -->\n<blockquote class="wp-block-quote">'
+                       f"{ps}</blockquote>\n<!-- /wp:quote -->")
+        elif tag == "table":
+            t = re.sub(r'<tr class="[^"]*">', "<tr>", raw)   # pandoc adds header/odd/even
+            t = re.sub(r">\s+<", "><", t)                    # keep the block validator happy
+            out.append('<!-- wp:table {"hasFixedLayout":false} -->\n'
+                       f'<figure class="wp-block-table">{t}</figure>\n<!-- /wp:table -->')
+        elif tag == "hr":
+            out.append('<!-- wp:separator -->\n'
+                       '<hr class="wp-block-separator has-alpha-channel-opacity"/>\n'
+                       '<!-- /wp:separator -->')
         elif tag is None:
             continue
         else:
@@ -159,6 +206,42 @@ Send the result as the `content` body (it is large - use
 **Sibling note:** Confluence is the opposite - its `createConfluencePage` takes
 `contentFormat=markdown` directly and renders clean code macros, so none of this
 block conversion is needed there.
+
+## A series: cross-link posts before you know the dates
+
+Posts in a series link each other, but a permalink contains the publish date, so
+the links cannot be written until the dates are fixed - and the dates usually are
+not fixed while drafting. Do not leave bracketed placeholders and plan to "fix
+them at publish time"; that makes the series publish in a forced order and the
+edits get forgotten.
+
+**Use `?p=<ID>` instead.** WordPress 301-redirects `https://<site>/?p=<ID>` to
+that post's permalink, so a link written against the ID keeps working whatever
+date the post ends up with.
+
+1. Create every post in the series as a title-only draft first
+   (`POST /sites/<site>/posts/new` with `title` and `status=draft`). The response
+   `ID` is what you link to; the IDs exist from that moment.
+2. Write the bodies with `https://<site>/?p=<ID>` links, then POST each body.
+3. Record the ID-to-post mapping somewhere durable (the repo, the tracking
+   issue), not in scratch files - the publish week outlives the session that
+   drafted it.
+
+**The caveat that bites: a forward link 404s until its target is live.** This is
+invisible when the whole series publishes at once and obvious when it does not.
+If posts go out one a day:
+
+- Strip **forward** links to plain text before the first post publishes, keeping
+  the sentence intact. Backward links are always safe.
+- On each publish day, flip today's post to `status=publish`, then edit the
+  previously published post to wrap its teaser text in a link to today's.
+- Write down the exact text to wrap for each day, per post. A teaser sentence is
+  usually a clause inside a paragraph, and re-finding it under time pressure is
+  where the mistakes happen.
+
+Count the forward links rather than eyeballing them: in a seven-post series the
+first post often carries several (next post, plus asides pointing further ahead),
+not just one.
 
 ## Update or append to an existing post
 
