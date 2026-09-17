@@ -225,7 +225,14 @@ Gotchas, each one an error string you will otherwise meet:
   anyway.)
 
 Verify with `drafts.list`: find your id, check `is_deleted` / `is_sent` are
-false, and read the text back out of `blocks`.
+false, and read the text back out of `blocks`. When reading back, handle
+`user` / `channel` / `emoji` elements too; a walker that only reads `text` and
+`link` silently drops @mentions.
+
+If the person schedules the draft from the app, it stays in `drafts.list` with
+`date_scheduled` (epoch seconds) set, and that is where to read the text that
+will go out: `chat.scheduledMessages.list` rejects a session token with
+`not_allowed_token_type`.
 
 ## Relationship to the interactive fallback
 
