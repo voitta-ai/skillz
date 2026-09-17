@@ -6,7 +6,8 @@ description: |
   Use when: (1) you participate in a Slack workspace but lack admin/app-install
   rights, so OAuth bot/user tokens are off the table; (2) you need to read history,
   list channels, search, or post programmatically acting as the logged-in user;
-  (3) a prior attempt failed because the `d` auth cookie is httpOnly and
+  (3) you want to leave UNSENT drafts in the person's Slack for them to review
+  and send themselves (`drafts.create` / `drafts.update`); (4) a prior attempt failed because the `d` auth cookie is httpOnly and
   document.cookie / JS extraction returns it empty (the wall every
   browser-automation attempt hits). Headline insight: decrypt the httpOnly
   `d` cookie straight from the browser cookie store with pycookiecheat, and scrape
@@ -14,8 +15,8 @@ description: |
   Ships a working, generalized Python client (slack_client.py) that self-labels
   outgoing posts with a good-faith agent marker by default.
 author: Claude Code
-version: 1.2.0
-date: 2026-07-06
+version: 1.3.0
+date: 2026-09-16
 source: https://github.com/voitta-ai/skillz/issues/67
 source_file: skills/slack-xoxc-session-client/slack_client.py
 ---
@@ -51,6 +52,9 @@ Invoke when:
   rights (no OAuth bot/user token available).
 - You need programmatic read (history, channel list, search) or write
   (post message) acting as the logged-in user.
+- A human wants to review text before it goes out: create it as a Slack
+  **draft** (see "Drafts: leave it unsent for a human" below) instead of
+  posting it.
 - A previous attempt failed because the `d` cookie came back empty from
   `document.cookie` / Claude-in-Chrome JS (httpOnly barrier).
 - You are logged in to the target workspace in a local browser whose cookie
@@ -160,6 +164,63 @@ Opt out per-client with `label_posts=False` (or `--no-label` on the CLI) — but
 the point is to leave it on. It earns legitimacy by adoption, not by a
 gatekeeper; other agents are free to adopt the same `🤖 [agent…]` marker so a
 channel of mixed humans and agents stays honestly readable.
+
+## Drafts: leave it unsent for a human
+
+When the person wants to read, edit and send the message themselves, do not
+post it: create a **draft**. It appears in their composer (or under "Drafts &
+sent") exactly as if they had started typing it, and nothing is visible to
+anyone else until they press send. `drafts.*` is the internal web-client API,
+so it is undocumented; the shape below was verified against a live workspace
+on 2026-09-16.
+
+```python
+import json, time, uuid
+
+blocks = [{"type": "rich_text", "elements": [{"type": "rich_text_section",
+           "elements": [{"type": "text", "text": "Draft body here. "},
+                        {"type": "text", "text": "code", "style": {"code": True}},
+                        {"type": "link", "url": "https://example.com"}]}]}]
+
+sc = SlackSessionClient("<workspace-subdomain>", label_posts=False)
+r = sc.call("drafts.create",
+            blocks=json.dumps(blocks),
+            destinations=json.dumps([{"channel_id": "C0123ABCD"}]),
+            client_msg_id=str(uuid.uuid4()),
+            file_ids="[]",
+            is_from_composer="false",
+            client_last_updated_ts=f"{time.time():.6f}")
+draft_id = r["draft"]["id"]
+```
+
+Gotchas, each one an error string you will otherwise meet:
+
+- **`client_msg_id` is required** (any fresh UUID). Without it:
+  `invalid_arguments` / `missing required field: client_msg_id`.
+- **Exactly one destination.** An empty list gives
+  `invalid_destinations_count`; a draft cannot be left unaddressed.
+- **One draft per destination.** A second draft into the same channel composer
+  gives `attached_draft_exists`. A thread is its own destination
+  (`{"channel_id": "C…", "thread_ts": "…", "broadcast": false}`), and the
+  person's self-DM (`conversations.open users=<own user id>`) takes the overflow
+  when there is no natural thread.
+- **The composer slot may already be taken by the person's own draft.**
+  `drafts.list` returns their hand-typed drafts too. Never update or delete a
+  draft you did not create; route yours elsewhere.
+- **Editing: `drafts.update`** with `draft_id` plus the same fields as create.
+  A DM destination read back from `drafts.list` carries both `channel_id` and
+  `user_ids`; passing both back gives
+  `both_user_ids_and_channel_id_provided_in_destination`, so send only
+  `channel_id`.
+- **Text is rich_text blocks, not mrkdwn.** Links need a `link` element and
+  inline code a `code` style; a raw URL inside a `text` element stays plain.
+- **Labeling.** The human sends the draft as themselves after reading it, so
+  create drafts with `label_posts=False`; the agent marker is for posts that go
+  out without that review. (The client's labeler only touches `chat.*` methods
+  anyway.)
+
+Verify with `drafts.list`: find your id, check `is_deleted` / `is_sent` are
+false, and read the text back out of `blocks`.
 
 ## Relationship to the interactive fallback
 
