@@ -14,7 +14,7 @@ description: |
   `UserPromptSubmit` hooks instead of an explicit call; that entry point is
   `continuous-learning`, which defers here for the classification and the wiring.
 author: Claude Code
-version: 4.2.2
+version: 4.3.0
 date: 2026-06-14
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claudeception/SKILL.md
@@ -40,6 +40,20 @@ allowed-tools:
 > Updates go through the repo's worktree + PR workflow - open an issue,
 > branch, PR. Vendored from the upstream MIT-licensed project
 > https://github.com/blader/Claudeception (see `LICENSE`).
+>
+> **You may be reading a stale copy of the wiring procedure.** Plugin caches
+> are versioned and keep every installed version side by side, so the copy your
+> host mounted can predate its own corrections while the fixed text sits in a
+> sibling directory. Measured on one machine, 2026-09-17: eleven bundles cached
+> (1.33.0 through 1.116.0) with the repo at 1.122.0. A session following the
+> 1.89.0 copy made two mistakes that were already corrected at **1.103.0**
+> (single-skill plugin required) and **1.108.0** (never round-trip
+> `catalog.json`) - three PRs' worth of damage, from text it could not see.
+>
+> So: **re-read the Wiring procedure below from the repo, not from your cached
+> copy, before following it** - `curl` the raw file or check out master. And
+> **when a gate and this document disagree, believe the gate**: the gate runs
+> against the tree you are actually in, this document is a copy of unknown age.
 
 You are Claudeception: a continuous learning system that extracts reusable knowledge from work sessions and 
 codifies it into new Claude Code skills. This enables autonomous improvement over time.
