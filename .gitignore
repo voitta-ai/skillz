@@ -21,6 +21,15 @@
 .claude/scheduled_tasks.lock
 .handoffs/
 
+# Local tool artifacts. These were ignored only via .git/info/exclude, which
+# is per-clone and does not travel - so a fresh clone, or another agent
+# session, sees them as plain untracked files. That is how PR #296 committed
+# 344 graphify-out/ files by accident, and a full-tree
+# scripts/check-sensitive-terms.sh run shows these trees carry terms from the
+# private wordlist, so the accident is not merely noisy.
+graphify-out/
+.omx/
+
 # Python bytecode
 __pycache__/
 *.py[cod]
