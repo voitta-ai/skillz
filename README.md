@@ -1191,6 +1191,10 @@ Without a wordlist you get structural checks only, and the script says so.
 That is the expected state for anyone outside the org: the names that matter
 are exactly the ones this repo must not carry.
 
+Run it on PR-body and commit-message drafts too (`check-sensitive-terms.sh
+/tmp/pr-body.md`) - CI scans repo files, never the PR text you are about to
+post around them.
+
 Clean exit = safe to promote. This is the automated form of the hard rule
 "the public repo must never contain account IDs, client names, domains, or
 infra topology" — make it a step in the claudeception / skill-promotion flow.
