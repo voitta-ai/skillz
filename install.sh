@@ -134,22 +134,33 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 2
 fi
 
-CATALOG_JSON=""
+CATALOG_FILE=""
+# Always hand python a PATH, never the catalog's bytes. Linux caps any single
+# argv/env string at MAX_ARG_STRLEN (32 pages = 131072 bytes) and returns
+# E2BIG past it; macOS has no per-string cap. catalog.json crossed 128 KiB, so
+# `CATALOG="$CATALOG_JSON"` began failing on Linux with "Argument list too
+# long" while every macOS run stayed green. Worse, the failure did not surface
+# as itself: python never started, resolve_skills produced nothing, and the
+# script reported "error: no skills resolved from selection" - a sentence about
+# the catalog's contents, for a problem that was purely about argument length.
 if [[ -n "$SCRIPT_DIR" && -f "$SCRIPT_DIR/catalog.json" ]]; then
-  CATALOG_JSON="$(cat "$SCRIPT_DIR/catalog.json")"
+  CATALOG_FILE="$SCRIPT_DIR/catalog.json"
 else
-  CATALOG_JSON="$(curl -fsSL "$SKILLZ_RAW_BASE/catalog.json")"
+  CATALOG_FILE="$(mktemp -t skillz-catalog.XXXXXX)"
+  trap 'rm -f "$CATALOG_FILE"' EXIT
+  curl -fsSL "$SKILLZ_RAW_BASE/catalog.json" -o "$CATALOG_FILE"
 fi
 
 resolve_skills() {
-  CATALOG="$CATALOG_JSON" \
+  CATALOG_FILE="$CATALOG_FILE" \
   REQ_S="$(printf '%s\n' "${REQ_SKILLS[@]:-}")" \
   REQ_C="$(printf '%s\n' "${REQ_COLLECTIONS[@]:-}")" \
   ALL="$1" \
     python3 <<'PY'
 import json, os, sys
 
-catalog = json.loads(os.environ["CATALOG"])
+with open(os.environ["CATALOG_FILE"]) as fh:
+    catalog = json.load(fh)
 req_s = [s for s in os.environ.get("REQ_S", "").splitlines() if s.strip()]
 req_c = [c for c in os.environ.get("REQ_C", "").splitlines() if c.strip()]
 all_flag = os.environ.get("ALL") == "1"
