@@ -206,6 +206,8 @@ environments and older Codex versions.
 | [secrets-in-agent-sessions](./skills/secrets-in-agent-sessions/SKILL.md) | skill | Claude, Codex | Handle credentials during a coding-agent session without writing them into the transcript, tool-output cache, permission allowlist or logs |
 | [`secrets-in-agent-sessions` plugin](./plugins/secrets-in-agent-sessions/) | plugin | Claude, Codex | Single-skill plugin: secrets-in-agent-sessions |
 | [`session-transcript-mining` plugin](./plugins/session-transcript-mining/) | plugin | Claude, Codex | Single-skill plugin: session-transcript-mining |
+| [slack-agent-cannot-wake-itself](./skills/slack-agent-cannot-wake-itself/SKILL.md) | skill | Claude, Codex | A Slack agent never answers a message posted by its own app (no app_mention), so its bot token or its app's webhook cannot wake it or carry a human's authority; check the posting identity and post as the human (xoxc) or hand them the text. |
+| [`slack-agent-cannot-wake-itself` plugin](./plugins/slack-agent-cannot-wake-itself/) | plugin | Claude, Codex | Single-skill plugin: slack-agent-cannot-wake-itself |
 | [slack-app-token-rotation](./skills/slack-app-token-rotation/SKILL.md) | skill | Claude, Codex | Actually rotate a leaked Slack bot or app-level token: |
 | [`slack-app-token-rotation` plugin](./plugins/slack-app-token-rotation/) | plugin | Claude, Codex | Single-skill plugin: slack-app-token-rotation |
 | [slack-xoxc-session-client](./skills/slack-xoxc-session-client/SKILL.md) | skill | Claude, Codex | Drive the Slack web API as yourself via a live browser session (xoxc token + httpOnly d cookie) when you cannot install a Slack app; ships a runnable Python client that |

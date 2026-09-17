@@ -652,6 +652,15 @@
       "summary": "Sweep every Claude Code session transcript on a machine for skill-worthy knowledge: root-caused bugs, non-obvious gotchas, painfully derived procedures - and for HOMELESS artifacts (skills written to ~/.claude/skills but never committed, skill edits stranded in worktrees, harvest PRs left open). Use when: (1) asked to \"mine sessions\", \"harvest what we learned\", or \"sweep transcripts for skills\", (2) daily/per-session harvesting has been running and you need the periodic catch-up pass that finds what it missed, (3) a skills repo looks behind what you know was learned recently, (4) you need to reconstruct what a lost or crashed session discovered. Method verified at scale: 50+ sessions condensed and mined by 8 parallel subagent miners in one sweep, yielding 22 shipped skill PRs."
     },
     {
+      "name": "slack-agent-cannot-wake-itself",
+      "path": "skills/slack-agent-cannot-wake-itself/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "A Slack agent never answers a message posted by its own app (no app_mention), so its bot token or its app's webhook cannot wake it or carry a human's authority; check the posting identity and post as the human (xoxc) or hand them the text."
+    },
+    {
       "name": "slack-app-token-rotation",
       "path": "skills/slack-app-token-rotation/SKILL.md",
       "hosts": [
@@ -1111,6 +1120,7 @@
         "rxjava-dofinally-terminal-then-finally-test-race",
         "secretsmanager-prove-no-consumer-before-destroy",
         "session-transcript-mining",
+        "slack-agent-cannot-wake-itself",
         "slack-app-token-rotation",
         "slack-xoxc-session-client",
         "spa-request-capture-and-block",
@@ -1872,6 +1882,19 @@
         "session-transcript-mining"
       ],
       "summary": "Single-skill plugin: session-transcript-mining."
+    },
+    {
+      "name": "slack-agent-cannot-wake-itself",
+      "claude_manifest": "plugins/slack-agent-cannot-wake-itself/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/slack-agent-cannot-wake-itself/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "slack-agent-cannot-wake-itself"
+      ],
+      "summary": "Single-skill plugin: slack-agent-cannot-wake-itself."
     },
     {
       "name": "slack-app-token-rotation",
