@@ -1007,6 +1007,15 @@
         "codex"
       ],
       "summary": "Decide whether a new major of a security gate you consume is safe to adopt, when your product depends on a distinction the gate's own host does not. Covers replaying in your own semantics rather than the vendor's, the delegated-versus-unreadable collapse that makes a fail-closed consumer park everything, checking the tree a drift number was measured on, drawing the startup probe from the population the change affected rather than from the survivors, and asking the vendor to report what the verdict depended on."
+    },
+    {
+      "name": "credential-audit-rerun",
+      "path": "skills/credential-audit-rerun/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Resume a credential audit whose sweep manifest has gone stale: why versioned plugin caches expire recorded paths, the three things an unreadable span means and why a rotated file looks identical to a remediated one, the rule that 'could not read it' never becomes 'safe to delete', why a scrub that re-walks survives what a classifier that re-reads does not, and the two credential-bearing surfaces the audit itself creates while running."
     }
   ],
   "collections": [
@@ -1134,7 +1143,8 @@
         "oss-contribution-shape-by-conversion-rate",
         "claude-session-three-names",
         "micronaut-endpoints-config-root-level",
-        "consumed-gate-major-upgrade"
+        "consumed-gate-major-upgrade",
+        "credential-audit-rerun"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2542,6 +2552,19 @@
         "consumed-gate-major-upgrade"
       ],
       "summary": "Single-skill plugin: consumed-gate-major-upgrade."
+    },
+    {
+      "name": "credential-audit-rerun",
+      "claude_manifest": "plugins/credential-audit-rerun/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/credential-audit-rerun/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "credential-audit-rerun"
+      ],
+      "summary": "Single-skill plugin: credential-audit-rerun."
     }
   ],
   "defaults": {
