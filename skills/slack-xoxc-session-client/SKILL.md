@@ -15,8 +15,8 @@ description: |
   Ships a working, generalized Python client (slack_client.py) that self-labels
   outgoing posts with a good-faith agent marker by default.
 author: Claude Code
-version: 1.3.0
-date: 2026-09-16
+version: 1.4.0
+date: 2026-09-17
 source: https://github.com/voitta-ai/skillz/issues/67
 source_file: skills/slack-xoxc-session-client/slack_client.py
 ---
@@ -101,6 +101,38 @@ python3 slack_client.py <workspace-subdomain> auth.test
 python3 slack_client.py <workspace-subdomain> conversations.history channel=C0123 limit=20
 python3 slack_client.py --browser firefox <workspace-subdomain> auth.test
 ```
+
+## Enterprise Grid restricts several read methods
+
+A Grid org refuses part of the read surface for a user session, and the refusals are not
+predictable from the method names. Measured against a real Grid org, one call per method:
+
+| works | refused with `enterprise_is_restricted` |
+|---|---|
+| `auth.test`, `team.info` | `conversations.list` |
+| `conversations.info` (including a DM id) | `users.conversations` |
+| `conversations.history`, `conversations.replies` | `chat.getPermalink` |
+| `users.info`, `search.messages` | |
+
+Three consequences:
+
+1. **The host carries the org segment.** The workspace is at
+   `https://<org>.enterprise.slack.com`. Plain `https://<org>.slack.com` answers 403 with no
+   token in the page, which looks exactly like a signed-out session and sends you off to
+   re-authenticate something that was never wrong. A client that builds
+   `https://<subdomain>.slack.com` works if you hand it `<org>.enterprise` as the subdomain.
+2. **Channel names cannot be resolved**, so config must name channels by id. A human finds one
+   in the channel's Copy link URL, which ends `/archives/C...`. Detect this and say so before
+   the first history call, rather than failing later with a generic "channel not found".
+3. **Permalinks must be constructed, not requested**:
+   `https://<sub>.slack.com/archives/<channel_id>/p<ts with the dot removed>` is the same link
+   the Slack client produces. Mark a constructed link in your own metadata so a reader can tell
+   it from one the API returned.
+
+**Gate the fallback on the exact error code.** Catching every error and constructing a link
+instead makes a genuine `channel_not_found`, `message_not_found` or a malformed timestamp
+indistinguishable from a healthy Grid workspace, forever, and hands the caller a plausible link
+that goes nowhere. Same for name resolution: only `enterprise_is_restricted` means "use ids".
 
 ## Key gotchas (encoded in the client)
 
