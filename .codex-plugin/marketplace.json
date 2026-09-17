@@ -540,6 +540,11 @@
       "name": "consumed-gate-major-upgrade",
       "source": "./plugins/consumed-gate-major-upgrade/",
       "description": "Single-skill plugin: consumed-gate-major-upgrade."
+    },
+    {
+      "name": "credential-audit-rerun",
+      "source": "./plugins/credential-audit-rerun/",
+      "description": "Resume a credential audit whose sweep manifest has gone stale. Why versioned plugin caches expire recorded paths, the three things an unreadable span means and why a rotated file looks identical to a remediated one, the rule that \"could not read it\" must never become \"safe to delete\", why a scrub that re-walks the filesystem survives what a classifier that re-reads the manifest does not, and the two credential-bearing surfaces the audit itself creates while running."
     }
   ]
 }

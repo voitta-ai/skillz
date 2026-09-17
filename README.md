@@ -252,6 +252,7 @@ environments and older Codex versions.
 | [claude-session-three-names](./skills/claude-session-three-names/SKILL.md) | skill | Claude, Codex | One name for a session everywhere: `cc`/`cx` launch wrappers set the peer name, Remote Control name and cmux tab from one value; `cc-names` who/pick/sync + a Stop hook keep the tab equal to the session name after `/rename` |
 | [`claude-session-three-names` plugin](./plugins/claude-session-three-names/) | plugin | Claude, Codex | Single-skill plugin: claude-session-three-names |
 | [micronaut-endpoints-config-root-level](./skills/micronaut-endpoints-config-root-level/SKILL.md) | skill | Claude, Codex | A Micronaut management endpoint 401s with no security library on the classpath, because `endpoints.*` is root-level and a copy nested under `micronaut:` binds to nothing |
+| [credential-audit-rerun](./skills/credential-audit-rerun/SKILL.md) | skill | Claude, Codex | Resume a credential audit whose sweep manifest has gone stale: versioned plugin caches expiring recorded paths, the three things an unreadable span means and why a rotated file looks identical to a remediated one, the rule that "could not read it" never becomes "safe to delete", why a scrub that re-walks survives what a classifier that re-reads does not, and the two credential-bearing surfaces the audit itself creates while running |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
