@@ -1,6 +1,6 @@
 {
   "name": "secrets-in-agent-sessions",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Handle credentials during a coding-agent session without writing them into the transcript, tool-output cache, permission allowlist or logs. Fingerprint comparison, ask-the-service identification, and env-to-file transfer that never passes through the model. Ships an advisory PreToolUse hook that flags credentials in Bash commands before they run.",
   "author": {
     "name": "voitta-ai"

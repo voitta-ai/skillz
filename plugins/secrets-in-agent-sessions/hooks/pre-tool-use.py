@@ -266,7 +266,7 @@ def selftest():
         ("git clone https://oauth2:${CI_JOB_TOKEN}@gitlab.test/t/s.git", "the recommended form"),
         ("git clone https://USERNAME:PASSWORD@host/o/r.git", "placeholders"),
         ("curl -X POST https://slack.com/api/auth.test", "plain url"),
-        ("const TOKEN = %sENV.SIDEWINDER_TOKEN || ''" % ("_" * 2), "k6 env ref"),
+        ("const TOKEN = %sENV.LOADTEST_TOKEN || ''" % ("_" * 2), "k6 env ref"),
         ("const token = process.env.SERVICE_TOKEN", "dotted env ref"),
         ("echo api_key = %sINTERNAL_API_KEY_NAME" % "_", "underscore-prefixed"),
         ("echo api_key = %sinternal_api_key_name" % "_", "underscore, lower"),
