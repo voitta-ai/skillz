@@ -27,11 +27,19 @@ err()  { echo "ERROR: $*" >&2; fail=1; }
 
 echo "Validating catalog at $CATALOG"
 
-CATALOG_JSON="$(cat "$CATALOG")" ROOT="$ROOT" python3 <<'PY'
+# Pass the catalog by PATH, not by value. Linux caps any single argv/env
+# string at MAX_ARG_STRLEN (32 pages = 131072 bytes) and raises E2BIG past it,
+# while macOS has no per-string cap - so `CATALOG_JSON="$(cat ...)"` worked on
+# every developer machine and died in CI the moment catalog.json crossed 128 KiB,
+# with `/usr/bin/python3: Argument list too long` and exit 126. The file grows
+# by roughly a kilobyte per skill, so this was a cliff the catalog was always
+# going to walk off, not a property of any one PR.
+CATALOG="$CATALOG" ROOT="$ROOT" python3 <<'PY'
 import collections, json, os, re, sys
 
 root = os.environ["ROOT"]
-catalog = json.loads(os.environ["CATALOG_JSON"])
+with open(os.environ["CATALOG"]) as fh:
+    catalog = json.load(fh)
 
 errors = []
 
