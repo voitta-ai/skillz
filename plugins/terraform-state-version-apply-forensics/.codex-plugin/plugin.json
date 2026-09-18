@@ -1,6 +1,6 @@
 {
   "name": "terraform-state-version-apply-forensics",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Prove whether a terraform change was actually applied to an environment: census the versioned S3 tfstate objects over time (serial + resource-type counts) and cross-check CloudTrail, to tell a real apply from a reverted one, identify which variant of a stacked change ran, and separate untracked orphans from failed destroys.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",
