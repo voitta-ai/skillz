@@ -964,6 +964,12 @@
       "summary": "Land a newly captured skill through the ONE peer session already working the skills repo: the capture side classifies, authors skills/<name>/ content only (never registry files), validates + leak-screens it, pushes branch add-skill-<name> and messages that single session; the landing side does registry, versions, validators, PR. Use when a learning flow (claudeception / continuous-learning) fires mid-task in a session whose real work is elsewhere, when two sessions are about to edit catalog/marketplace/README concurrently, or when a handoff message names a content-only branch. Falls back to claudeception's own wiring when no such peer exists."
     },
     {
+      "name": "joined-audio-transcript-drift",
+      "path": "skills/joined-audio-transcript-drift/SKILL.md",
+      "hosts": ["claude", "codex"],
+      "summary": "Keep timestamps aligned when joining many audio files into one: a lossless concat keeps every piece's gapless padding, so a transcript built from measured durations drifts later and later. Covers why frame counts do not fix it, when to encode once, and how to verify drift."
+    },
+    {
       "name": "android-adb-device-verification",
       "path": "skills/android-adb-device-verification/SKILL.md",
       "hosts": [
@@ -1150,6 +1156,7 @@
         "permission-gate-inherits-operator-allow-list",
         "skill-capture-pr-handoff",
         "android-adb-device-verification",
+        "joined-audio-transcript-drift",
         "oss-contribution-shape-by-conversion-rate",
         "claude-session-three-names",
         "micronaut-endpoints-config-root-level",
@@ -2510,6 +2517,19 @@
         "skill-capture-pr-handoff"
       ],
       "summary": "Single-skill plugin: skill-capture-pr-handoff."
+    },
+    {
+      "name": "joined-audio-transcript-drift",
+      "claude_manifest": "plugins/joined-audio-transcript-drift/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/joined-audio-transcript-drift/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "joined-audio-transcript-drift"
+      ],
+      "summary": "Single-skill plugin: joined-audio-transcript-drift."
     },
     {
       "name": "android-adb-device-verification",

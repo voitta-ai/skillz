@@ -522,6 +522,11 @@
       "description": "Capture side hands a content-only skill branch to the ONE session working the skills repo; that session lands registry+PR."
     },
     {
+      "name": "joined-audio-transcript-drift",
+      "source": "./plugins/joined-audio-transcript-drift",
+      "description": "Keep timestamps aligned when joining many audio files into one: a lossless concat keeps every piece's gapless padding, so a transcript built from measured durations drifts later and later. Covers why frame counts do not fix it, when to encode once, and how to verify drift."
+    },
+    {
       "name": "android-adb-device-verification",
       "source": "./plugins/android-adb-device-verification",
       "description": "Verify an Android change on a device or emulator when the project has no test suite: release build first because R8 breaks reflection-driven code, drive the UI by element label, read app state back, mock location, and calibrate every check so a blind one is not read as a pass."
