@@ -522,6 +522,11 @@
       "description": "Capture side hands a content-only skill branch to the ONE session working the skills repo; that session lands registry+PR."
     },
     {
+      "name": "android-mic-capture-tears-down-a2dp",
+      "source": "./plugins/android-mic-capture-tears-down-a2dp",
+      "description": "Find and fix an Android app whose microphone use tears down Bluetooth A2DP in a car: read the profile timeline from dumpsys bluetooth_manager, name the app from appops, and pin capture to the built-in microphone with setCommunicationDevice."
+    },
+    {
       "name": "android-adb-device-verification",
       "source": "./plugins/android-adb-device-verification",
       "description": "Verify an Android change on a device or emulator when the project has no test suite: release build first because R8 breaks reflection-driven code, drive the UI by element label, read app state back, mock location, and calibrate every check so a blind one is not read as a pass."
