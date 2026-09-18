@@ -12,8 +12,8 @@ description: |
   tfstate objects over time (serial + resource-type counts per version) and cross-check
   with CloudTrail delete/create events. Read-only; safe to run against prod.
 author: Claude Code
-version: 1.1.0
-date: 2026-08-20
+version: 1.2.0
+date: 2026-09-17
 ---
 
 # Terraform state-version apply forensics
@@ -38,12 +38,36 @@ can't tell whether the apply silently failed or those resources were never in st
 - Suspicion of the manual-apply-then-CI-reapply race.
 - Catching a lagging environment up: what does prod not have that dev does, and will the
   plan rename those resources or destroy-and-recreate them? (step 6)
+- You are about to **assert**, in a commit body, a PR or a review, that a resource is or
+  is not in state. A state read without a refresh is a claim about the last apply, not a
+  claim about AWS. Date the snapshot (step 0) before the assertion leaves your terminal.
+  This is the trigger that fires *earliest*: the other entries assume you already suspect
+  something, and this one catches the case where you do not.
 
 Prerequisite: the S3 backend bucket has **versioning enabled** (standard for TF backends).
 Without versioning you get only the current object and this method degrades to CloudTrail
 alone.
 
 ## Solution
+
+### 0. Date your snapshot before trusting it
+
+```bash
+aws s3api head-object --bucket <backend-bucket> --key <state-key> \
+  --query LastModified --output text
+```
+
+One call. If `LastModified` predates any event you are reasoning about, your read
+**structurally cannot see that event** and you have no basis for an absence claim -
+escalate to the census below.
+
+Observed: a merged commit body asserted "no us-east-1 counterpart exists in state or in
+AWS" about a CloudWatch alarm. The AWS half was right. The state half was wrong -
+`module.us_east_1.<svc>_iterator_age` was in the state file at serial 60. The alarm was
+missing from AWS because someone deleted it by hand from the console, and the state
+object's `LastModified` predated that deletion by a day. Nobody ran a bad census; nobody
+ran one at all. The author read current state, saw what they expected, and shipped the
+claim. One `head-object` would have caught it.
 
 ### 1. Locate the state object
 
@@ -121,6 +145,24 @@ Also useful: provider `default_tags` (`application` / `environment` / `terraform
 usually appear on TF-managed resources. Absent tags are a hint — but not proof, since some
 resource types (notably `aws_autoscaling_group`) don't receive provider default tags.
 
+**The mirror direction: in state, absent from the API.** The above handles a live resource
+that should be gone. The inverse — terraform believes it exists, the API says it does not —
+is almost always a manual console deletion:
+
+```bash
+aws cloudtrail lookup-events --region <region> \
+  --lookup-attributes AttributeKey=EventName,AttributeValue=Delete<Thing> \
+  --start-time <iso>
+```
+
+Actor, timestamp, source IP and user agent in one call. **The user agent is the tell**: a
+browser user agent means a console click, while a terraform or SDK delete carries an
+`aws-sdk-go` agent instead.
+
+Filter on the exact resource name, not a project substring. A first pass grepping a repo
+name matched 4,428 rows, because DynamoDB `AutoScaling-ManageAlarms` churn dominates
+`DeleteAlarms` in any account with provisioned-capacity tables.
+
 ### 6. Diff two environments against each other
 
 Same census, different axis: instead of one environment over time, compare two
@@ -177,6 +219,12 @@ for "what AWS did" and treat the gap as drift or an out-of-band change.
 
 ## Notes
 
+- **A description of the thing is not the thing.** A state file is a record of the last
+  apply; a name prefix is a convention someone may have departed from; a cached manifest
+  is a snapshot of whenever it was written. None of them is the API. Every failure this
+  skill covers is the same substitution made somewhere different, so when an answer
+  matters, query the resource rather than the record of it - and when you must use the
+  record, date it first.
 - The downloaded state files contain **secret values in plaintext** --
   `aws_secretsmanager_secret_version.secret_string`, DB passwords, client secrets. Delete
   them when the census is done (`shred -u`, or `rm` at minimum), and do not leave them in
