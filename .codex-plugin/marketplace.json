@@ -152,6 +152,11 @@
       "description": "Handle credentials during a coding-agent session without writing them into the transcript, tool-output cache, permission allowlist or logs. Fingerprint comparison, ask-the-service identification, and env-to-file transfer that never passes through the model."
     },
     {
+      "name": "slack-agent-cannot-wake-itself",
+      "source": "./plugins/slack-agent-cannot-wake-itself/",
+      "description": "A Slack agent cannot wake itself: check whose token the posting tool holds, and post as the human instead of via the agent's own bot or webhook."
+    },
+    {
       "name": "slack-app-token-rotation",
       "source": "./plugins/slack-app-token-rotation/",
       "description": "Actually rotate a leaked Slack bot or app-level token: reinstalling does NOT mint a new xoxb-, only destroying the OAuth grant does. Covers the channel-membership fallout, the incoming-webhook channel picker, and verification without printing tokens."
