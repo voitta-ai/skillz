@@ -964,6 +964,12 @@
       "summary": "Land a newly captured skill through the ONE peer session already working the skills repo: the capture side classifies, authors skills/<name>/ content only (never registry files), validates + leak-screens it, pushes branch add-skill-<name> and messages that single session; the landing side does registry, versions, validators, PR. Use when a learning flow (claudeception / continuous-learning) fires mid-task in a session whose real work is elsewhere, when two sessions are about to edit catalog/marketplace/README concurrently, or when a handoff message names a content-only branch. Falls back to claudeception's own wiring when no such peer exists."
     },
     {
+      "name": "android-mic-capture-tears-down-a2dp",
+      "path": "skills/android-mic-capture-tears-down-a2dp/SKILL.md",
+      "hosts": ["claude", "codex"],
+      "summary": "Find and fix an Android app whose microphone use tears down Bluetooth A2DP in a car: read the profile timeline from dumpsys, name the app from appops, and pin capture to the built-in microphone."
+    },
+    {
       "name": "android-adb-device-verification",
       "path": "skills/android-adb-device-verification/SKILL.md",
       "hosts": [
@@ -1150,6 +1156,7 @@
         "permission-gate-inherits-operator-allow-list",
         "skill-capture-pr-handoff",
         "android-adb-device-verification",
+        "android-mic-capture-tears-down-a2dp",
         "oss-contribution-shape-by-conversion-rate",
         "claude-session-three-names",
         "micronaut-endpoints-config-root-level",
@@ -2510,6 +2517,19 @@
         "skill-capture-pr-handoff"
       ],
       "summary": "Single-skill plugin: skill-capture-pr-handoff."
+    },
+    {
+      "name": "android-mic-capture-tears-down-a2dp",
+      "claude_manifest": "plugins/android-mic-capture-tears-down-a2dp/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/android-mic-capture-tears-down-a2dp/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "android-mic-capture-tears-down-a2dp"
+      ],
+      "summary": "Single-skill plugin: android-mic-capture-tears-down-a2dp."
     },
     {
       "name": "android-adb-device-verification",
