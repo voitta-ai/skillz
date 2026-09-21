@@ -1,0 +1,12 @@
+{
+  "name": "joined-audio-transcript-drift",
+  "description": "Keep timestamps aligned when joining many audio files into one: a lossless concat keeps every piece's gapless padding, so a transcript built from measured durations drifts later and later. Covers why frame counts do not fix it, when to encode once, and how to verify drift.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

@@ -555,6 +555,11 @@
       "name": "credential-audit-rerun",
       "source": "./plugins/credential-audit-rerun/",
       "description": "Resume a credential audit whose sweep manifest has gone stale. Why versioned plugin caches expire recorded paths, the three things an unreadable span means and why a rotated file looks identical to a remediated one, the rule that \"could not read it\" must never become \"safe to delete\", why a scrub that re-walks the filesystem survives what a classifier that re-reads the manifest does not, and the two credential-bearing surfaces the audit itself creates while running."
+    },
+    {
+      "name": "joined-audio-transcript-drift",
+      "source": "./plugins/joined-audio-transcript-drift",
+      "description": "Keep timestamps aligned when joining many audio files into one: a lossless concat keeps every piece's gapless padding, so a transcript built from measured durations drifts later and later. Covers why frame counts do not fix it, when to encode once, and how to verify drift."
     }
   ]
 }
