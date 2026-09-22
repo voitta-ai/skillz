@@ -274,6 +274,15 @@
       "summary": "Make AI agents show as watchable cmux tabs; Claude needs the claude-teams wrapper, Codex tabs via codex-teams/hooks."
     },
     {
+      "name": "cmux-node-options-tmpdir-guard",
+      "path": "skills/cmux-node-options-tmpdir-guard/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Keep cmux's Claude NODE_OPTIONS restore guard alive when it lives under $TMPDIR: macOS reaps $TMPDIR files untouched for about three days, so a long-lived session's --require target vanishes and every node/claude invocation in it dies. Covers the persistent-HOME-copy stopgap, the daily LaunchAgent that recreates and mtime-refreshes the file, why a LaunchAgent resolves the same per-user temp base, and when to retire it."
+    },
+    {
       "name": "cmux-autoresume-after-reboot",
       "path": "skills/cmux-autoresume-after-reboot/SKILL.md",
       "hosts": [
@@ -1127,6 +1136,7 @@
         "cloudwatch-metric-filter-dimensions-default-value-exclusive",
         "cloudwatch-per-host-stat-single-host-vs-fleet",
         "cmux-agent-tabs",
+        "cmux-node-options-tmpdir-guard",
         "cmux-autoresume-after-reboot",
         "cmux-claude-codex-cross-runtime-messaging",
         "cmux-config-silent-drop-triage",
@@ -2212,6 +2222,19 @@
         "claudeception"
       ],
       "summary": "Single-skill plugin: claudeception."
+    },
+    {
+      "name": "cmux-node-options-tmpdir-guard",
+      "claude_manifest": "plugins/cmux-node-options-tmpdir-guard/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/cmux-node-options-tmpdir-guard/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "cmux-node-options-tmpdir-guard"
+      ],
+      "summary": "Single-skill plugin: cmux-node-options-tmpdir-guard."
     },
     {
       "name": "cmux-autoresume-after-reboot",
