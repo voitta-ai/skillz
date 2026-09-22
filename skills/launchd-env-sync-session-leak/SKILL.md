@@ -21,7 +21,7 @@ description: |
   services), the purge, the reload order that actually clears a service, and
   the `bootout` race that leaves it DOWN.
 author: Claude Code
-version: 1.1.0
+version: 1.2.0
 date: 2026-08-28
 source: https://github.com/voitta-ai/skillz
 source_file: skills/launchd-env-sync-session-leak/SKILL.md
@@ -164,3 +164,5 @@ faithfully re-publish the leaked names on its next run. Close the gate first.
 
 - `cmux-autoresume-after-reboot` - a stray `CMUX_DISABLE_SESSION_RESTORE`
   synced into launchd is the same mechanism with a different victim.
+- `cmux-node-options-tmpdir-guard` - why the `NODE_OPTIONS` `--require` target
+  lives in `$TMPDIR` and what keeps it alive.

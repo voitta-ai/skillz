@@ -1,7 +1,7 @@
 {
   "name": "launchd-env-sync-session-leak",
   "description": "Diagnose and undo a login-environment -> launchd sync that was run from inside a multiplexer pane or an AI-agent session, so PROMPT_COMMAND, CMUX_*, CLAUDECODE/CLAUDE_CODE_*,...",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "author": {
     "name": "voitta-ai"
   },
