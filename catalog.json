@@ -4,6 +4,15 @@
   "description": "Catalog of skills, collections, and plugin bundles distributable from this repo.",
   "skills": [
     {
+      "name": "reverse-engineer-react-native-hermes-app",
+      "path": "skills/reverse-engineer-react-native-hermes-app/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Reverse-engineer an Android app whose logic is a React Native Hermes bytecode bundle, off a stock non-rooted device: decompile Hermes (incl. unsupported versions) with hermes-dec, trace flows via the string table, and know which capture layers work without root -- the user-CA TLS wall blocks HTTPS interception, BLE works via the HCI snoop log + adb bugreport."
+    },
+    {
       "name": "agent-credential-leak-surfaces",
       "path": "skills/agent-credential-leak-surfaces/SKILL.md",
       "hosts": [
@@ -1058,6 +1067,19 @@
   ],
   "plugins": [
     {
+      "name": "reverse-engineer-react-native-hermes-app",
+      "claude_manifest": "plugins/reverse-engineer-react-native-hermes-app/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/reverse-engineer-react-native-hermes-app/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "reverse-engineer-react-native-hermes-app"
+      ],
+      "summary": "Single-skill plugin: reverse-engineer-react-native-hermes-app."
+    },
+    {
       "name": "skillz",
       "claude_manifest": "plugins/skillz/.claude-plugin/plugin.json",
       "codex_manifest": "plugins/skillz/.codex-plugin/plugin.json",
@@ -1068,6 +1090,7 @@
         "codex"
       ],
       "skills": [
+        "reverse-engineer-react-native-hermes-app",
         "agent-credential-leak-surfaces",
         "agent-host-skill-loading",
         "agent-session-credential-audit",
