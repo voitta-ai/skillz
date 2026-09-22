@@ -565,6 +565,11 @@
       "name": "joined-audio-transcript-drift",
       "source": "./plugins/joined-audio-transcript-drift",
       "description": "Keep timestamps aligned when joining many audio files into one: a lossless concat keeps every piece's gapless padding, so a transcript built from measured durations drifts later and later. Covers why frame counts do not fix it, when to encode once, and how to verify drift."
+    },
+    {
+      "name": "vendor-console-form-silent-noop",
+      "source": "./plugins/vendor-console-form-silent-noop/",
+      "description": "A vendor console's confirm button silently does nothing and the required consent checkbox clears itself on every submit. Two causes that imitate each other: a framework-controlled input that ignores synthetic clicks and needs a real Space keypress, and a server error the console renders nowhere. Covers telling them apart in one read-only step, reading the swallowed response body, and checking whether an earlier attempt half-succeeded before retrying something that costs money."
     }
   ]
 }
