@@ -1052,6 +1052,15 @@
         "codex"
       ],
       "summary": "Keep timestamps aligned when joining many audio files into one: a lossless concat keeps every piece's gapless padding, so a transcript built from measured durations drifts later and later. Covers why frame counts do not fix it, when to encode once, and how to verify drift."
+    },
+    {
+      "name": "vendor-console-form-silent-noop",
+      "path": "skills/vendor-console-form-silent-noop/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "A vendor console's confirm button silently does nothing and the required consent checkbox clears itself on every submit. Two causes that imitate each other: a framework-controlled input that ignores synthetic clicks and value-sets (it needs a real Space keypress), and a server error the console renders nowhere. Covers telling them apart in one read-only step by patching window.fetch, reading the swallowed response body, checking whether an earlier attempt half-succeeded, and why retrying the click is the expensive wrong move on a provisioning flow."
     }
   ],
   "collections": [
@@ -1197,7 +1206,8 @@
         "micronaut-endpoints-config-root-level",
         "consumed-gate-major-upgrade",
         "credential-audit-rerun",
-        "joined-audio-transcript-drift"
+        "joined-audio-transcript-drift",
+        "vendor-console-form-silent-noop"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2657,6 +2667,19 @@
         "joined-audio-transcript-drift"
       ],
       "summary": "Single-skill plugin: joined-audio-transcript-drift."
+    },
+    {
+      "name": "vendor-console-form-silent-noop",
+      "claude_manifest": "plugins/vendor-console-form-silent-noop/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/vendor-console-form-silent-noop/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "vendor-console-form-silent-noop"
+      ],
+      "summary": "Single-skill plugin: vendor-console-form-silent-noop."
     }
   ],
   "defaults": {
