@@ -1,0 +1,12 @@
+{
+  "name": "reverse-engineer-react-native-hermes-app",
+  "description": "Reverse-engineer a React Native Hermes-bytecode Android app off a stock non-rooted device: hermes-dec on unsupported versions, string-table flow tracing, the user-CA TLS wall, no-root BLE/HTTP capture.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

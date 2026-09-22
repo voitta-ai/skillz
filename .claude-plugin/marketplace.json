@@ -7,6 +7,11 @@
   "description": "Skillz marketplace: full bundle plus per-skill and grouped plugin entries.",
   "plugins": [
     {
+      "name": "reverse-engineer-react-native-hermes-app",
+      "source": "./plugins/reverse-engineer-react-native-hermes-app/",
+      "description": "Single-skill plugin: reverse-engineer a React Native Hermes-bytecode Android app off a stock non-rooted device."
+    },
+    {
       "name": "skillz",
       "source": "./plugins/skillz/",
       "description": "Bundle: every skill in the catalog except hooked-plugin skills (see catalog.json)."
