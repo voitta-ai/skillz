@@ -1,7 +1,7 @@
 {
   "name": "agent-session-credential-audit",
   "description": "Triage, rotate and scrub credentials that leaked into agent session transcripts: severity test, non-destructive liveness probes, rotation verification, and a kill-list scrub that cannot erase a live secret.",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": {
     "name": "voitta-ai"
   },
