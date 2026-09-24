@@ -25,6 +25,40 @@ cd "$repo_root" || exit 1
 
 fail=0
 
+# A capture branch per skill-capture-pr-handoff carries skills/<name>/ content
+# and deliberately NO registry files, so validate-catalog's "SKILL.md but no
+# catalog.json entry" check fails by construction - and the contract forbids the
+# only fix that check accepts. Three sessions hit this; two pushed --no-verify
+# (silencing the sensitive-term gate too) and one abandoned the push entirely.
+#
+# So detect that exact shape - every changed path under skills/, and at least
+# one - and demote that one error to a warning. Any registry file, plugin file
+# or README in the diff means this is NOT a capture branch and the check stands.
+# CI never sets this, so the landing side still enforces it.
+#
+# `case`, deliberately not `grep -qv`: the grep on this machine returns 1 from
+# -qv on input whose first line does NOT match, which flips the test and marks
+# every branch a capture branch - including ones that rewrite catalog.json.
+# .github/workflows/release.yml carries the same warning for the same reason.
+changed=$(git diff --name-only origin/master...HEAD 2>/dev/null || true)
+capture=0
+if [ -n "$changed" ]; then
+  capture=1
+  while IFS= read -r f; do
+    case "$f" in
+      skills/*) ;;
+      *) capture=0; break ;;
+    esac
+  done <<EOF
+$changed
+EOF
+fi
+if [ "$capture" -eq 1 ]; then
+  export SKILLZ_CAPTURE_BRANCH=1
+  echo "pre-push: content-only capture branch (nothing outside skills/);"
+  echo "          the catalog-entry check is the landing side's to satisfy."
+fi
+
 echo "pre-push: validating catalog..."
 if ! bash scripts/validate-catalog.sh; then
   fail=1

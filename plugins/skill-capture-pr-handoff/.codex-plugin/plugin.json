@@ -1,6 +1,6 @@
 {
   "name": "skill-capture-pr-handoff",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Land a newly captured skill through the ONE peer session already working the skills repo: capture side authors skills/<name>/ content only (never registry files), leak-screens it, pushes branch add-skill-<name> and messages that single session; landing side does registry, versions, validators, PR. Falls back to claudeception's own wiring when no such peer exists.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",
