@@ -1079,6 +1079,15 @@
         "codex"
       ],
       "summary": "Adopt a hand-installed macOS app into a Homebrew cask: --adopt runs sudo chgrp over the bundle, which macOS App Management (TCC) blocks for any terminal that lacks the grant, so it fails with 'Operation not permitted' after sudo already accepted the password and root does not help. Covers granting App Management and relaunching the terminal, why sudo brew is refused, the drag-to-Trash alternative that preserves user data, detaching the leftover DMG behind 'hdiutil: attach failed - Resource busy', and why piping brew through tail hides the error."
+    },
+    {
+      "name": "test-a-commit-blocking-hook",
+      "path": "skills/test-a-commit-blocking-hook/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Verify a pre-commit hook that is meant to refuse commits, without destroying the hook while testing it; the staged-vs-committed diff trap, safe test sequencing, and reflog recovery."
     }
   ],
   "collections": [
@@ -1227,7 +1236,8 @@
         "credential-audit-rerun",
         "joined-audio-transcript-drift",
         "vendor-console-form-silent-noop",
-        "homebrew-cask-adopt-app-management"
+        "homebrew-cask-adopt-app-management",
+        "test-a-commit-blocking-hook"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2726,6 +2736,19 @@
         "homebrew-cask-adopt-app-management"
       ],
       "summary": "Single-skill plugin: homebrew-cask-adopt-app-management."
+    },
+    {
+      "name": "test-a-commit-blocking-hook",
+      "claude_manifest": "plugins/test-a-commit-blocking-hook/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/test-a-commit-blocking-hook/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "test-a-commit-blocking-hook"
+      ],
+      "summary": "Single-skill plugin: test-a-commit-blocking-hook."
     }
   ],
   "defaults": {

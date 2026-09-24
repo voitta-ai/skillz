@@ -265,6 +265,8 @@ environments and older Codex versions.
 | [micronaut-endpoints-config-root-level](./skills/micronaut-endpoints-config-root-level/SKILL.md) | skill | Claude, Codex | A Micronaut management endpoint 401s with no security library on the classpath, because `endpoints.*` is root-level and a copy nested under `micronaut:` binds to nothing |
 | [credential-audit-rerun](./skills/credential-audit-rerun/SKILL.md) | skill | Claude, Codex | Resume a credential audit whose sweep manifest has gone stale: versioned plugin caches expiring recorded paths, the three things an unreadable span means and why a rotated file looks identical to a remediated one, the rule that "could not read it" never becomes "safe to delete", why a scrub that re-walks survives what a classifier that re-reads does not, and the two credential-bearing surfaces the audit itself creates while running |
 | [joined-audio-transcript-drift](./skills/joined-audio-transcript-drift/SKILL.md) | skill | Claude, Codex | Joined audio drifts away from its transcript because a lossless concat keeps each piece's gapless padding; encode once and verify the drift |
+| [test-a-commit-blocking-hook](./skills/test-a-commit-blocking-hook/SKILL.md) | skill | Claude, Codex | Verify a pre-commit hook meant to refuse commits without destroying it while testing: a commit-range diff is empty in pre-commit, `git add -A` during a probe stages the tooling too, and `reset --hard` then deletes it; plus reflog recovery |
+| [`test-a-commit-blocking-hook` plugin](./plugins/test-a-commit-blocking-hook/) | plugin | Claude, Codex | Single-skill plugin: test-a-commit-blocking-hook |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries

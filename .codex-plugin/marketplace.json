@@ -580,6 +580,11 @@
       "name": "homebrew-cask-adopt-app-management",
       "source": "./plugins/homebrew-cask-adopt-app-management/",
       "description": "Adopt a hand-installed macOS app into a Homebrew cask and get past the three ways it silently fails. Use when: (1) brew install --cask <app> --adopt dies on 'chgrp -hR admin ... exited with 1' with hundreds of 'Operation not permitted' lines even though sudo took the password, (2) sudo brew is refused as 'extremely dangerous and no longer supported', (3) a retry fails with 'hdiutil: attach failed - Resource busy' or 'Download failed', (4) an agent shell hits 'sudo: a terminal is required to read the password', (5) brew output piped through tail looks clean but the app version never changed. Root cause of (1) is macOS App Management (TCC) on the terminal app, not file permissions; root does not bypass it. Covers the App Management grant and relaunch, the no-adopt alternative that keeps user data, and detaching the leftover DMG."
+    },
+    {
+      "name": "test-a-commit-blocking-hook",
+      "source": "./plugins/test-a-commit-blocking-hook/",
+      "description": "Verify a pre-commit hook meant to refuse commits, without destroying the hook while testing it: the staged-vs-committed diff trap, safe test sequencing, and reflog recovery."
     }
   ]
 }
