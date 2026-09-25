@@ -16,7 +16,7 @@ description: |
   granularity, and a scrub driven by a kill-list of verified-dead fingerprints
   so it cannot erase a live secret ahead of its rotation.
 author: Claude Code
-version: 1.2.0
+version: 1.3.0
 date: 2026-08-19
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-session-credential-audit/SKILL.md
@@ -340,8 +340,49 @@ A synthetic control is credential-shaped by construction, which has two costs.
 permission allowlists - the same surfaces this skill exists to clean. And **no
 scanner can distinguish your control from a real token**, so every future sweep
 re-flags it as a candidate, and every document that quotes it inherits the same
-tax. Pass controls on stdin or via the environment, exactly like real values, and
-describe them in prose rather than pasting the literal.
+tax. Describe them in prose rather than pasting the literal, and pass them the way
+you would pass a real value - noting that **the two obvious ways do not work**.
+
+An env-assignment PREFIX does not populate the current shell's expansion:
+
+```bash
+TOKEN="$t" curl -H "Authorization: Bearer ${TOKEN}" https://host/path
+```
+
+`${TOKEN}` is expanded by the *calling* shell, which has no `TOKEN`, before the
+assignment is applied to the command's environment. Under `set -u` this aborts
+with `unbound variable`. **Without `set -u` it expands to the empty string**, the
+request goes out as `Authorization: Bearer ` and returns **401** - which during a
+credential rotation is indistinguishable from the expired token you are replacing,
+and that is exactly when someone writes this line. Verified identical on bash
+3.2.57, zsh 5.9, dash, ksh and sh: the semantics are POSIX, not a bash quirk.
+
+Referencing it from an inner shell does pass the value, and still leaks:
+
+```bash
+TOKEN="$t" sh -c 'curl -H "Authorization: Bearer $TOKEN" https://host/path'
+```
+
+The inner shell expands it into curl's `argv` before `exec`, so `ps` sees it.
+Measured: a canary passed this way is visible in `ps -eo args` for the life of the
+process.
+
+For curl, pass a config file on stdin. Nothing reaches `argv`, nothing touches
+disk:
+
+```bash
+printf 'header = "Authorization: Bearer %s"\n' "$TOKEN" \
+  | curl -s -K - https://host/path
+```
+
+Measured against a local listener: the header arrives intact and `ps -eo args`
+shows nothing. This depends on `printf` being the shell **builtin** - true in
+bash, zsh, dash, ksh and sh, where `command -v printf` returns a bare name. Spell
+it `/usr/bin/printf` or route it through `env` and you have put the value back in
+`argv`.
+
+For a tool with no config-file input, write the value to a `chmod 600` temp file,
+reference the FILE on `argv`, and delete it. The path is not the secret.
 
 ## Shadow families: renames and editor backups multiply the surface
 
