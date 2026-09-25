@@ -13,7 +13,7 @@ description: |
   spilled tool output), and the fingerprint / ask-the-service / env-to-file
   techniques that avoid all of them.
 author: Claude Code
-version: 1.0.0
+version: 1.1.0
 date: 2026-08-14
 ---
 
@@ -208,6 +208,18 @@ When output may contain secrets and you need to show *structure*:
 ... | sed -E 's/=.*/=<redacted>/'                    # config lines
 ... | sed -E 's|://[^/@]*@|://<CREDS>@|g'            # URLs with credentials
 ```
+
+Leave the mask **unanchored**. A pattern written for the live assignment,
+`^\s*(export\s+)?NAME=`, passes commented-out lines through untouched - and a
+dotfile's `# export TOKEN=...` is exactly where a retired, possibly still-valid
+token is kept. One anchored mask over a shell profile printed such a line in
+full. When only the set of variables matters, print names and never lines:
+
+```bash
+grep -o -E '^[[:space:]#]*(export[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*=' ~/.bash_profile
+```
+
+To ask whether two secrets are the same one, compare hashes, not values.
 
 ## Handing a secret to another process or agent
 
