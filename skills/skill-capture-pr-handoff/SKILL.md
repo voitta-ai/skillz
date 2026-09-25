@@ -17,7 +17,7 @@ description: |
   side does registry, versions, validators, PR. Falls back to the full
   claudeception wiring when no such peer exists.
 author: Claude Code
-version: 1.0.0
+version: 1.1.0
 date: 2026-09-13
 ---
 
@@ -57,6 +57,29 @@ registry.
    content leaves it.
 4. Branch from `origin/master`, name it `add-skill-<name>`, commit only
    the skill directory, push.
+
+   **The push works; it used not to.** `validate-catalog.sh` refuses a
+   `skills/<name>/` directory with no `catalog.json` entry, which a conforming
+   capture branch trips *by construction* - and this contract forbids the only
+   fix that check accepts. Three sessions hit it: two pushed `--no-verify`
+   (which also silences the sensitive-term gate, the one screen that must not
+   be skipped from a session holding client context), and one abandoned the
+   push and left the commit local.
+
+   `hooks/pre-push` now detects the shape - every changed path under `skills/`,
+   and at least one - and demotes that single error to a warning:
+
+   ```
+   pre-push: content-only capture branch (nothing outside skills/);
+             the catalog-entry check is the landing side's to satisfy.
+   WARNING: 'skills/<name>' has a SKILL.md but no catalog.json entry ...
+            [capture branch: owed by the landing side]
+   ```
+
+   Any registry file, plugin manifest or README in the diff means it is not a
+   capture branch and the error stands. CI never sets the flag, so the landing
+   side still enforces it. **Do not use `--no-verify`**: if the hook blocks you,
+   the branch is not content-only and the gate is right.
 5. Pick the landing session: `ListAgents`, then the session working the
    skills repo (session names usually carry the repo directory; a busy row
    is fine - messages queue). Exactly ONE target. If several look

@@ -42,6 +42,7 @@ with open(os.environ["CATALOG"]) as fh:
     catalog = json.load(fh)
 
 errors = []
+warnings = []
 
 skills = catalog.get("skills", [])
 skill_names = set()
@@ -129,10 +130,21 @@ if os.path.isdir(skills_root):
             )
             continue
         if rel not in declared_dirs:
-            errors.append(
+            msg = (
                 f"'{rel}' has a SKILL.md but no catalog.json entry - it will "
                 f"not install; add it to catalog.json or delete the directory"
             )
+            # This is a LANDING-side invariant. A capture branch authored per
+            # skill-capture-pr-handoff carries skills/<name>/ content and
+            # deliberately no registry files, so it trips this by construction -
+            # and the contract forbids fixing it the only way this check accepts.
+            # hooks/pre-push sets the flag below only when the diff touches
+            # nothing outside skills/, which is exactly that shape. CI never
+            # sets it, so the invariant still holds where it is true.
+            if os.environ.get("SKILLZ_CAPTURE_BRANCH") == "1":
+                warnings.append(msg + " [capture branch: owed by the landing side]")
+            else:
+                errors.append(msg)
 
 # Inline collections in catalog.json
 for c in catalog.get("collections", []):
@@ -472,6 +484,9 @@ for entry in skills:
         f"skill '{name}' ships no hooks but is missing from the skillz "
         f"bundle's skill list - bundle users never get it"
     )
+
+for w in warnings:
+    print(f"WARNING: {w}", file=sys.stderr)
 
 if errors:
     for e in errors:
