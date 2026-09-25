@@ -1070,6 +1070,15 @@
         "codex"
       ],
       "summary": "A vendor console's confirm button silently does nothing and the required consent checkbox clears itself on every submit. Two causes that imitate each other: a framework-controlled input that ignores synthetic clicks and value-sets (it needs a real Space keypress), and a server error the console renders nowhere. Covers telling them apart in one read-only step by patching window.fetch, reading the swallowed response body, checking whether an earlier attempt half-succeeded, and why retrying the click is the expensive wrong move on a provisioning flow."
+    },
+    {
+      "name": "homebrew-cask-adopt-app-management",
+      "path": "skills/homebrew-cask-adopt-app-management/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Adopt a hand-installed macOS app into a Homebrew cask: --adopt runs sudo chgrp over the bundle, which macOS App Management (TCC) blocks for any terminal that lacks the grant, so it fails with 'Operation not permitted' after sudo already accepted the password and root does not help. Covers granting App Management and relaunching the terminal, why sudo brew is refused, the drag-to-Trash alternative that preserves user data, detaching the leftover DMG behind 'hdiutil: attach failed - Resource busy', and why piping brew through tail hides the error."
     }
   ],
   "collections": [
@@ -1217,7 +1226,8 @@
         "consumed-gate-major-upgrade",
         "credential-audit-rerun",
         "joined-audio-transcript-drift",
-        "vendor-console-form-silent-noop"
+        "vendor-console-form-silent-noop",
+        "homebrew-cask-adopt-app-management"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2703,6 +2713,19 @@
         "vendor-console-form-silent-noop"
       ],
       "summary": "Single-skill plugin: vendor-console-form-silent-noop."
+    },
+    {
+      "name": "homebrew-cask-adopt-app-management",
+      "claude_manifest": "plugins/homebrew-cask-adopt-app-management/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/homebrew-cask-adopt-app-management/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "homebrew-cask-adopt-app-management"
+      ],
+      "summary": "Single-skill plugin: homebrew-cask-adopt-app-management."
     }
   ],
   "defaults": {
