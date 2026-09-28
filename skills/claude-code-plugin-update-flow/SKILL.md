@@ -10,16 +10,20 @@ description: |
   repo and no user, including you, ever sees them, (4) `/plugin update
   <plugin>@<marketplace>` opens the plugin-discovery picker instead of
   updating (older builds), (5) you're unsure whether `plugin update`,
-  `/reload-plugins`, or a restart is what's needed. Root cause for the
+  `/reload-plugins`, or a restart is what's needed, (6) you are updating
+  every installed plugin at once: there is no `plugin update --all`, one
+  plugin can be installed at several scopes, and some "up to date"
+  answers are wrong. Root cause for the
   "up to date" case: the installed copy lives at
   `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/`, keyed on
   `.claude-plugin/plugin.json#version`, so an unchanged version means
   nothing re-extracts. Also covers why checking the marketplace clone is
-  NOT valid verification, and the release-tagging order for squash-merge
-  repos.
+  NOT valid verification, diffing clone against cache to find
+  same-version drift, forcing a re-extract with `uninstall --keep-data`
+  + `install`, and the release-tagging order for squash-merge repos.
 author: Claude Code
-version: 1.4.0
-date: 2026-08-17
+version: 1.5.0
+date: 2026-09-28
 ---
 
 # Claude Code: Updating an Installed Plugin
@@ -130,9 +134,50 @@ executes — you get the marketplace output, no update output, and an
 unchanged cache.
 
 If `plugin update` says "up to date" and you know master has moved, the
-author didn't bump the version. Nothing on your side will fix that; the
-only local workaround is deleting the stale cache directory to force a
-re-extract, and that is a hack — the fix belongs upstream.
+author didn't bump the version. The fix belongs upstream, but you can
+force a re-extract without touching the cache by hand:
+
+```bash
+claude plugin uninstall <plugin>@<marketplace> -s <scope> --keep-data </dev/null
+claude plugin install   <plugin>@<marketplace> -s <scope> </dev/null
+```
+
+`--keep-data` preserves `~/.claude/plugins/data/<id>/`. The
+`enabledPlugins` entry is removed and re-added as `true`, so a plugin you
+had disabled comes back enabled. `installed_plugins.json` records the new
+`gitCommitSha` under the same version. On 2.1.284 this re-extracted even
+though the old copy's `.in_use/` was stamped by live sessions, but check
+it with the diff under Verification rather than trusting
+"Successfully installed".
+
+### Updating everything
+
+There is no `plugin update --all`. `claude plugin marketplace update`
+with no name refreshes every marketplace, and after that you update
+plugins one at a time. Iterate over install **entries**, not plugin ids.
+One plugin can be installed at more than one scope, at different
+versions (observed: the same plugin at project scope `0.3.5` and user
+scope `0.3.29`), and `update` without `-s` only picks one of them. A
+project-scope entry has to be updated from its `projectPath`.
+
+```bash
+claude plugin marketplace update </dev/null
+python3 -c '
+import json, os
+d = json.load(open(os.path.expanduser("~/.claude/plugins/installed_plugins.json")))
+for pid, entries in d["plugins"].items():
+    for e in entries:
+        print(pid, e["scope"], e.get("projectPath", os.path.expanduser("~")))
+' | while read -r pid scope dir; do
+  (cd "$dir" && claude plugin update "$pid" -s "$scope" --json </dev/null)
+done
+```
+
+`--json` prints one line per entry with `updateOutcome` (`updated` or
+`up_to_date`) and `oldVersion`/`newVersion`. Don't add `-y`. According to
+`--help`, a run without a TTY needs `-y` to accept a marketplace-declared
+install command or `headersHelper`, so leaving it off makes that update
+stop and show the command, and a person gets to read it before it runs.
 
 ## Verification
 
@@ -156,6 +201,35 @@ of that line means nothing happened.
 
 To confirm *which* copy a running session loaded, look for the
 `.in_use/` directory under each cached version and compare mtimes.
+
+**`up_to_date` compares versions, not content.** To find the installs
+where that answer is wrong, diff each plugin's source in the marketplace
+clone against its cache copy. Resolve the source from the clone's
+`.claude-plugin/marketplace.json` (`plugins[].source`, relative to the
+clone). Take the clone path from
+`known_marketplaces.json#<name>.installLocation`, not from
+`marketplaces/<name>`. On 2.1.284 a `marketplace update` re-cloned one
+git-URL marketplace into `marketplaces/<repo-name>/`, rewrote
+`installLocation`, and left the old directory behind, stale. The cause is
+unexplained.
+
+```bash
+diff -rq -x .git -x .in_use <clone>/<source> <installPath>
+```
+
+Some differences are not drift:
+
+- `node_modules/` only in the cache: installed dependencies.
+- `.claude-plugin/` only in the cache: a manifest generated for a
+  catalog-only plugin.
+- `LICENSE` only in the clone.
+- `Directory loop detected` or `Only in <cache>`: directories the clone
+  holds as symlinks and the cache materializes.
+
+Drift is `Files ... differ` under an unchanged version. One observed run
+covered 28 installs. 18 reported `up_to_date`, and two of those differed
+from upstream: an LSP config's startup timeout and restart limit, and a
+hook's interpreter fallback. Both were still at `0.1.0`.
 
 ## Example
 
