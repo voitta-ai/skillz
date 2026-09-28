@@ -134,7 +134,14 @@ survive the replacement; the EIP shows as an in-place modify.
 
 ## Related
 
-- `cloudwatch-alarm-cannot-fire-audit` - the same discipline for alarms: a
-  metric that never reports is not a metric that is fine.
-- `terraform-plan-unrelated-destroy-drift` - the other direction, where a plan
-  proposes more than you meant rather than less.
+Both of these live in a private catalog, so the portable form is stated here
+rather than left as a link a reader cannot follow.
+
+- **The same discipline for alarms.** A metric that has never reported is not a
+  metric that is fine: an alarm watching one sits in `INSUFFICIENT_DATA` and
+  cannot fire. Confirm the metric exists and has history before trusting the
+  alarm over it.
+- **The other direction** - a plan proposing MORE than you meant rather than
+  less. Diff the plan's action list against the resources your change actually
+  names, and treat every unexplained entry as a stale checkout until proven
+  otherwise.
