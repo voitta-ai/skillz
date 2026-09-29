@@ -1,0 +1,15 @@
+{
+  "name": "cmux-knowledge-index",
+  "version": "1.0.0",
+  "description": "Start here for any cmux question, then follow the pointer. Routes by symptom to the right cmux skill, blog post or issue: tabs missing or restored wrong after a quit, relaunch or reboot; two tabs resuming one Claude session; a tab resuming another tab's conversation; a second cmux window full of duplicate tabs (\"two instances\"); a session that cannot tell which tab it is in; agents not showing as tabs; a claude-teams teammate spawn failing with \"Could not determine current tmux pane/window\"; a palette command that needs input or typed into a Claude prompt; config entries that silently do nothing; NODE_OPTIONS/$TMPDIR shims vanishing; tmux tools under cmux; agent-to-agent messaging in cmux. Also states in one place how cmux decides which session each tab resumes (per-tab resumeBinding replay, no one-tab-per-session rule) and which claims in older notes no longer hold on cmux 0.64.25.",
+  "author": "voitta-ai",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills"
+  ],
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}
