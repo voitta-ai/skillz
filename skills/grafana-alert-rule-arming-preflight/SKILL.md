@@ -13,7 +13,7 @@ description: |
   (strict and dropNN stay NaN on an empty labelled frame, replaceNN and sum give 0), the
   no_data_state trap (KeepLast fires new rules), explicit rule uids, and post-apply verification.
 author: Claude Code
-version: 1.0.0
+version: 1.0.1
 date: 2026-09-29
 ---
 
@@ -99,11 +99,23 @@ gauges where absence is suspicious, do not paper over it. Alert on absence expli
 whose query returns true NoData fires on creation. A CloudWatch alarm in `INSUFFICIENT_DATA`
 notified only `insufficient_data_actions`, which ports rarely set, so `OK` is the parity choice.
 
-### 4. Pin rule uids (terraform)
+### 4. Rule uids (terraform): pin EXISTING rules only
 
 `grafana_rule_group` matches `rule` blocks to state by position. Deleting or reordering a rule
-slides its neighbours onto each other's uids, which scrambles silences and state history. Set
-`uid` explicitly and derive it, e.g. `substr(sha1("<service>/<region>/<rule-key>"), 0, 14)`.
+slides its neighbours onto each other's uids, which scrambles silences and state history. So pin
+uids on rules that already exist, using the uid Grafana assigned.
+
+**Do not put an explicit uid on a rule that does not exist yet**, at least on Grafana 10.4.x
+(Amazon Managed Grafana). Observed 2026-09-29: one apply created 7 rule groups whose new rules
+carried derived uids (`substr(sha1(...), 0, 14)`). Every create failed with `PutAlertRuleGroup 500`,
+after the same apply had destroyed the groups those rules replaced. Root cause, traced to Grafana
+10.4 `pkg/services/ngalert/store/deltas.go`: a submitted rule that carries a uid is treated as an
+update of an existing rule, and an unknown uid returns `ErrAlertRuleNotFound`, which the
+provisioning API surfaces as `500 {}`. Create without `uid`, then pin the assigned uid in a
+follow-up before reordering. Newer Grafana versions may accept client-chosen uids on create. Check
+yours before relying on it. When
+moving rules between groups or folders, never destroy the old group in the same apply that creates
+the new one unless the create has been proven on this Grafana version.
 
 ### 5. Prove the rendered instance count
 
