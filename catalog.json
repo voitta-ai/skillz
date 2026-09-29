@@ -1115,6 +1115,15 @@
         "codex"
       ],
       "summary": "Diagnose an EC2 instance that boots clean and serves nothing, where every AWS-visible health field reads ok because the instance really is healthy and it is cloud-init that died. Use when: (1) an instance is `running` with `SystemStatus: ok` and `InstanceStatus: ok`, SSH answers, but the ports your user_data was supposed to open are closed, (2) software the bootstrap installs is simply absent and nothing in the console suggests why, (3) you are running any `dnf`/`apt` operation inside user_data on a 512 MB instance (`t4g.nano`, `t3.nano`, `t2.nano`), (4) a bootstrap under `set -e` stopped partway and you cannot tell where, (5) you edited user_data in Terraform and the plan says \"will be updated in-place, 0 to destroy\" - that plan is a no-op. Two traps: instance status answers \"is the VM alive\", never \"did cloud-init finish\", so a green check is not evidence the bootstrap ran; and `user_data` is read only on first boot, so changing it in place changes an API field while the running machine stays exactly as broken."
+    },
+    {
+      "name": "alert-paging-chain-verification",
+      "path": "skills/alert-paging-chain-verification/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Prove a migrated or newly-created alert actually reaches a human BEFORE deleting the alarm it replaces. Use when: (1) porting CloudWatch alarms to Grafana/Prometheus rules, (2) about to delete a monitor because \"the replacement is live\", (3) routing new rules to an SNS topic or webhook an existing alarm already uses, (4) a migration PR claims \"routing parity\" from matching rule counts or matching alarm_actions counts, (5) an alert has never fired and you are treating that as healthy. Catches the failure where delivery succeeds, every count matches, and no incident is ever created."
     }
   ],
   "collections": [
@@ -1267,7 +1276,8 @@
         "test-a-commit-blocking-hook",
         "terraform-depends-on-defers-data-source-forced-replacement",
         "vendor-api-registration-gate",
-        "ec2-user-data-died-health-ok"
+        "ec2-user-data-died-health-ok",
+        "alert-paging-chain-verification"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2818,6 +2828,19 @@
         "ec2-user-data-died-health-ok"
       ],
       "summary": "Single-skill plugin: ec2-user-data-died-health-ok."
+    },
+    {
+      "name": "alert-paging-chain-verification",
+      "claude_manifest": "plugins/alert-paging-chain-verification/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/alert-paging-chain-verification/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "alert-paging-chain-verification"
+      ],
+      "summary": "Single-skill plugin: alert-paging-chain-verification."
     }
   ],
   "defaults": {
