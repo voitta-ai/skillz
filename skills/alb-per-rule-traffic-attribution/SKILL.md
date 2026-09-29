@@ -18,7 +18,7 @@ description: |
   Attribute by `request_url` + `user_agent` instead, quote per-day rates, and report
   the window the data has (min/max date), not the one the WHERE clause asked for.
 author: Claude Code
-version: 1.1.0
+version: 1.2.0
 date: 2026-08-27
 ---
 
@@ -225,6 +225,54 @@ intended caller was the endpoint's largest consumer.
 
 That distinction only appears when you attribute by identity. Priority alone would
 have said "rule is empty" and stopped there.
+
+## When the logs cannot answer: probe the matrix
+
+This skill is PASSIVE attribution, and section 5 tells you to discard synthetic
+probes as noise. When a rule carries almost no traffic, that leaves nothing to
+attribute and you need the complement: probe every credential state against
+every door, and read ROWS, not cells.
+
+Observed: a rule under consideration for retirement carried TEN requests in
+seven days (0,0,0,1,6,1,2) against ~100,000,000/day on the same load balancer -
+and all ten were the probe script itself, exactly the signature section 5 says
+to throw away.
+
+Two front doors x three credential states, printed as a matrix:
+
+```
+                  OLD DOOR                NEW GATEWAY
+  1 credential      401  refused            401  refused
+  2 bearer only     401  refused            200  result body
+  3 both            200  result body        200  result body
+```
+
+**The PAIR is the information, not the cell.** Row 1 alone looks like a broken
+credential. Row 1 plus row 3 at the SAME door - 401 with the credential alone,
+200 with credential+bearer - proves that door's rule already forwards to the new
+gateway. Another caller read 200/401 on the same row, and that single differing
+cell was the whole finding: a production defect, because the legacy path must
+keep working until a caller actually moves. A one-door-per-scenario script had
+run for weeks and structurally could not show it, because each scenario only
+ever probed the door it was "about".
+
+**Response headers identify WHO answered; the status code cannot.** A gateway
+header such as `server: kong/3.9.3` on an OLD-door 401 is the proof that rule
+forwards. A bare `apigw-requestid` with no gateway header is the API gateway
+answering alone - a missing route, not an auth failure. That distinction cost a
+calling team a day.
+
+**Probe the row you can predict anyway.** Row 2 at the old door is 401 BY
+CONSTRUCTION: that listener selects a rule by exact-matching the credential
+header, so with no header there is no rule and the bearer is never read. Showing
+it beats asserting it.
+
+**Redact the transcript.** The matrix wants a full request/response log, and a
+transcript with live credentials is a file nobody deletes, sitting in `$TMPDIR`.
+Redact to length plus fingerprint, and key the redaction on the header NAME so a
+new credential header is covered by adding a case rather than by remembering to.
+Print only the path: six exchanges with bodies scroll the matrix off screen,
+which defeats the point of a matrix.
 
 ## Notes
 

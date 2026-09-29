@@ -14,7 +14,7 @@ description: |
   alternative, reproducing a wrapper's computed variables, and why a plan
   file is a secret.
 author: Claude Code
-version: 1.0.0
+version: 1.1.0
 date: 2026-08-24
 ---
 
@@ -133,6 +133,62 @@ a summary; it is a snapshot.
 - A plan file also **freezes secret values at plan time**. If a secret rotates
   between plan and apply, the apply writes the stale one. Keep the window
   short, and re-plan rather than reusing a plan file from yesterday.
+
+## Guarding a saved plan, and two ways the guard lies
+
+A saved plan is only as safe as the guard that reads it. Both traps below
+produced FALSE POSITIVES that refused a correct apply - the right direction for
+a guard to fail, but each cost a cycle, and the second is a plain bash bug.
+
+**Terraform's own continuation line shares the action-line prefix.** A guard
+that whitelists resource addresses by grepping `^  # ` also matches the
+explanation terraform prints underneath:
+
+```
+  # aws_lb_target_group.example[0] will be destroyed
+  # (because index [0] is out of range for count)
+```
+
+So "is every action line one I expect?" answers NO on a plan containing only
+expected actions. Exclude the continuation:
+
+```bash
+grep -E '^  # ' plan.txt | grep -v '^  # (because' | grep -v '<expected address>'
+```
+
+**`grep | head` returns head's status, which is always 0.** This always sets
+FAIL:
+
+```bash
+grep -E 'image .*->' plan.txt | head -3 && FAIL=1     # WRONG
+```
+
+Use `grep -q` in an `if`, with no pipe:
+
+```bash
+if grep -qE 'image .*->' plan.txt; then echo "GUARD: image change"; FAIL=1; fi
+```
+
+A guard that held, for an expected 0 add / 0 change / 1 destroy:
+
+```bash
+FAIL=0
+grep -qE '^Plan: 0 to add, 0 to change, 1 to destroy\.$' plan.txt || FAIL=1
+U=$(grep -E '^  # ' plan.txt | grep -v '^  # (because' | grep -v '<expected address>' || true)
+[ -n "$U" ] && FAIL=1
+if grep -qE 'image .*->' plan.txt; then FAIL=1; fi
+[ "$FAIL" -ne 0 ] && { echo "NOT APPLYING"; exit 1; }
+terraform apply -auto-approve "$PLAN"
+```
+
+**Why `image .*->` is worth guarding on even when images are not the subject.**
+A wrapper taking POSITIONAL arguments and passing no flags through turned
+`./plan.sh prod -no-color -out=p.tfplan` into
+`-var="service_version=-no-color"`. The plan read as ordinary drift - `4 to
+change`, Deployments updated in place - while actually setting every prod pod's
+image tag to the literal string `-no-color`. It was caught only by opening the
+deployment diff. So: guard that no image changes, and confirm the wrapper
+echoed a real version.
 
 ## Checklist
 

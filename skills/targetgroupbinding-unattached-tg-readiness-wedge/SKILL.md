@@ -18,9 +18,13 @@ description: |
   load balancer listener keeps its targets permanently `Target.NotInUse`, so
   the gate can never pass. Unwedge with `kubectl delete targetgroupbinding`;
   durable fix is gating the binding separately from the target group and
-  attaching the listener rule before the binding.
+  attaching the listener rule before the binding. Also covers the BACKWARDS
+  direction - a listener rule REMOVED while its binding stays - and the case
+  where the wedge is invisible to traffic: every request still returns 200
+  because a second load balancer registers the same pod IPs directly and health
+  checks them itself, so the Service having no endpoints never shows up.
 author: Claude Code
-version: 1.0.0
+version: 1.1.0
 date: 2026-08-27
 source: https://github.com/voitta-ai/skillz
 source_file: skills/targetgroupbinding-unattached-tg-readiness-wedge/SKILL.md
@@ -156,6 +160,56 @@ consequences:
   once to observe health.
 - A comment claiming an unattached group "health checks the pods" is
   wrong; it health-checks nothing.
+
+## The backwards direction: the rule goes away later
+
+The durable fix above orders things at CREATION. The case that actually bites is
+the rule going away LATER, and this is the arrow people get wrong, because nobody
+re-reads a binding when deleting a listener rule.
+
+Observed: an apply removed the listener rule forwarding to a target group while
+the binding that referenced it was still enabled. Same wedge, opposite arrow.
+
+**Detaching a target group and deleting its binding belong in the same change.**
+
+## The wedge can be invisible to traffic
+
+The trigger list above assumes a rollout that has already timed out. It does not
+have to. Dev sat wedged from one apply until it was found days later, and **every
+request returned 200 the whole time**.
+
+Both proxy pods were `Ready=False` with the gate condition
+`target-health.elbv2.k8s.aws/<tg>` reading `False`, reason `Target.NotInUse`,
+`"Target group is not configured to receive traffic from the load balancer"`.
+The Service had **zero** ready endpoints - both pod IPs sat in
+`notReadyAddresses`.
+
+Traffic kept working because a separate, newly created load balancer registered
+the same pod IPs directly with `target-type: ip` and health checked them itself.
+**Pod-IP registration plus its own health check does not consult pod readiness**,
+so a Service with no endpoints is irrelevant to it. A smoke test cannot see this.
+
+Detection, cheapest first:
+
+```bash
+# 1. the cheap one, and the one that works when the service looks fine
+kubectl get endpoints <svc> -n <ns> -o json | jq '{ready: .subsets[0].addresses, notReady: .subsets[0].notReadyAddresses}'
+
+# 2. the gate CONDITION on the pod -- not the spec
+kubectl get pods -n <ns> -o json | jq '.items[].status.conditions[]|select(.type|startswith("target-health"))'
+
+# 3. root cause
+aws elbv2 describe-target-groups --target-group-arns <arn> --query 'TargetGroups[].LoadBalancerArns'
+```
+
+A populated `notReadyAddresses` against an empty `addresses` is the signature.
+`LoadBalancerArns: []` is the cause.
+
+**Check the condition, never the spec, and never a request.** After the binding
+is deleted the pods keep `readinessGates` in their SPEC - it is injected at
+admission and is immutable - and the controller resolves the CONDITION to True.
+No restart is needed, so "the gate is gone" is only visible on the pod's status
+conditions and the Service endpoints.
 
 ## Caveats
 
