@@ -1,0 +1,15 @@
+{
+  "name": "alert-paging-chain-verification",
+  "version": "1.0.0",
+  "description": "Prove a migrated or newly-created alert actually reaches a human BEFORE deleting the alarm it replaces. Use when: (1) porting CloudWatch alarms to Grafana/Prometheus rules, (2) about to delete a monitor because \"the replacement is live\", (3) routing new rules to an SNS topic or webhook an existing alarm already uses, (4) a migration PR claims \"routing parity\" from matching rule counts or matching alarm_actions counts, (5) an alert has never fired and you are treating that as healthy. Catches the failure where delivery succeeds, every count matches, and no incident is ever created.",
+  "author": "voitta-ai",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills"
+  ],
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}
