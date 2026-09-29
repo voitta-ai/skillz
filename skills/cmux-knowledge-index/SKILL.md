@@ -6,7 +6,9 @@ description: |
   after a quit, relaunch or reboot; two tabs resuming one Claude session; a
   tab resuming another tab's conversation; a second cmux window full of
   duplicate tabs ("two instances"); a session that cannot tell which tab it is
-  in; agents not showing as tabs; config entries that silently do nothing;
+  in; agents not showing as tabs; a claude-teams teammate spawn failing with
+  "Could not determine current tmux pane/window"; a palette command that
+  needs input or typed into a Claude prompt; config entries that silently do nothing;
   NODE_OPTIONS/$TMPDIR shims vanishing; tmux tools under cmux; agent-to-agent
   messaging in cmux. Also states in one place how cmux decides which session
   each tab resumes (per-tab resumeBinding replay, no one-tab-per-session rule)
@@ -46,6 +48,8 @@ which session a tab resumes, which is the root of most restore surprises.
 | A session must find the tab it runs in | `cmux-session-self-identity` |
 | Tab title, peer name and Remote Control name disagree | `claude-session-three-names` |
 | Spawned agents do not appear as tabs | `cmux-agent-tabs` |
+| A `claude-teams` teammate spawn fails with `Could not determine current tmux pane/window` | `cmux-agent-tabs`. Check two causes in order. (1) The lead's tab moved to another workspace after launch, so `TMUX` still names the old one (`Workspace not found`): relaunch in place with `--resume`; from 0.64.22 launch re-resolves the workspace by surface id. (2) cmux 0.64.23 to 0.64.25 allow 9 polling reads per socket connection, and Claude Code's `display-message -t $TMUX_PANE` needs more (`rate_limited`): [manaflow-ai/cmux#12757](https://github.com/manaflow-ai/cmux/issues/12757), fixed by #12832, not in v0.64.25. Use peer-session tabs until a release carries it. |
+| A palette entry must ask for input, or its command landed in a Claude prompt | No skill yet. Palette commands cannot prompt. A `commands[]` entry with `command` is typed into the focused terminal; an action with `type: command` and `target: newTabInCurrentPane` opens a new tab, so prompt there (0.64.25 `CmuxConfigExecutor`). |
 | Something was seen "in some pane" | `cmux-search` |
 | Agent-to-agent traffic is invisible to the human | `cmux-cross-session-visibility` |
 | A Claude agent and a Codex agent must message each other | `cmux-claude-codex-cross-runtime-messaging` |
@@ -94,7 +98,8 @@ empty. The tab title is stored on the tab and is never tied to the session.
 |---|---|---|
 | Workspace and tab ids are re-minted on restore | `cmux-session-restore-forensics` 1.2.0; the 2026-08-10 post | Ids stayed the same across five relaunches; still join on the session UUID |
 | Restore launches `claude --session-id <uuid>` | `claude-session-three-names` | Restore uses `--resume <uuid>`; `--session-id` marks a fresh launch |
-| Teams panes carry no binding | voitta-lab#2 title | Launcher panes carry one since 0.64.16; teammate panes untested |
+| Teams panes carry no binding | voitta-lab#2 title | Launcher panes carry one since 0.64.16; teammate panes untested (they cannot spawn on 0.64.23 to 0.64.25) |
+| `cmux claude-teams` opens each named teammate in its own tab | the 2026-08-27 pinger/ponger post; `cmux-agent-tabs`; `agent-team-orchestration` | Not on 0.64.23 to 0.64.25: every spawn hits the polling rate limit (#12757). Test first with Claude Code's own query, `tmux display-message -t "$TMUX_PANE" -p '#{window_id}'` |
 | Bindings call an absolute path to claude | the 2026-06-17 post; `cmux-autoresume-after-reboot` | Bindings call `$CMUX_CLAUDE_WRAPPER_SHIM` since 0.64.16 |
 
 ## Blog posts
