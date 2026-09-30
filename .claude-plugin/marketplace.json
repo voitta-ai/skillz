@@ -615,6 +615,11 @@
       "name": "grafana-alert-rule-arming-preflight",
       "source": "./plugins/grafana-alert-rule-arming-preflight/",
       "description": "Dry-run a Grafana unified-alerting rule's full query -> reduce -> threshold pipeline through the alerting evaluator BEFORE arming it, so a rule that fires on its first evaluation is caught in review instead of in Slack or PagerDuty. Use when: (1) you are about to create, port, re-home or un-gate Grafana alert rules (terraform grafana_rule_group, provisioning API, UI), especially rules ported from CloudWatch alarms; (2) a rule fires continuously although the metric is quiet, its state history reads `B=NaN, C=NaN`, the rules API shows value `NaN`, or the notification prints `Value: [no value]`; (3) a sparse counter (published only when non-zero) sits behind a `reduce last`/`max`/`mean`; (4) someone asks whether reduce mode dropNN or replaceNN fixes an empty series. Covers POST /api/v1/eval and /api/ds/query dry runs, the measured reducer table (strict and dropNN stay NaN on an empty labelled frame, replaceNN and sum give 0), the no_data_state trap (KeepLast fires new rules), explicit rule uids, and post-apply verification."
+    },
+    {
+      "name": "github-actions-cost-attribution",
+      "source": "./plugins/github-actions-cost-attribution/",
+      "description": "Reconstruct GitHub Actions spend per repo, workflow, event, branch, triggering actor, job and step from run and job timestamps when you cannot see org billing, then rank concrete CI savings with measured numbers. Use when: (1) someone reports Actions usage skyrocketed or a spending budget was raised or hit and you need to say where the minutes went, (2) the billing endpoints 404 because you are an org member, not an admin, (3) a run's /timing endpoint returns billable.total_ms 0 (a deprecated field that answers 0 when it means 'I cannot'), (4) jobs fail in about four seconds with no steps and an annotation saying an Actions budget is preventing further use, (5) you are evaluating CI savings proposals and want measured savings rather than guesses. Ships gha_cost.py, which lists runs per UTC day to stay under the 1000-result search cap, fetches jobs with filter=all, recomputes billed minutes by rounding each job up to a whole minute at per-SKU list rates, and reports by day, workflow, actor, job and sub-minute job."
     }
   ]
 }

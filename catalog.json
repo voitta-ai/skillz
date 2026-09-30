@@ -1142,6 +1142,18 @@
         "codex"
       ],
       "summary": "Dry-run a Grafana unified-alerting rule's full query -> reduce -> threshold pipeline through the alerting evaluator BEFORE arming it, so a rule that fires on its first evaluation is caught in review instead of in Slack or PagerDuty. Use when: (1) you are about to create, port, re-home or un-gate Grafana alert rules (terraform grafana_rule_group, provisioning API, UI), especially rules ported from CloudWatch alarms; (2) a rule fires continuously although the metric is quiet, its state history reads `B=NaN, C=NaN`, the rules API shows value `NaN`, or the notification prints `Value: [no value]`; (3) a sparse counter (published only when non-zero) sits behind a `reduce last`/`max`/`mean`; (4) someone asks whether reduce mode dropNN or replaceNN fixes an empty series. Covers POST /api/v1/eval and /api/ds/query dry runs, the measured reducer table (strict and dropNN stay NaN on an empty labelled frame, replaceNN and sum give 0), the no_data_state trap (KeepLast fires new rules), explicit rule uids, and post-apply verification."
+    },
+    {
+      "name": "github-actions-cost-attribution",
+      "path": "skills/github-actions-cost-attribution/SKILL.md",
+      "files": [
+        "scripts/gha_cost.py"
+      ],
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Reconstruct GitHub Actions spend per repo, workflow, event, branch, actor, job and step from run and job timestamps when the billing API 404s for non-admins and the per-run /timing billable block returns a deprecated zero. Recomputes billed minutes by rounding each job up to a whole minute at per-SKU list rates, matching admin billing figures within about 10-30 percent. Ships gha_cost.py, and covers the per-day listing that dodges the 1000-result search cap, why branch and event filters silently under-report, excluding skipped jobs and budget-refused jobs that never got a runner, and the recurring savings patterns worth 10-45 percent of a repo: sub-minute jobs, PR-title checks on synchronize, diff gating that fails open on a new branch, and old open PRs re-running full CI on every rebase."
     }
   ],
   "collections": [
@@ -1297,7 +1309,8 @@
         "ec2-user-data-died-health-ok",
         "alert-paging-chain-verification",
         "cmux-knowledge-index",
-        "grafana-alert-rule-arming-preflight"
+        "grafana-alert-rule-arming-preflight",
+        "github-actions-cost-attribution"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2887,6 +2900,19 @@
         "grafana-alert-rule-arming-preflight"
       ],
       "summary": "Single-skill plugin: grafana-alert-rule-arming-preflight."
+    },
+    {
+      "name": "github-actions-cost-attribution",
+      "claude_manifest": "plugins/github-actions-cost-attribution/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/github-actions-cost-attribution/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "github-actions-cost-attribution"
+      ],
+      "summary": "Single-skill plugin: github-actions-cost-attribution."
     }
   ],
   "defaults": {
