@@ -1,6 +1,6 @@
 {
   "name": "credential-redactor-audit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Audit a credential-redaction layer you own: find the holes a normal test suite misses (fixtures that hide the bug, patterns that bypass the value guard, dropped overlap spans, non-idempotence, backwards allow-lists, fail-open imports), then scrub what already leaked.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",

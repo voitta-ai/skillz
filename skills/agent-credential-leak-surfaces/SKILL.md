@@ -14,7 +14,7 @@ description: |
   false confidence, why keyword-adjacency regexes lose to prose, why bare
   high-entropy matching is unusable, and the fingerprint-not-echo technique.
 author: Claude Code
-version: 1.1.0
+version: 1.2.0
 date: 2026-08-19
 ---
 
@@ -68,7 +68,7 @@ case of scanning repo files.
 extend this list, extend the enforced script too -- a prose union that drifts
 from the gate is a false-clean generator.
 
-## The six surfaces
+## The seven surfaces
 
 Ordered by how often they are missed, not by severity.
 
@@ -262,6 +262,62 @@ Two things that surprise people:
   and then printed, as its remedy, the command it had just refused. Unset the
   variable for that one subprocess (`env -u VAR -u VAR2 <cli> logout ...`) rather
   than disturbing the working surface.
+
+### 7. `bashEditDiff` - the harness diffs any TRACKED file a Bash command writes
+
+The one nobody looks for, because nothing the agent typed contains the secret.
+
+When a Bash command modifies a **git-tracked** file, the harness records a
+before/after diff into the session transcript at
+`toolUseResult.bashEditDiff.files[].hunks[].lines`, and renders it in the
+terminal. Observed 2026-09-30: `mkcert -cert-file … -key-file …` into a repo
+that tracks its certs put **both** the old committed key and the newly generated
+key into the transcript in full - 25 base64 lines removed, 25 added.
+
+Three properties make it its own surface:
+
+- **The command is clean.** The leak is the harness reacting to the write, so
+  scanning what the agent typed finds nothing.
+- **It is not in `message.content`.** Verified: the marker is absent there and
+  present only under `toolUseResult`, so a scan of model-visible content misses
+  it entirely.
+- **Tracked-ness is the trigger.** The same command writing an ignored path
+  produces no diff. A repo whose README says certs are git-ignored, but whose
+  `.gitignore` has no such rule, is the exact shape that produces this.
+
+**Scan it line by line.** `bashEditDiff` stores each diff line as a separate
+JSON array element, so a PEM header and its body are **never adjacent** in the
+raw text. A scan looking for a header followed by base64 in one string reports
+"no body" and is wrong. Walk `hunks[].lines` element by element.
+
+**Remediating it has three constraints, all verified:**
+
+- **The agent cannot scrub its own transcript.** An in-place rewrite is refused
+  as session-transcript tampering, and printing even a key prefix or length is
+  refused as credential materialization. The scrub is user-run, not agent-run.
+- **Rotate outside the session.** Regenerating the key from inside - including
+  via `!` - is another Bash write, and gets diffed again.
+- **Untrack without checking out.** A worktree checkout re-materializes the key.
+  Build the removal commit on a temporary index instead:
+
+  ```bash
+  GIT_INDEX_FILE=$tmp git read-tree $BASE
+  GIT_INDEX_FILE=$tmp git update-index --force-remove <secret paths>
+  GIT_INDEX_FILE=$tmp git write-tree        # then commit-tree -p $BASE
+  ```
+
+  Review it with `git diff --name-status` only - a full diff prints the deleted
+  key back out.
+
+The scrub itself: for each line containing `"bashEditDiff"`, `json.loads` it,
+`toolUseResult.pop("bashEditDiff")`, re-serialize only changed lines, and write
+back with `open("r+b")` + `seek(0)` + `write` + `truncate` so the inode survives
+and the live session keeps appending. Run it while the session is idle; abort
+before writing on any parse failure.
+
+**Distinguishing a real leak from a marker mention.** Scanning `~/.claude` for
+private-key markers also hits other sessions' transcripts that merely discuss
+them. Match the **exact lines** of the real key, not the header.
 
 ## Five lessons about detection, learned the hard way
 

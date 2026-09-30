@@ -1,6 +1,6 @@
 {
   "name": "agent-credential-leak-surfaces",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Find and clean the six local surfaces where a coding agent accumulates copies of your secrets (git remote URLs, memory stores, file-history snapshots, tool config literals, permission allowlists, tool-output caches). Covers why prefix-grep gives false confidence and why keyword-adjacency redaction loses to prose.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",
