@@ -17,9 +17,16 @@ description: |
 author: Claude Code
 version: 1.0.0
 date: 2026-09-25
+source: https://github.com/voitta-ai/skillz
+source_file: skills/github-actions-cost-attribution/SKILL.md
 ---
 
 # GitHub Actions cost attribution without billing access
+
+> **Canonical source.** This skill lives in the repo at
+> https://github.com/voitta-ai/skillz (file:
+> `skills/github-actions-cost-attribution/SKILL.md`).
+
 
 ## Problem
 
