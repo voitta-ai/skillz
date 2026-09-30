@@ -20,7 +20,7 @@ description: |
   pre-open-source-credential-audit; for hunting the copies a secret already
   scattered across local disk see agent-credential-leak-surfaces.
 author: Claude Code
-version: 1.0.0
+version: 1.1.0
 date: 2026-08-15
 ---
 
@@ -319,6 +319,24 @@ You are done when all of these hold:
 - Adversarial review of a redactor is worth repeating **after** each fix.
   Three of the four rounds cited here found holes introduced or left by the
   previous round's fix.
+
+## Scan `toolUseResult.bashEditDiff`, element by element
+
+A transcript audit that reads only `message.content` misses an entire class of
+leak. When a Bash command writes a **git-tracked** file, the harness records a
+before/after diff at `toolUseResult.bashEditDiff.files[].hunks[].lines` - so the
+secret is in the transcript although nothing the agent typed contains it.
+
+Each diff line is a separate JSON array element, so a PEM header and its body
+are **never adjacent in the raw text**. A regex looking for a header followed by
+base64 in one string reports "no body" and is wrong. Walk `hunks[].lines`
+element by element.
+
+Observed 2026-09-30: 25 base64 lines of an old committed key plus 25 of a newly
+generated one, present under `toolUseResult` and absent from `message.content`.
+
+See `agent-credential-leak-surfaces` surface 7 for the remediation, which is
+user-run: the agent cannot scrub its own transcript.
 
 ## References
 
