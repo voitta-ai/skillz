@@ -1154,6 +1154,15 @@
         "codex"
       ],
       "summary": "Reconstruct GitHub Actions spend per repo, workflow, event, branch, actor, job and step from run and job timestamps when the billing API 404s for non-admins and the per-run /timing billable block returns a deprecated zero. Recomputes billed minutes by rounding each job up to a whole minute at per-SKU list rates, matching admin billing figures within about 10-30 percent. Ships gha_cost.py, and covers the per-day listing that dodges the 1000-result search cap, why branch and event filters silently under-report, excluding skipped jobs and budget-refused jobs that never got a runner, and the recurring savings patterns worth 10-45 percent of a repo: sub-minute jobs, PR-title checks on synchronize, diff gating that fails open on a new branch, and old open PRs re-running full CI on every rebase."
+    },
+    {
+      "name": "terraform-cross-state-resource-handoff",
+      "path": "skills/terraform-cross-state-resource-handoff/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Hand a live resource from one Terraform state to another without destroying or recreating it, using config-driven removed blocks (lifecycle destroy = false) in the source and import blocks in the destination rather than two unreviewed state mutations via terraform state rm and terraform import. Covers the apply order that avoids a window where no state manages the resource, the double-ownership window and prevent_destroy, index syntax on count-gated resources and counted modules, env-gated import for_each when dev and prod share an account and one side auto-applies on merge, the plan output that prints an embedded secret on import, and why create-is-idempotent adoption is a hazard rather than a shortcut."
     }
   ],
   "collections": [
@@ -1310,7 +1319,8 @@
         "alert-paging-chain-verification",
         "cmux-knowledge-index",
         "grafana-alert-rule-arming-preflight",
-        "github-actions-cost-attribution"
+        "github-actions-cost-attribution",
+        "terraform-cross-state-resource-handoff"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2913,6 +2923,19 @@
         "github-actions-cost-attribution"
       ],
       "summary": "Single-skill plugin: github-actions-cost-attribution."
+    },
+    {
+      "name": "terraform-cross-state-resource-handoff",
+      "claude_manifest": "plugins/terraform-cross-state-resource-handoff/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/terraform-cross-state-resource-handoff/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "terraform-cross-state-resource-handoff"
+      ],
+      "summary": "Single-skill plugin: terraform-cross-state-resource-handoff."
     }
   ],
   "defaults": {

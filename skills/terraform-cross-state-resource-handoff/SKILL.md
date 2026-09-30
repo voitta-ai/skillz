@@ -17,9 +17,16 @@ description: |
 author: Claude Code
 version: 1.0.0
 date: 2026-09-29
+source: https://github.com/voitta-ai/skillz
+source_file: skills/terraform-cross-state-resource-handoff/SKILL.md
 ---
 
 # Terraform cross-state resource handoff (removed + import)
+
+> **Canonical source.** This skill lives in the repo at
+> https://github.com/voitta-ai/skillz (file:
+> `skills/terraform-cross-state-resource-handoff/SKILL.md`).
+
 
 ## Problem
 
