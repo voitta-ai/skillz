@@ -17,7 +17,7 @@ description: |
   side does registry, versions, validators, PR. Falls back to the full
   claudeception wiring when no such peer exists.
 author: Claude Code
-version: 1.1.0
+version: 1.2.0
 date: 2026-09-13
 ---
 
@@ -80,6 +80,13 @@ registry.
    capture branch and the error stands. CI never sets the flag, so the landing
    side still enforces it. **Do not use `--no-verify`**: if the hook blocks you,
    the branch is not content-only and the gate is right.
+
+   The same demotion covers the **plugin version-bump check**. Editing an
+   EXISTING skill makes `check-plugin-version-bumps.py` demand a bump in
+   `plugins/<name>/` and in the bundle - which this contract forbids the capture
+   side from touching, so that branch had no permitted fix at all and could not
+   be pushed. Two sessions hit it independently and both correctly refused to
+   `--no-verify`. Version bumps are landing-side work; CI enforces them there.
 5. Pick the landing session: `ListAgents`, then the session working the
    skills repo (session names usually carry the repo directory; a busy row
    is fine - messages queue). Exactly ONE target. If several look
