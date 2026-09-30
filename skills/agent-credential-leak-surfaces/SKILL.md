@@ -14,7 +14,7 @@ description: |
   false confidence, why keyword-adjacency regexes lose to prose, why bare
   high-entropy matching is unusable, and the fingerprint-not-echo technique.
 author: Claude Code
-version: 1.2.0
+version: 1.3.0
 date: 2026-08-19
 ---
 
@@ -308,6 +308,19 @@ raw text. A scan looking for a header followed by base64 in one string reports
 
   Review it with `git diff --name-status` only - a full diff prints the deleted
   key back out.
+
+  **And diff it against a freshly fetched base before pushing.**
+  `update-index --cacheinfo` takes WHOLE-FILE blobs from the working tree, so if
+  the base moved since that tree was cut, the commit silently reverts every
+  upstream edit to those files. Observed: a 4-line edit landed as **+4/-23**,
+  because upstream had added 23 lines to the same file. It was caught only by
+  `--stat` before the push.
+
+  So: `git fetch` first, confirm
+  `git diff --stat origin/<base> <new-branch>` shows only the intended lines,
+  and for a file that moved upstream build the blob with
+  `git merge-file -p <upstream> <old-base> <ours>` - its exit code is the
+  conflict count, and 0 gave a clean +4.
 
 The scrub itself: for each line containing `"bashEditDiff"`, `json.loads` it,
 `toolUseResult.pop("bashEditDiff")`, re-serialize only changed lines, and write
