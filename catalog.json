@@ -1229,6 +1229,15 @@
         "codex"
       ],
       "summary": "A git subtree add into a monorepo whose root .gitattributes routes a pattern through Git LFS leaves a binary file permanently modified when the source stored it as a plain blob: the subtree copies the source tree verbatim while the inherited LFS clean filter pointer-izes the working copy, so the index and the working file can never agree, and the Bin 8879291 -> 132 bytes in git diff --stat is a pointer rather than a truncation. The obvious fix is the wrong one - a renormalize commit cleans git status and leaves the full raw blob in the destination's history forever, defeating the LFS policy. Fix the source instead: clone it, git lfs migrate import --include matching the destination's patterns --everything, reset the unpushed subtree commits away, and redo the add from the clone's local path so the LFS objects are reachable. Covers verifying with git lfs ls-files that the object is present and not merely referenced, the redundant nested .gitattributes, why --squash does not help, and stopping to ask when the bad subtree was already pushed."
+    },
+    {
+      "name": "eks-running-image-from-amp-cadvisor",
+      "path": "skills/eks-running-image-from-amp-cadvisor/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Read which container image an EKS workload is actually running, per cluster and region, with no Kubernetes API or RBAC access, by querying Amazon Managed Service for Prometheus (AMP) for cAdvisor's `container_start_time_seconds`, whose series carry an `image` label. Use when: (1) a monitor, audit, batch task (Airflow/MWAA, Lambda, CI) must know what image prod EKS runs, but its IAM role has no EKS access entry or kubeconfig and granting one means a cluster-side change; (2) a deploy-freshness or drift check is reading a stale proxy instead of the pods - e.g. an ECS task definition that skip_destroy keeps ACTIVE after an ECS-to-EKS migration, so its registeredAt freezes and the check measures a fleet nothing runs; (3) the app's own CloudWatch metrics carry no version dimension; (4) you need the image across several regions in one pass. Covers the PromQL filter (drop the pod-level cgroup and pause-sandbox rows), SigV4-signing the AMP query with botocore + urllib (no new dependency), finding the workspace by alias (ListWorkspaces' alias filter is a PREFIX match), dating each image by ECR imagePushedAt in its own regional registry, the IAM grant (aps:QueryMetrics is resource-scoped, aps:ListWorkspaces is \"*\" only), and why zero series must read as UNMEASURABLE, never as fresh."
     }
   ],
   "collections": [
@@ -1393,7 +1402,8 @@
         "obsidian-vault-scripted-setup",
         "mcp-streamable-http-client-no-sdk",
         "agent-eval-replay-history-leak",
-        "git-subtree-add-into-lfs-repo"
+        "git-subtree-add-into-lfs-repo",
+        "eks-running-image-from-amp-cadvisor"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3100,6 +3110,19 @@
         "git-subtree-add-into-lfs-repo"
       ],
       "summary": "Single-skill plugin: git-subtree-add-into-lfs-repo."
+    },
+    {
+      "name": "eks-running-image-from-amp-cadvisor",
+      "claude_manifest": "plugins/eks-running-image-from-amp-cadvisor/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/eks-running-image-from-amp-cadvisor/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "eks-running-image-from-amp-cadvisor"
+      ],
+      "summary": "Single-skill plugin: eks-running-image-from-amp-cadvisor."
     }
   ],
   "defaults": {
