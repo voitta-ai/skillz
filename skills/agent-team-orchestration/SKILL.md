@@ -18,7 +18,7 @@ description: |
   other multiplexers. Also use when (5) a spawned wave produces no commits, no
   dirty files and no replies - agents that are visible but wedged.
 author: Claude Code
-version: 1.6.0
+version: 1.7.0
 date: 2026-08-21
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-team-orchestration/SKILL.md
@@ -106,6 +106,56 @@ decided, opinionatedly, and it decided once.
 **Ask each surface/runtime decision at most once.** Once step 0 has resolved the
 surface, no later step re-asks it (gate 4 must not re-pose gate 2). Record the
 resolved surface and reuse it for the whole run.
+
+### The three checks above are NOT sufficient
+
+Observed 2026-09-29: `which tmux`, `$TMUX` and an untargeted
+`tmux display-message -p '#{pane_id}'` all passed, and every `Agent(name: ...)`
+spawn still failed with `Could not determine current tmux pane/window`.
+
+Add the check that ends the argument - replay what Claude Code itself queries
+(2.1.284, `TmuxBackend.getCurrentWindowTarget`). It must print an `@...`:
+
+```bash
+tmux -S "${TMUX%%,*}" display-message -t "$TMUX_PANE" -p '#{window_id}'
+```
+
+Two independent causes produce that same error:
+
+- **The lead's tab was moved to another cmux workspace after launch.** `TMUX`
+  and `CMUX_WORKSPACE_ID` still name the dead launch workspace, and the shim
+  answers `Error: not_found: Workspace not found`. Fix: `/exit`, then
+  `cmux claude-teams --chrome -n <name> --resume <session-id>` **in the same
+  tab** - cmux 0.64.25 re-resolves the workspace at launch.
+- **cmux >= 0.64.23 `ControlClientRateLimiter`.** Any `-t %pane` query makes
+  more than 9 polling reads in one call, so it returns
+  `Error: rate_limited: Polling rate limited for this connection` every time.
+  Relaunching and waiting do not help. Fixed upstream in manaflow-ai/cmux
+  #12757 / PR #12832, merged 2026-09-17 and **not** in 0.64.25.
+
+### Fallback that works: peer-session tabs
+
+When teammate spawns cannot work, create each agent as its own cmux surface
+instead:
+
+```bash
+cmux new-surface --type terminal --workspace <ws> --pane <pane> \
+  --command "bash launch.sh <name> <dir>"
+cmux rename-tab --surface <ref> <name>
+```
+
+where the launcher execs
+`cmux claude-teams -n <team>:<name> --permission-mode <lead's mode> "<brief>"`.
+
+Three caveats, each of which cost a run:
+
+- **A relayed OK from the lead never counts in a peer session.** The operator
+  approves prod steps in each agent's own tab.
+- **Peers address the lead by its session name**, not `team-lead`.
+- **Start each peer in an already-trusted folder** - check
+  `~/.claude.json` `.projects[dir].hasTrustDialogAccepted`. Otherwise it sits
+  silently on the folder-trust prompt. The step 0b probe catches this: one run
+  scored 4/5 PROBE_OK with the fifth stuck on that dialog.
 
 ## Step 0b: executability precondition (a single probe agent, before the wave)
 Step 0 answers "will agents be **visible**." It does not answer "can agents
