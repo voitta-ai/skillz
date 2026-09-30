@@ -78,7 +78,15 @@ echo "pre-push: plugin version bumps..."
 # CI costs a round trip, and the failure names a file you have already pushed.
 # Needs origin/master to compare against - if the ref is missing, say so rather
 # than passing silently, since a silent pass is exactly the failure mode.
-if git rev-parse --verify --quiet origin/master >/dev/null; then
+if [ "$capture" -eq 1 ]; then
+  # Same reasoning as the catalog-entry check above. Version bumps are the
+  # LANDING side's job under skill-capture-pr-handoff, and the contract forbids
+  # the capture side from touching plugins/ at all - so a capture branch that
+  # edits an EXISTING skill fails this check by construction and has no
+  # permitted fix. Two sessions hit it independently and both correctly refused
+  # to --no-verify. CI still enforces it, on the side that owes it.
+  echo "pre-push: skipped - version bumps are the landing side's to supply."
+elif git rev-parse --verify --quiet origin/master >/dev/null; then
   if ! python3 scripts/check-plugin-version-bumps.py origin/master; then
     fail=1
   fi
