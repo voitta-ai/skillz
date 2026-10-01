@@ -20,8 +20,8 @@ description: |
   degenerate-output shapes (plan-only "zero findings", quiet background-launch
   failure) to judge before posting.
 author: Claude Code
-version: 1.6.1
-date: 2026-08-24
+version: 1.7.0
+date: 2026-10-01
 source: https://github.com/voitta-ai/skillz
 source_file: skills/codex-adversarial-pr-review/SKILL.md
 ---
@@ -454,6 +454,17 @@ Three more shapes, all seen on agent-authored PRs in bulk sweeps:
     side's `work-on-pr` step 6g does that for each finding it addresses;
     if you post from a reviewer identity, resolve the threads you accept as
     addressed, or the review you wrote is what stops the merge.
+
+11. **Run under a host sandbox, Codex's own sandbox degenerates the review.** When the
+    calling tool already runs inside a sandbox (for example a Claude Code Bash tool
+    with its sandbox on), Codex's nested read-only sandbox can be denied the repository:
+    stderr shows `child setpgid (...): Operation not permitted`, and the payload body
+    says the diff was "not locally inspectable ... (git and filesystem access denied)".
+    The result is one generic, inference-only finding below the confidence floor and a
+    "Do not ship" verdict that rests on nothing. This is gotcha 8's degenerate run with
+    a known cause. Re-run with the host's sandbox disabled for this one command (the
+    review itself stays read-only), and expect concrete `path:line` findings that quote
+    the diff.
 
 ## Requirements
 
