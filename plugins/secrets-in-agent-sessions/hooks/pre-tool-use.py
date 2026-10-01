@@ -112,6 +112,17 @@ _IDENTIFIER_SHAPES = (
     # costs more than an extra notice.
     re.compile(r"^_+[A-Z][A-Z0-9_]*$"),            # _SCREAMING_SNAKE
     re.compile(r"^_+[a-z][a-z0-9_]*$"),            # _snake_case, __dunder__
+    # A key/cert FILENAME is a name, not a key. `-key-file 127.0.0.1+1-key.pem`
+    # reached the flag tier because the flag contains "key" and the value is 19
+    # chars of the value alphabet, so it read as a credential and the advice
+    # told the operator to rotate a filename.
+    #
+    # The STEM is capped at 32 because an extension alone is not proof: without
+    # the cap, `KEY=<40 hex>.pem` reads as a filename and goes silent, which is
+    # a secret hiding behind an extension. Measured stems of real key filenames:
+    # 127.0.0.1+1-key = 15, wildcard-production-2026 = 24. A 40-char hex or
+    # base64 blob is >= 40 and cannot qualify.
+    re.compile(r"^[A-Za-z0-9_.+\-]{1,32}\.(?:pem|key|crt|cer|csr|p12|pfx|jks|keystore|pub)$"),
 )
 # Anything matching a real credential shape wins over the name-shaped tests --
 # an AWS key id is [A-Z0-9]{20} end to end and would otherwise read as an
@@ -254,6 +265,8 @@ def selftest():
         # from a real _NAME; keep this fixture mixed-case and "-"-free.
         ("deploy --token _%s" % ("Onxa0DLfPPPpPiQMoo_2o7fSGDf3riFjvltHi"),
          "base64url blob starting with _"),
+        # The stem cap: an extension alone must not exempt a blob.
+        ("deploy --token %s.pem" % ("0123456789abcdef" * 4), "blob wearing .pem"),
     ]
     negative = [
         ('curl -H "X-Api-Key: $MY_API_KEY" https://example.test', "env ref"),
@@ -270,6 +283,10 @@ def selftest():
         ("const token = process.env.SERVICE_TOKEN", "dotted env ref"),
         ("echo api_key = %sINTERNAL_API_KEY_NAME" % "_", "underscore-prefixed"),
         ("echo api_key = %sinternal_api_key_name" % "_", "underscore, lower"),
+        ("mkcert -cert-file 127.0.0.1+1.pem -key-file 127.0.0.1+1-key.pem localhost",
+         "key FILENAME after a -key* flag, not a key"),
+        ("openssl req -keyout very-long-server-name.key -out very-long-server-name.crt",
+         "cert filenames"),
     ]
     bad = 0
     for cmd, why in positive:
