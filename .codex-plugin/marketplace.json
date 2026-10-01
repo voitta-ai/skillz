@@ -635,6 +635,11 @@
       "name": "macos-menubar-app-hidden-behind-notch",
       "source": "./plugins/macos-menubar-app-hidden-behind-notch/",
       "description": "Diagnose and fix a macOS menu bar app (LSUIElement, status item only, no Dock icon) that runs fine but whose icon the user cannot see on a notched MacBook with a busy menu bar. Use when: (1) the user says \"I don't see the icon in the menu bar\" while the process is up, its ports listen and its log is clean, (2) the Mac has a notch and the menu bar is full of third-party icons, (3) you need to prove which status items macOS is not drawing (CGWindowListCopyWindowInfo, layer 25, kCGWindowIsOnscreen = false; on macOS 26 every status item is owned by \"Control Center\"), (4) osascript System Events fails with \"osascript is not allowed assistive access (-1719)\", (5) you are adding entry points that do not depend on menu bar space: a window on first launch and applicationShouldHandleReopen: hasVisibleWindows: (including adding it to a rumps app's delegate with objc.classAddMethods), (6) you need to test a reopen handler next to an already-installed copy of the same app."
+    },
+    {
+      "name": "prerelease-channel-version-gate",
+      "source": "./plugins/prerelease-channel-version-gate/",
+      "description": "Add pre-release (beta, rc) builds to a release workflow that reads its version from one file, gates PRs on a version bump, and publishes on push to the default branch. Use when: (1) you want a beta build of a PR branch without merging it and without the beta becoming everyone's \"Latest\" download, (2) a version gate built on `sort -V` would reject the final release after a beta (it ranks 0.2.0 below 0.2.0b1 and below 0.2.0-beta), (3) a briefcase (BeeWare) app ships an installer named 0.2.0b0 while the tag and Info.plist say 0.2.0-beta, (4) a release job refuses non-default-branch refs and you need an exception for pre-releases only, (5) you are choosing between \"0.2.0-beta\", \"0.2.0b1\" and semver pre-release spellings. Covers a PEP 440 gate with packaging.Version plus a canonical-spelling check, `gh release create --prerelease=<bool>`, and dispatching a pre-release from a branch."
     }
   ]
 }
