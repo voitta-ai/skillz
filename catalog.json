@@ -1172,6 +1172,15 @@
         "codex"
       ],
       "summary": "Verify what a deployed Python service actually imports when it runs from its own venv and you develop in a source checkout. The obvious probe fails in exactly the case you need it: sys.path[0] is the cwd for -c and -m and the script's own directory for a script, so a check run from inside the checkout imports the checkout and reports every merged change as present - naming the interpreter by absolute path does not help, and neither does PYTHONPATH. Covers probing from a neutral cwd and reading __file__ to learn which copy answered, asserting on the code with inspect because a VCS-pinned install keeps its version across many commits, refreshing with pip install --force-reinstall --no-deps and re-verifying rather than trusting exit 0, PYTHONSAFEPATH as a belt, why editable installs and multiple venvs change the question, and the ordering rule: deploy the code before the config that depends on it, because a config naming a missing feature fails when that path runs rather than at load."
+    },
+    {
+      "name": "macos-menubar-app-hidden-behind-notch",
+      "path": "skills/macos-menubar-app-hidden-behind-notch/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Diagnose and fix a macOS menu bar app (LSUIElement, status item only, no Dock icon) that runs fine but whose icon the user cannot see on a notched MacBook with a busy menu bar. Use when: (1) the user says \"I don't see the icon in the menu bar\" while the process is up, its ports listen and its log is clean, (2) the Mac has a notch and the menu bar is full of third-party icons, (3) you need to prove which status items macOS is not drawing (CGWindowListCopyWindowInfo, layer 25, kCGWindowIsOnscreen = false; on macOS 26 every status item is owned by \"Control Center\"), (4) osascript System Events fails with \"osascript is not allowed assistive access (-1719)\", (5) you are adding entry points that do not depend on menu bar space: a window on first launch and applicationShouldHandleReopen: hasVisibleWindows: (including adding it to a rumps app's delegate with objc.classAddMethods), (6) you need to test a reopen handler next to an already-installed copy of the same app."
     }
   ],
   "collections": [
@@ -1330,7 +1339,8 @@
         "grafana-alert-rule-arming-preflight",
         "github-actions-cost-attribution",
         "terraform-cross-state-resource-handoff",
-        "deployed-venv-false-pass"
+        "deployed-venv-false-pass",
+        "macos-menubar-app-hidden-behind-notch"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2959,6 +2969,19 @@
         "deployed-venv-false-pass"
       ],
       "summary": "Single-skill plugin: deployed-venv-false-pass."
+    },
+    {
+      "name": "macos-menubar-app-hidden-behind-notch",
+      "claude_manifest": "plugins/macos-menubar-app-hidden-behind-notch/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/macos-menubar-app-hidden-behind-notch/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "macos-menubar-app-hidden-behind-notch"
+      ],
+      "summary": "Single-skill plugin: macos-menubar-app-hidden-behind-notch."
     }
   ],
   "defaults": {
