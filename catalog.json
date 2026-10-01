@@ -1163,6 +1163,15 @@
         "codex"
       ],
       "summary": "Hand a live resource from one Terraform state to another without destroying or recreating it, using config-driven removed blocks (lifecycle destroy = false) in the source and import blocks in the destination rather than two unreviewed state mutations via terraform state rm and terraform import. Covers the apply order that avoids a window where no state manages the resource, the double-ownership window and prevent_destroy, index syntax on count-gated resources and counted modules, env-gated import for_each when dev and prod share an account and one side auto-applies on merge, the plan output that prints an embedded secret on import, and why create-is-idempotent adoption is a hazard rather than a shortcut."
+    },
+    {
+      "name": "deployed-venv-false-pass",
+      "path": "skills/deployed-venv-false-pass/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Verify what a deployed Python service actually imports when it runs from its own venv and you develop in a source checkout. The obvious probe fails in exactly the case you need it: sys.path[0] is the cwd for -c and -m and the script's own directory for a script, so a check run from inside the checkout imports the checkout and reports every merged change as present - naming the interpreter by absolute path does not help, and neither does PYTHONPATH. Covers probing from a neutral cwd and reading __file__ to learn which copy answered, asserting on the code with inspect because a VCS-pinned install keeps its version across many commits, refreshing with pip install --force-reinstall --no-deps and re-verifying rather than trusting exit 0, PYTHONSAFEPATH as a belt, why editable installs and multiple venvs change the question, and the ordering rule: deploy the code before the config that depends on it, because a config naming a missing feature fails when that path runs rather than at load."
     }
   ],
   "collections": [
@@ -1320,7 +1329,8 @@
         "cmux-knowledge-index",
         "grafana-alert-rule-arming-preflight",
         "github-actions-cost-attribution",
-        "terraform-cross-state-resource-handoff"
+        "terraform-cross-state-resource-handoff",
+        "deployed-venv-false-pass"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -2936,6 +2946,19 @@
         "terraform-cross-state-resource-handoff"
       ],
       "summary": "Single-skill plugin: terraform-cross-state-resource-handoff."
+    },
+    {
+      "name": "deployed-venv-false-pass",
+      "claude_manifest": "plugins/deployed-venv-false-pass/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/deployed-venv-false-pass/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "deployed-venv-false-pass"
+      ],
+      "summary": "Single-skill plugin: deployed-venv-false-pass."
     }
   ],
   "defaults": {

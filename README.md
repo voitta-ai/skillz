@@ -38,7 +38,9 @@ environments and older Codex versions.
 
 | Name | Type | Hosts | Purpose |
 |---|---|---|---|
+| [deployed-venv-false-pass](./skills/deployed-venv-false-pass/SKILL.md) | skill | Claude, Codex | Verify what a deployed Python service actually imports when it runs from its own venv: `sys.path[0]` is the cwd (`-c`/`-m`) or the script's own directory, so a probe run from inside the checkout imports the checkout and reports every merged change as present. Probe from a neutral cwd and read `__file__`, assert with `inspect` not a version string, and deploy code before the config that needs it |
 | [consumed-gate-major-upgrade](./skills/consumed-gate-major-upgrade/SKILL.md) | skill | Claude, Codex | Decide whether a new major of a gate you consume is safe to adopt, when you depend on a distinction its own host does not |
+| [`deployed-venv-false-pass` plugin](./plugins/deployed-venv-false-pass/) | plugin | Claude, Codex | Single-skill plugin: deployed-venv-false-pass |
 | [`consumed-gate-major-upgrade` plugin](./plugins/consumed-gate-major-upgrade/) | plugin | Claude, Codex | Single-skill plugin: consumed-gate-major-upgrade |
 | [permission-gate-allow-list-not-decisive](./skills/permission-gate-allow-list-not-decisive/SKILL.md) | skill | Claude, Codex | Which gate refused? `classifyAllShell` (opt-in, default false) suspends Bash allow rules in auto mode; outside it the same rule bypasses your hook |
 | [`permission-gate-allow-list-not-decisive` plugin](./plugins/permission-gate-allow-list-not-decisive/) | plugin | Claude, Codex | Single-skill plugin: permission-gate-allow-list-not-decisive |
