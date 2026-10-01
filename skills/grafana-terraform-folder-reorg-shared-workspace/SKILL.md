@@ -19,8 +19,8 @@ description: |
   uids, a saved-plan prod apply gate, and before/after live snapshots via
   /api/search.
 author: Claude Code
-version: 1.1.0
-date: 2026-09-10
+version: 1.2.0
+date: 2026-10-01
 ---
 
 # Grafana folder reorganisation with terraform, one workspace, several states
@@ -115,6 +115,31 @@ the other state never references them and no import dance is needed.
 - Depth: `height(moved folder) + depth(new parent) + 1 <= MaxNestedFolderDepth`.
 - Rule groups pin to a folder uid; do not move dashboards that must stay next to their
   rule group, or accept that the group stays in the old folder.
+- **A folder may not take the title of a DASHBOARD in the same parent** (measured on
+  Grafana 10.4.7). Create, rename and move are all refused while a dashboard with that
+  title sits beside it: create and rename fail with `Folder name cannot be the same as one
+  of its dashboards`, and move fails with a bare 500. This bites the common reorg "put
+  each service's boards into a `<Service>` folder" when a board is titled with the bare
+  service name (`Bidder` next to a new `Bidder` folder). Terraform creates or renames the
+  folder BEFORE it moves the dashboards that depend on it, so a single apply cannot do it.
+  Use two applies: first, create or re-parent the folders under a temporary
+  non-colliding title (`Bidder [prod]`) and move the boards in; second, rename. Guard the
+  rename with a plan-time precondition that intersects the lower-cased folder titles with
+  `data "grafana_dashboards" { folder_uids = [<parent>] }` titles, so a collision fails
+  the plan, not half an apply.
+- **`overwrite = true` on a dashboard move can REPLACE a different dashboard.** If the
+  target folder already holds a dashboard with the same title, Grafana's save takes over
+  that dashboard's id and uid: its content is overwritten with the moved board, and the
+  moved board stays where it was. Nothing errors. Before a move, list (target folder,
+  title) pairs across every board that lands there, case-insensitively, and require them
+  to be unique.
+- **Moving a folder changes its inherited permissions.** It gains the new parent's grants
+  and loses the old parent's, for example a folder-creator Admin inherited from a
+  hand-made nav folder. Read `/api/folders/<uid>/permissions` before and after, and record
+  the delta.
+- **Renaming a folder that holds alert rules changes their `grafana_folder` label**: the
+  label is the immediate folder's title, so instance identity and the default
+  notification grouping change. A firing rule resolves and re-fires.
 
 ### 4. Retire a folder in TWO applies
 
