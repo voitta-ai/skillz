@@ -14,7 +14,7 @@ description: |
   alternative, reproducing a wrapper's computed variables, and why a plan
   file is a secret.
 author: Claude Code
-version: 1.1.0
+version: 1.2.0
 date: 2026-08-24
 ---
 
@@ -133,6 +133,24 @@ a summary; it is a snapshot.
 - A plan file also **freezes secret values at plan time**. If a secret rotates
   between plan and apply, the apply writes the stale one. Keep the window
   short, and re-plan rather than reusing a plan file from yesterday.
+- **`terraform show -json <planfile>` is as secret as the plan.** It prints
+  sensitive values in clear text, so the JSON is a second copy of everything the
+  plan holds - and it is the copy people keep, because it looks like analysis
+  output rather than a credential.
+
+  Measured 2026-10-01: every saved-plan JSON rendered from a config whose
+  provider auth came from a secrets-manager data source contained the provider
+  token - 18 files across two sessions, 5 of them holding a token still live for
+  another 4 hours.
+
+  Write it to scratch and delete it together with the plan. If a record is
+  needed, keep only addresses and actions:
+
+  ```bash
+  terraform show -json "$PLAN" | jq '[.resource_changes[] | {address, actions: .change.actions}]'
+  ```
+
+  And grep for token shapes before sharing anything derived from it.
 
 ## Guarding a saved plan, and two ways the guard lies
 
