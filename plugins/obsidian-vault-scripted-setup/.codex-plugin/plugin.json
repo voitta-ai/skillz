@@ -1,0 +1,19 @@
+{
+  "name": "obsidian-vault-scripted-setup",
+  "version": "1.0.0",
+  "description": "Turn an existing directory (a whole code or work tree) into an Obsidian vault on macOS by script: register it, pre-seed exclusions so build junk never appears, and fold older nested vaults into it. Use when: (1) the user picked \"Create new vault\" on a folder and got an EMPTY vault in a new subfolder, expecting the parent's contents; (2) you want a directory full of git repos as one vault without node_modules, dist, build, venv, __pycache__ or *.worktrees noise; (3) an \"Excluded files\" entry like node_modules/ only hides the top-level folder while nested ones still show; (4) you need to add, remove or replace vaults without clicking through the vault switcher; (5) an older vault lives inside the new one and its link and daily-note settings must carry over. Covers the obsidian.json registry and why Obsidian must be quit before editing it, segment-anchored regex userIgnoreFilters that match at any depth, the obsidian://open URL scheme, and merging nested vaults. Ships scripts/obsidian-vault-setup.sh.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "obsidian",
+    "macos",
+    "vault",
+    "notes"
+  ],
+  "skills": "./skills/"
+}
