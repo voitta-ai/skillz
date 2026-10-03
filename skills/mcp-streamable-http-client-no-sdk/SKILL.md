@@ -17,9 +17,16 @@ description: |
 author: Claude Code
 version: 1.0.0
 date: 2026-10-03
+source: https://github.com/voitta-ai/skillz
+source_file: skills/mcp-streamable-http-client-no-sdk/SKILL.md
 ---
 
 # Speaking MCP Streamable HTTP without the SDK
+
+> **Canonical source.** This skill lives in the repo at
+> https://github.com/voitta-ai/skillz (file:
+> `skills/mcp-streamable-http-client-no-sdk/SKILL.md`).
+
 
 ## Problem
 

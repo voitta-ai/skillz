@@ -645,6 +645,11 @@
       "name": "obsidian-vault-scripted-setup",
       "source": "./plugins/obsidian-vault-scripted-setup/",
       "description": "Turn an existing directory (a whole code or work tree) into an Obsidian vault on macOS by script: register it, pre-seed exclusions so build junk never appears, and fold older nested vaults into it. Use when: (1) the user picked \"Create new vault\" on a folder and got an EMPTY vault in a new subfolder, expecting the parent's contents; (2) you want a directory full of git repos as one vault without node_modules, dist, build, venv, __pycache__ or *.worktrees noise; (3) an \"Excluded files\" entry like node_modules/ only hides the top-level folder while nested ones still show; (4) you need to add, remove or replace vaults without clicking through the vault switcher; (5) an older vault lives inside the new one and its link and daily-note settings must carry over. Covers the obsidian.json registry and why Obsidian must be quit before editing it, segment-anchored regex userIgnoreFilters that match at any depth, the obsidian://open URL scheme, and merging nested vaults. Ships scripts/obsidian-vault-setup.sh."
+    },
+    {
+      "name": "mcp-streamable-http-client-no-sdk",
+      "source": "./plugins/mcp-streamable-http-client-no-sdk/",
+      "description": "Call an MCP (Model Context Protocol) server over Streamable HTTP from your own code without the MCP SDK - just an HTTP client that can POST and read a body. Use when: (1) you need to list or call a remote MCP server's tools from a runtime where pulling the official SDK and its asyncio stack is not worth it for a couple of calls; (2) a server exposes only an MCP endpoint (a path ending /mcp) and no plain REST; (3) your POST returns an SSE body of lines beginning \"data:\" instead of a single JSON object and json.loads() fails; (4) tools/list or tools/call appears to return nothing because you read the first SSE frame rather than the result frame, or sent no Accept header the server honors; (5) a tools/call result looks empty because content is a list of typed parts you did not join. Covers the initialize -> tools/list -> tools/call sequence, the SSE framing, optional mcp-session-id handling, and isError on an HTTP 200. Includes a dependency-free Python client and the curl equivalent."
     }
   ]
 }
