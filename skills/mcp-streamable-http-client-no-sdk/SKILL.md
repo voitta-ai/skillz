@@ -102,25 +102,28 @@ def _post(url, headers, payload, timeout=30):
         frame = json.loads(body)
     if isinstance(frame, dict) and frame.get("error"):
         raise RuntimeError(f"MCP error: {frame['error']}")
-    return frame.get("result", {}), session
+    retval = (frame.get("result", {}), session)
+    return retval
 
 def _headers(session=None):
-    h = {"Content-Type": "application/json",
-         "Accept": "application/json, text/event-stream"}
+    retval = {"Content-Type": "application/json",
+              "Accept": "application/json, text/event-stream"}
     if session:
-        h["mcp-session-id"] = session
-    return h
+        retval["mcp-session-id"] = session
+    return retval
 
 def _rpc(url, method, params, session=None, _id=1):
-    return _post(url, _headers(session),
-                 {"jsonrpc": "2.0", "id": _id, "method": method, "params": params})
+    retval = _post(url, _headers(session),
+                   {"jsonrpc": "2.0", "id": _id, "method": method, "params": params})
+    return retval
 
 def list_tools(url):
     _r, session = _rpc(url, "initialize", {
         "protocolVersion": "2024-11-05", "capabilities": {},
         "clientInfo": {"name": "my-client", "version": "1"}})
     result, _s = _rpc(url, "tools/list", {}, session, _id=2)
-    return result.get("tools", [])
+    retval = result.get("tools", [])
+    return retval
 
 def call_tool(url, name, arguments):
     _r, session = _rpc(url, "initialize", {
@@ -134,7 +137,8 @@ def call_tool(url, name, arguments):
         raise RuntimeError(f"tool '{name}' failed: {' '.join(parts) or 'no detail'}")
     text = "\n".join(p.get("text", "") for p in (result.get("content") or [])
                      if p.get("type") == "text")
-    return text or json.dumps(result.get("structuredContent") or result)
+    retval = text or json.dumps(result.get("structuredContent") or result)
+    return retval
 ```
 
 The same shape translates to `curl`:
