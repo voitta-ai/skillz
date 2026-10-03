@@ -293,6 +293,8 @@ environments and older Codex versions.
 | [`terraform-cross-state-resource-handoff` plugin](./plugins/terraform-cross-state-resource-handoff/) | plugin | Claude, Codex | Single-skill plugin: terraform-cross-state-resource-handoff |
 | [mcp-streamable-http-client-no-sdk](./skills/mcp-streamable-http-client-no-sdk/SKILL.md) | skill | Claude, Codex | Call a remote MCP server's tools over Streamable HTTP without the SDK: JSON-RPC 2.0, one POST each for `initialize` / `tools/list` / `tools/call`, with an SSE response body. Covers the `Accept` header some servers require, keeping the `data:` frame that carries `result` rather than the first one, echoing `mcp-session-id` only when given, joining the typed parts of `result.content`, and `isError` on an HTTP 200 |
 | [`mcp-streamable-http-client-no-sdk` plugin](./plugins/mcp-streamable-http-client-no-sdk/) | plugin | Claude, Codex | Single-skill plugin: mcp-streamable-http-client-no-sdk |
+| [agent-eval-replay-history-leak](./skills/agent-eval-replay-history-leak/SKILL.md) | skill | Claude, Codex | Stop a replay-a-merged-PR agent eval from leaking the answer through git history: worktrees share the future (object store, refs, origin/*, landing branches) and git show HEAD:path defeats deleting a file. Covers a single-branch clone truncated at the parent, a transcript audit for non-ancestor SHAs, task framing, and the claude -p error shape that looks like an answer. |
+| [`agent-eval-replay-history-leak` plugin](./plugins/agent-eval-replay-history-leak/) | plugin | Claude, Codex | Single-skill plugin: agent-eval-replay-history-leak |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
