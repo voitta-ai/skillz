@@ -17,9 +17,16 @@ description: |
 author: Claude Code
 version: 1.0.0
 date: 2026-09-30
+source: https://github.com/voitta-ai/skillz
+source_file: skills/obsidian-vault-scripted-setup/SKILL.md
 ---
 
 # Obsidian vault: scripted setup
+
+> **Canonical source.** This skill lives in the repo at
+> https://github.com/voitta-ai/skillz (file:
+> `skills/obsidian-vault-scripted-setup/SKILL.md`).
+
 
 ## Problem
 

@@ -1190,6 +1190,18 @@
         "codex"
       ],
       "summary": "Add pre-release (beta, rc) builds to a release workflow that reads its version from one file, gates PRs on a version bump, and publishes on push to the default branch. Use when: (1) you want a beta build of a PR branch without merging it and without the beta becoming everyone's \"Latest\" download, (2) a version gate built on `sort -V` would reject the final release after a beta (it ranks 0.2.0 below 0.2.0b1 and below 0.2.0-beta), (3) a briefcase (BeeWare) app ships an installer named 0.2.0b0 while the tag and Info.plist say 0.2.0-beta, (4) a release job refuses non-default-branch refs and you need an exception for pre-releases only, (5) you are choosing between \"0.2.0-beta\", \"0.2.0b1\" and semver pre-release spellings. Covers a PEP 440 gate with packaging.Version plus a canonical-spelling check, `gh release create --prerelease=<bool>`, and dispatching a pre-release from a branch."
+    },
+    {
+      "name": "obsidian-vault-scripted-setup",
+      "path": "skills/obsidian-vault-scripted-setup/SKILL.md",
+      "files": [
+        "scripts/obsidian-vault-setup.sh"
+      ],
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Turn an existing directory into an Obsidian vault on macOS by script rather than through the UI. Three traps: \"Create new vault\" always creates a new subfolder inside the location you pick, so pointing it at a tree yields an empty vault and \"Open folder as vault\" is the action you wanted; plain \"Excluded files\" entries match from the vault root, so node_modules/ hides the top-level folder while every nested one still shows, and only a segment-anchored regex userIgnoreFilter matches at depth; and the obsidian.json registry is rewritten when Obsidian exits, so it must be quit before the file is edited or the change is lost. Ships scripts/obsidian-vault-setup.sh, which backs up the registry, quits Obsidian with a guard, registers the root, merges exclusions into an existing app.json rather than replacing it, and reopens via obsidian://open. Also covers folding an older nested vault into the new one."
     }
   ],
   "collections": [
@@ -1350,7 +1362,8 @@
         "terraform-cross-state-resource-handoff",
         "deployed-venv-false-pass",
         "macos-menubar-app-hidden-behind-notch",
-        "prerelease-channel-version-gate"
+        "prerelease-channel-version-gate",
+        "obsidian-vault-scripted-setup"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3005,6 +3018,19 @@
         "prerelease-channel-version-gate"
       ],
       "summary": "Single-skill plugin: prerelease-channel-version-gate."
+    },
+    {
+      "name": "obsidian-vault-scripted-setup",
+      "claude_manifest": "plugins/obsidian-vault-scripted-setup/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/obsidian-vault-scripted-setup/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "obsidian-vault-scripted-setup"
+      ],
+      "summary": "Single-skill plugin: obsidian-vault-scripted-setup."
     }
   ],
   "defaults": {

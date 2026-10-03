@@ -640,6 +640,11 @@
       "name": "prerelease-channel-version-gate",
       "source": "./plugins/prerelease-channel-version-gate/",
       "description": "Add pre-release (beta, rc) builds to a release workflow that reads its version from one file, gates PRs on a version bump, and publishes on push to the default branch. Use when: (1) you want a beta build of a PR branch without merging it and without the beta becoming everyone's \"Latest\" download, (2) a version gate built on `sort -V` would reject the final release after a beta (it ranks 0.2.0 below 0.2.0b1 and below 0.2.0-beta), (3) a briefcase (BeeWare) app ships an installer named 0.2.0b0 while the tag and Info.plist say 0.2.0-beta, (4) a release job refuses non-default-branch refs and you need an exception for pre-releases only, (5) you are choosing between \"0.2.0-beta\", \"0.2.0b1\" and semver pre-release spellings. Covers a PEP 440 gate with packaging.Version plus a canonical-spelling check, `gh release create --prerelease=<bool>`, and dispatching a pre-release from a branch."
+    },
+    {
+      "name": "obsidian-vault-scripted-setup",
+      "source": "./plugins/obsidian-vault-scripted-setup/",
+      "description": "Turn an existing directory (a whole code or work tree) into an Obsidian vault on macOS by script: register it, pre-seed exclusions so build junk never appears, and fold older nested vaults into it. Use when: (1) the user picked \"Create new vault\" on a folder and got an EMPTY vault in a new subfolder, expecting the parent's contents; (2) you want a directory full of git repos as one vault without node_modules, dist, build, venv, __pycache__ or *.worktrees noise; (3) an \"Excluded files\" entry like node_modules/ only hides the top-level folder while nested ones still show; (4) you need to add, remove or replace vaults without clicking through the vault switcher; (5) an older vault lives inside the new one and its link and daily-note settings must carry over. Covers the obsidian.json registry and why Obsidian must be quit before editing it, segment-anchored regex userIgnoreFilters that match at any depth, the obsidian://open URL scheme, and merging nested vaults. Ships scripts/obsidian-vault-setup.sh."
     }
   ]
 }
