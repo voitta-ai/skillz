@@ -291,6 +291,8 @@ environments and older Codex versions.
 | [`vendor-api-registration-gate` plugin](./plugins/vendor-api-registration-gate/) | plugin | Claude, Codex | Single-skill plugin: vendor-api-registration-gate |
 | [terraform-cross-state-resource-handoff](./skills/terraform-cross-state-resource-handoff/SKILL.md) | skill | Claude, Codex | Hand a live resource between two Terraform states without destroying or recreating it: config-driven `removed { lifecycle { destroy = false } }` in the source plus `import {}` in the destination, instead of `state rm` + `import` CLI surgery. Covers apply order, the double-ownership window, count-gated index syntax, env-gated imports, and the plan that prints an embedded secret |
 | [`terraform-cross-state-resource-handoff` plugin](./plugins/terraform-cross-state-resource-handoff/) | plugin | Claude, Codex | Single-skill plugin: terraform-cross-state-resource-handoff |
+| [mcp-streamable-http-client-no-sdk](./skills/mcp-streamable-http-client-no-sdk/SKILL.md) | skill | Claude, Codex | Call a remote MCP server's tools over Streamable HTTP without the SDK: JSON-RPC 2.0, one POST each for `initialize` / `tools/list` / `tools/call`, with an SSE response body. Covers the `Accept` header some servers require, keeping the `data:` frame that carries `result` rather than the first one, echoing `mcp-session-id` only when given, joining the typed parts of `result.content`, and `isError` on an HTTP 200 |
+| [`mcp-streamable-http-client-no-sdk` plugin](./plugins/mcp-streamable-http-client-no-sdk/) | plugin | Claude, Codex | Single-skill plugin: mcp-streamable-http-client-no-sdk |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries

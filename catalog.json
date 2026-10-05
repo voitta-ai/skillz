@@ -1202,6 +1202,15 @@
         "codex"
       ],
       "summary": "Turn an existing directory into an Obsidian vault on macOS by script rather than through the UI. Three traps: \"Create new vault\" always creates a new subfolder inside the location you pick, so pointing it at a tree yields an empty vault and \"Open folder as vault\" is the action you wanted; plain \"Excluded files\" entries match from the vault root, so node_modules/ hides the top-level folder while every nested one still shows, and only a segment-anchored regex userIgnoreFilter matches at depth; and the obsidian.json registry is rewritten when Obsidian exits, so it must be quit before the file is edited or the change is lost. Ships scripts/obsidian-vault-setup.sh, which backs up the registry, quits Obsidian with a guard, registers the root, merges exclusions into an existing app.json rather than replacing it, and reopens via obsidian://open. Also covers folding an older nested vault into the new one."
+    },
+    {
+      "name": "mcp-streamable-http-client-no-sdk",
+      "path": "skills/mcp-streamable-http-client-no-sdk/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Speak MCP over Streamable HTTP directly - JSON-RPC 2.0, one POST per request, SSE response body - instead of pulling the official SDK and its async stack for two or three round trips. Three edges account for most failures: send Accept: application/json, text/event-stream or some servers refuse; the body is SSE, so parse every data: line and keep the frame carrying result rather than the first one; and echo mcp-session-id only when initialize returned one rather than inventing it. Also covers joining the text parts of result.content (a tool result looks empty until you do) and honoring result.isError, which arrives on an HTTP 200. Ships a standard-library-only Python client and the curl equivalent."
     }
   ],
   "collections": [
@@ -1363,7 +1372,8 @@
         "deployed-venv-false-pass",
         "macos-menubar-app-hidden-behind-notch",
         "prerelease-channel-version-gate",
-        "obsidian-vault-scripted-setup"
+        "obsidian-vault-scripted-setup",
+        "mcp-streamable-http-client-no-sdk"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3031,6 +3041,19 @@
         "obsidian-vault-scripted-setup"
       ],
       "summary": "Single-skill plugin: obsidian-vault-scripted-setup."
+    },
+    {
+      "name": "mcp-streamable-http-client-no-sdk",
+      "claude_manifest": "plugins/mcp-streamable-http-client-no-sdk/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/mcp-streamable-http-client-no-sdk/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "mcp-streamable-http-client-no-sdk"
+      ],
+      "summary": "Single-skill plugin: mcp-streamable-http-client-no-sdk."
     }
   ],
   "defaults": {
