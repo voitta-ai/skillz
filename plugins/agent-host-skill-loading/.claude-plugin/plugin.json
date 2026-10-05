@@ -1,7 +1,7 @@
 {
   "name": "agent-host-skill-loading",
   "description": "Make a non-Claude, non-Codex agent host load skillz-format SKILL.md files:",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": {
     "name": "voitta-ai"
   },

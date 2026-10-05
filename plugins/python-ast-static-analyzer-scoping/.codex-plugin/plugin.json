@@ -1,6 +1,6 @@
 {
   "name": "python-ast-static-analyzer-scoping",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Build a correct Python ast static analyzer: resolve import aliases and model module-load vs deferred (call-time) execution.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",

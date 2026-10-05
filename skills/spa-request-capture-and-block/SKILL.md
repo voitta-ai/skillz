@@ -25,7 +25,7 @@ description: |
   responses, and disarming afterwards — including why a hash-route
   navigation does not remove the patch.
 author: Claude Code
-version: 1.2.0
+version: 1.2.1
 date: 2026-09-14
 ---
 
@@ -131,16 +131,19 @@ only*. A verified block on the leads path is not a block on the accounts path.
       let body = init && init.body;
       try { body = JSON.parse(body); } catch (e) {}
       window.__cap.push({ via: 'fetch', url, body, blocked: true });
-      return Promise.reject(new Error('[capture] blocked by harness'));
+      const retval = Promise.reject(new Error('[capture] blocked by harness'));
+      return retval;
     }
-    return origFetch.apply(this, arguments);
+    const retval = origFetch.apply(this, arguments);
+    return retval;
   };
 
   const origOpen = XMLHttpRequest.prototype.open;
   const origSend = XMLHttpRequest.prototype.send;
   XMLHttpRequest.prototype.open = function (method, url) {
     this.__capUrl = url; this.__capMethod = method;
-    return origOpen.apply(this, arguments);
+    const retval = origOpen.apply(this, arguments);
+    return retval;
   };
   XMLHttpRequest.prototype.send = function (body) {
     if (MATCH.test(this.__capUrl || '')) {
@@ -150,7 +153,8 @@ only*. A verified block on the leads path is not a block on the accounts path.
       try { this.abort(); } catch (e) {}
       return;                       // never call origSend — nothing leaves
     }
-    return origSend.apply(this, arguments);
+    const retval = origSend.apply(this, arguments);
+    return retval;
   };
 
   window.__capInstalled = true;
@@ -177,7 +181,8 @@ your wrapper, which zone.js cannot have saved:
     const origOpen = xhr.open, origSend = xhr.send;
     xhr.open = function (method, url) {
       xhr.__capUrl = url; xhr.__capMethod = method;
-      return origOpen.apply(xhr, arguments);
+      const retval = origOpen.apply(xhr, arguments);
+      return retval;
     };
     xhr.send = function (body) {
       const url = xhr.__capUrl || '';
@@ -191,7 +196,8 @@ your wrapper, which zone.js cannot have saved:
         window.__cap.push({ via: 'xhr', method: xhr.__capMethod, url,
           status: xhr.status, response: String(xhr.responseText || '').slice(0, 2000) });
       });
-      return origSend.apply(xhr, arguments);
+      const retval = origSend.apply(xhr, arguments);
+      return retval;
     };
     return xhr;
   }
@@ -205,13 +211,15 @@ your wrapper, which zone.js cannot have saved:
       let body = init && init.body;
       try { body = JSON.parse(body); } catch (e) {}
       window.__cap.push({ via: 'fetch', url, body, blocked: true });
-      return Promise.reject(new Error('[capture] blocked by harness'));
+      const retval = Promise.reject(new Error('[capture] blocked by harness'));
+      return retval;
     }
-    return origFetch.apply(this, arguments).then(res => {
+    const retval = origFetch.apply(this, arguments).then(res => {
       res.clone().text().then(t => window.__cap.push({
         via: 'fetch', url, status: res.status, response: t.slice(0, 2000) })).catch(() => {});
       return res;
     });
+    return retval;
   };
 
   window.__capInstalled = true;
