@@ -3,7 +3,7 @@ name: agent-host-skill-loading
 description: |
   Make a non-Claude, non-Codex agent load skillz-format `SKILL.md` files, so procedures written once reach every agent you run instead of being restated per host. Covers the two-stage disclosure that keeps the standing prompt small (menu line in the system prompt, full body behind a `load_skill` tool), the measured cost of each alternative, frontmatter parsing that survives block scalars, ordered-path precedence with shadow reporting, refresh without a restart and the turn-boundary gotcha that comes with it, and why the reload belongs behind a privilege gate even though it only reads files. Use when: (1) you have a custom agent loop (Slack bot, service, own harness) that cannot use the skills your Claude Code or Codex installs already have, (2) you are deciding how much of a skill catalog to put in a system prompt versus behind a tool, (3) your standing prompt is growing with every skill added and cheaper fallback models in a waterfall are paying for it, (4) a skill catalog is loaded but the model never invokes it, or (5) two catalogs (public plus private) define the same skill name and you need a defined winner.
 author: Claude Code
-version: 1.1.0
+version: 1.1.1
 date: 2026-08-20
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-host-skill-loading/SKILL.md
@@ -115,7 +115,8 @@ def reload():
                            "summary": summarize(meta.get("description")),
                            "path": path}
     _INDEX, _SHADOWED = index, shadowed
-    return len(_INDEX)
+    retval = len(_INDEX)
+    return retval
 ```
 
 `summarize()` is: collapse whitespace, take up to the first `". "`, cap, ellipsize.

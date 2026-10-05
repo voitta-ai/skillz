@@ -22,7 +22,7 @@ description: |
   fail-closed wrapper, the argv-in-logs trap, and the live tests that prove
   it.
 author: Claude Code
-version: 1.1.0
+version: 1.1.1
 date: 2026-08-28
 source: Built for voitta-ai/shmobster #116 (sandbox per Slack channel), verified live on Darwin 25 against a real git worktree.
 source_file: skills/macos-sandbox-exec-agent-command-confinement/SKILL.md
@@ -134,7 +134,8 @@ def wrap(command, tenant):
     exe = shutil.which("sandbox-exec")
     if not exe:
         raise RuntimeError("sandbox-exec not found; refusing to run unconfined")
-    return [exe, "-p", profile(tenant), "/bin/sh", "-c", command]
+    retval = [exe, "-p", profile(tenant), "/bin/sh", "-c", command]
+    return retval
 
 subprocess.run(wrap(cmd, tenant), capture_output=True, text=True, cwd=tenant_cwd, timeout=...)
 ```

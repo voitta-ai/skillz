@@ -263,7 +263,8 @@ function inlineBody(f) {
     "",
     `<sub>codex adversarial review</sub>`
   ];
-  return lines.join("\n");
+  const retval = lines.join("\n");
+  return retval;
 }
 
 function anchorComment(f, commentable) {
@@ -352,7 +353,8 @@ function buildReview(result, commentable, opts, headOid) {
     body: body.join("\n"),
     comments: inline
   };
-  return { review, counts: { inline: inline.length, outOfDiff: outOfDiff.length, lowConfidence: lowConfidence.length } };
+  const retval = { review, counts: { inline: inline.length, outOfDiff: outOfDiff.length, lowConfidence: lowConfidence.length } };
+  return retval;
 }
 
 function postReview(repo, pr, review) {

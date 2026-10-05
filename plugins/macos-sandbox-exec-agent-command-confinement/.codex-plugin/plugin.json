@@ -1,6 +1,6 @@
 {
   "name": "macos-sandbox-exec-agent-command-confinement",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Confine agent-run shell commands to one tree with macOS sandbox-exec: reads, writes, symlinks, runtime paths.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",

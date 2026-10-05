@@ -24,7 +24,7 @@ description: |
   same-source-line position precision (lineno-only keying loses
   intra-line ordering when multiple statements share a line).
 author: Claude Code
-version: 1.1.0
+version: 1.1.1
 date: 2026-05-13
 ---
 
@@ -375,15 +375,18 @@ class Analyzer(ast.NodeVisitor):
     @staticmethod
     def _target_names(t):
         if isinstance(t, ast.Name):
-            return {t.id}
+            retval = {t.id}
+            return retval
         if isinstance(t, (ast.Tuple, ast.List)):
             out = set()
             for e in t.elts:
                 out |= Analyzer._target_names(e)
             return out
         if isinstance(t, ast.Starred):
-            return Analyzer._target_names(t.value)
-        return set()
+            retval = Analyzer._target_names(t.value)
+            return retval
+        retval = set()
+        return retval
 
     def _snapshot_at_line(self, lineno):
         s = {}
@@ -440,7 +443,8 @@ class Analyzer(ast.NodeVisitor):
 
     def _call_name(self, node):
         if isinstance(node.func, ast.Name):
-            return self._resolve(node.func.id, node)
+            retval = self._resolve(node.func.id, node)
+            return retval
         if isinstance(node.func, ast.Attribute):
             parts = []
             cur = node.func
@@ -450,7 +454,8 @@ class Analyzer(ast.NodeVisitor):
             if isinstance(cur, ast.Name):
                 parts.append(cur.id)
             parts.reverse()
-            return self._resolve(".".join(parts), node)
+            retval = self._resolve(".".join(parts), node)
+            return retval
         return None
 
     def _resolve(self, name, node):
@@ -463,7 +468,8 @@ class Analyzer(ast.NodeVisitor):
         if head not in table:
             return name
         resolved = table[head]
-        return f"{resolved}.{rest}" if sep else resolved
+        retval = f"{resolved}.{rest}" if sep else resolved
+        return retval
 ```
 
 ## Notes

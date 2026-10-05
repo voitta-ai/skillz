@@ -18,7 +18,7 @@ description: |
   authorization-code flow, store the token, then publish. NOT for self-hosted
   WordPress using application-password REST - this targets public-api.wordpress.com.
 author: Claude Code
-version: 1.4.0
+version: 1.4.1
 date: 2026-09-16
 source: https://github.com/voitta-ai/skillz
 source_file: skills/wordpress-com-publish/SKILL.md
@@ -194,7 +194,8 @@ def to_blocks(md_path, shift=1):
             continue
         else:
             out.append(f"<!-- wp:html -->\n{raw}\n<!-- /wp:html -->")
-    return "\n\n".join(out)
+    retval = "\n\n".join(out)
+    return retval
 
 if __name__ == "__main__":
     print(to_blocks(sys.argv[1], int(sys.argv[2]) if len(sys.argv) > 2 else 1))
