@@ -1,0 +1,15 @@
+{
+  "name": "eks-running-image-from-amp-cadvisor",
+  "version": "1.0.0",
+  "description": "Read which container image an EKS workload is actually running, per cluster and region, with no Kubernetes API or RBAC access, by querying Amazon Managed Service for Prometheus (AMP) for cAdvisor's `container_start_time_seconds`, whose series carry an `image` label. Use when: (1) a monitor, audit, batch task (Airflow/MWAA, Lambda, CI) must know what image prod EKS runs, but its IAM role has no EKS access entry or kubeconfig and granting one means a cluster-side change; (2) a deploy-freshness or drift check is reading a stale proxy instead of the pods - e.g. an ECS task definition that skip_destroy keeps ACTIVE after an ECS-to-EKS migration, so its registeredAt freezes and the check measures a fleet nothing runs; (3) the app's own CloudWatch metrics carry no version dimension; (4) you need the image across several regions in one pass. Covers the PromQL filter (drop the pod-level cgroup and pause-sandbox rows), SigV4-signing the AMP query with botocore + urllib (no new dependency), finding the workspace by alias (ListWorkspaces' alias filter is a PREFIX match), dating each image by ECR imagePushedAt in its own regional registry, the IAM grant (aps:QueryMetrics is resource-scoped, aps:ListWorkspaces is \"*\" only), and why zero series must read as UNMEASURABLE, never as fresh.",
+  "author": "voitta-ai",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills"
+  ],
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}
