@@ -1,0 +1,58 @@
+name: directory-branch
+
+# Publishes the materialized skillz bundle to the `directory` branch, which is
+# the branch the Claude plugin directory submission tracks. The repo layout
+# (a bundle of symlinks in a subfolder) cannot be submitted as-is; see
+# scripts/build-directory-bundle.py for why.
+#
+# Commits are appended, never force-pushed: the directory pins published
+# versions to commit SHAs, so every SHA it has seen must stay reachable.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: directory-branch
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build bundle
+        run: python3 scripts/build-directory-bundle.py "$RUNNER_TEMP/bundle"
+
+      - name: Commit to the directory branch
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          version=$(jq -r .version "$RUNNER_TEMP/bundle/.claude-plugin/plugin.json")
+
+          work="$RUNNER_TEMP/directory"
+          if git ls-remote --exit-code --heads origin directory >/dev/null; then
+            git fetch --no-tags origin directory
+            git worktree add --detach "$work" FETCH_HEAD
+          else
+            git worktree add --orphan -b directory "$work"
+          fi
+
+          # Replace the tree wholesale so removed skills disappear too.
+          find "$work" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a "$RUNNER_TEMP/bundle/." "$work/"
+
+          git -C "$work" add -A
+          if git -C "$work" diff --cached --quiet; then
+            echo "directory branch already matches skillz $version"
+            exit 0
+          fi
+          git -C "$work" commit -q -m "skillz $version from ${SOURCE_SHA}"
+          git -C "$work" push origin HEAD:refs/heads/directory
