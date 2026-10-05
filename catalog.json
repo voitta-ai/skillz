@@ -1211,6 +1211,15 @@
         "codex"
       ],
       "summary": "Speak MCP over Streamable HTTP directly - JSON-RPC 2.0, one POST per request, SSE response body - instead of pulling the official SDK and its async stack for two or three round trips. Three edges account for most failures: send Accept: application/json, text/event-stream or some servers refuse; the body is SSE, so parse every data: line and keep the frame carrying result rather than the first one; and echo mcp-session-id only when initialize returned one rather than inventing it. Also covers joining the text parts of result.content (a tool result looks empty until you do) and honoring result.isError, which arrives on an HTTP 200. Ships a standard-library-only Python client and the curl equivalent."
+    },
+    {
+      "name": "agent-eval-replay-history-leak",
+      "path": "skills/agent-eval-replay-history-leak/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Stop a replay-a-merged-PR agent eval from leaking the answer through git history: worktrees share the future (object store, refs, origin/*, landing branches) and git show HEAD:path defeats deleting a file. Covers a single-branch clone truncated at the parent, a transcript audit for non-ancestor SHAs, task framing, and the claude -p error shape that looks like an answer."
     }
   ],
   "collections": [
@@ -1373,7 +1382,8 @@
         "macos-menubar-app-hidden-behind-notch",
         "prerelease-channel-version-gate",
         "obsidian-vault-scripted-setup",
-        "mcp-streamable-http-client-no-sdk"
+        "mcp-streamable-http-client-no-sdk",
+        "agent-eval-replay-history-leak"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3054,6 +3064,19 @@
         "mcp-streamable-http-client-no-sdk"
       ],
       "summary": "Single-skill plugin: mcp-streamable-http-client-no-sdk."
+    },
+    {
+      "name": "agent-eval-replay-history-leak",
+      "claude_manifest": "plugins/agent-eval-replay-history-leak/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/agent-eval-replay-history-leak/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "agent-eval-replay-history-leak"
+      ],
+      "summary": "Single-skill plugin: agent-eval-replay-history-leak."
     }
   ],
   "defaults": {

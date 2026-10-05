@@ -1,0 +1,18 @@
+{
+  "name": "agent-eval-replay-history-leak",
+  "version": "1.0.0",
+  "description": "Stop replay-a-merged-PR agent evals leaking the answer through git history: isolated single-branch clone at the parent, transcript audit for non-ancestor SHAs, and task framing that does not invite reconstruction.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "evals",
+    "git",
+    "benchmarking"
+  ],
+  "skills": "./skills/"
+}
