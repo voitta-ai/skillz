@@ -1220,6 +1220,15 @@
         "codex"
       ],
       "summary": "Stop a replay-a-merged-PR agent eval from leaking the answer through git history: worktrees share the future (object store, refs, origin/*, landing branches) and git show HEAD:path defeats deleting a file. Covers a single-branch clone truncated at the parent, a transcript audit for non-ancestor SHAs, task framing, and the claude -p error shape that looks like an answer."
+    },
+    {
+      "name": "git-subtree-add-into-lfs-repo",
+      "path": "skills/git-subtree-add-into-lfs-repo/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "A git subtree add into a monorepo whose root .gitattributes routes a pattern through Git LFS leaves a binary file permanently modified when the source stored it as a plain blob: the subtree copies the source tree verbatim while the inherited LFS clean filter pointer-izes the working copy, so the index and the working file can never agree, and the Bin 8879291 -> 132 bytes in git diff --stat is a pointer rather than a truncation. The obvious fix is the wrong one - a renormalize commit cleans git status and leaves the full raw blob in the destination's history forever, defeating the LFS policy. Fix the source instead: clone it, git lfs migrate import --include matching the destination's patterns --everything, reset the unpushed subtree commits away, and redo the add from the clone's local path so the LFS objects are reachable. Covers verifying with git lfs ls-files that the object is present and not merely referenced, the redundant nested .gitattributes, why --squash does not help, and stopping to ask when the bad subtree was already pushed."
     }
   ],
   "collections": [
@@ -1383,7 +1392,8 @@
         "prerelease-channel-version-gate",
         "obsidian-vault-scripted-setup",
         "mcp-streamable-http-client-no-sdk",
-        "agent-eval-replay-history-leak"
+        "agent-eval-replay-history-leak",
+        "git-subtree-add-into-lfs-repo"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3077,6 +3087,19 @@
         "agent-eval-replay-history-leak"
       ],
       "summary": "Single-skill plugin: agent-eval-replay-history-leak."
+    },
+    {
+      "name": "git-subtree-add-into-lfs-repo",
+      "claude_manifest": "plugins/git-subtree-add-into-lfs-repo/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/git-subtree-add-into-lfs-repo/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "git-subtree-add-into-lfs-repo"
+      ],
+      "summary": "Single-skill plugin: git-subtree-add-into-lfs-repo."
     }
   ],
   "defaults": {
