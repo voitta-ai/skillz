@@ -295,6 +295,8 @@ environments and older Codex versions.
 | [`mcp-streamable-http-client-no-sdk` plugin](./plugins/mcp-streamable-http-client-no-sdk/) | plugin | Claude, Codex | Single-skill plugin: mcp-streamable-http-client-no-sdk |
 | [agent-eval-replay-history-leak](./skills/agent-eval-replay-history-leak/SKILL.md) | skill | Claude, Codex | Stop a replay-a-merged-PR agent eval from leaking the answer through git history: worktrees share the future (object store, refs, origin/*, landing branches) and git show HEAD:path defeats deleting a file. Covers a single-branch clone truncated at the parent, a transcript audit for non-ancestor SHAs, task framing, and the claude -p error shape that looks like an answer. |
 | [`agent-eval-replay-history-leak` plugin](./plugins/agent-eval-replay-history-leak/) | plugin | Claude, Codex | Single-skill plugin: agent-eval-replay-history-leak |
+| [git-subtree-add-into-lfs-repo](./skills/git-subtree-add-into-lfs-repo/SKILL.md) | skill | Claude, Codex | A `git subtree add` into an LFS-tracked monorepo leaves a binary file permanently "modified" when the source stored it as a plain blob — the subtree copies the tree verbatim while the inherited clean filter pointer-izes the working copy. Covers why a renormalize commit is the wrong fix (the raw blob stays in history), migrating the source with `git lfs migrate import` and redoing the add from a local path, and the already-pushed case |
+| [`git-subtree-add-into-lfs-repo` plugin](./plugins/git-subtree-add-into-lfs-repo/) | plugin | Claude, Codex | Single-skill plugin: git-subtree-add-into-lfs-repo |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
