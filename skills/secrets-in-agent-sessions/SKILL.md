@@ -8,12 +8,14 @@ description: |
   to hand it to a process or another agent; (3) a command you want to run takes a
   credential as an argument or header; (4) you need to prove a rotation happened
   without revealing either value; (5) reviewing why a secret ended up in a
-  session log. Covers why one echo becomes several permanent copies, the four
-  traps that leak silently (command strings in task summaries, argv, narration,
-  spilled tool output), and the fingerprint / ask-the-service / env-to-file
-  techniques that avoid all of them.
+  session log; (6) a credential is displayed in a browser page you drive (a
+  password-manager share link, a console "reveal" page) and you need to know
+  what it is without reading it. Covers why one echo becomes several permanent
+  copies, the four traps that leak silently (command strings in task summaries,
+  argv, narration, spilled tool output), and the fingerprint / ask-the-service /
+  env-to-file / fingerprint-in-the-page techniques that avoid all of them.
 author: Claude Code
-version: 1.1.0
+version: 1.2.0
 date: 2026-08-14
 ---
 
@@ -220,6 +222,64 @@ grep -o -E '^[[:space:]#]*(export[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*=' ~/.bash_
 ```
 
 To ask whether two secrets are the same one, compare hashes, not values.
+
+### Inspect a secret shown in a web page, without reading it
+
+Sometimes the credential you need to examine is only *displayed*: a
+password-manager share link, a console page with a "reveal" button, a vendor
+dashboard. Driving that page with browser automation is trap 4 in its purest
+form -- a screenshot, a page-text dump and an accessibility tree each copy the
+value into the transcript, and nobody chose to print it.
+
+Run the parsing **in the page** and return only structure:
+
+1. **Probe the state first, with no content.** Return the title, headings,
+   button labels, input types and boolean flags (a verification gate, an expiry
+   notice) -- never `innerText`.
+2. **A verification gate is the user's.** A share restricted to an email address
+   sends a code to the user's inbox: ask, or let them complete it in the open
+   tab, then probe again.
+3. **Parse in the page.** Return names, lengths, fingerprints, and the claims
+   that are not secret -- a JWT's payload (`client_id`, `scope`, `exp`), the user
+   half of a Basic credential. Keep the result small: a truncated tool result
+   hides the part you needed, so return one short record per credential.
+4. **Compare the fingerprints** against the copies you already hold -- the
+   secret store, a chat paste of "the same" value, the rule or allow-list that is
+   supposed to admit it.
+5. **Close the tab.**
+
+The matcher below reads `curl` headers; adapt it to what the page shows.
+
+```js
+// javascript_tool: top-level await works; crypto.subtle needs a secure (https) page
+const fp = async v => [...new Uint8Array(await crypto.subtle.digest(
+  "SHA-256", new TextEncoder().encode(v)))].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 8);
+const b64u = s => atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4));
+const out = [{selfTest: await fp("abc")}];            // must be ba7816bf
+for (const m of document.body.innerText.matchAll(/(?:--header|-H)\s+(['"])([\s\S]*?)\1/g)) {
+  const i = m[2].indexOf(":"), name = m[2].slice(0, i).trim(), v = m[2].slice(i + 1).trim();
+  if (/^bearer\s/i.test(v)) {
+    const jwt = v.replace(/^bearer\s+/i, "");
+    let c = {}; try { c = JSON.parse(b64u(jwt.split(".")[1])); } catch (e) {}
+    out.push({name, len: jwt.length, fp: await fp(jwt), startsEyJ: jwt.startsWith("eyJ"),
+              client_id: c.client_id, scope: c.scope, exp: c.exp && new Date(c.exp * 1000).toISOString()});
+  } else if (/authorization|token|key|secret|cookie/i.test(name)) {
+    out.push({name, len: v.length, fp: await fp(v)});
+  } else out.push({name, value: v});
+}
+JSON.stringify(out)
+```
+
+The self-test is not ceremony: a broken hash reports "no match" against
+everything, which reads exactly like a real finding.
+
+What it found the first time: two copies of one request disagreed. The chat
+paste of the token had lost 2 of its 30 characters; the password-manager copy
+was intact -- and belonged to a *different caller* than the one being tested.
+The bearer in both copies was one character short (it did not start `eyJ`),
+which a JWT gateway refuses at every endpoint (Kong: `401 {"message":"Bad token;
+invalid JSON"}`). None of that shows in a status code, and none of it needed a
+value read.
 
 ## Handing a secret to another process or agent
 
