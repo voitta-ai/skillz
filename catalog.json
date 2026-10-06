@@ -1238,6 +1238,18 @@
         "codex"
       ],
       "summary": "Read which container image an EKS workload is actually running, per cluster and region, with no Kubernetes API or RBAC access, by querying Amazon Managed Service for Prometheus (AMP) for cAdvisor's `container_start_time_seconds`, whose series carry an `image` label. Use when: (1) a monitor, audit, batch task (Airflow/MWAA, Lambda, CI) must know what image prod EKS runs, but its IAM role has no EKS access entry or kubeconfig and granting one means a cluster-side change; (2) a deploy-freshness or drift check is reading a stale proxy instead of the pods - e.g. an ECS task definition that skip_destroy keeps ACTIVE after an ECS-to-EKS migration, so its registeredAt freezes and the check measures a fleet nothing runs; (3) the app's own CloudWatch metrics carry no version dimension; (4) you need the image across several regions in one pass. Covers the PromQL filter (drop the pod-level cgroup and pause-sandbox rows), SigV4-signing the AMP query with botocore + urllib (no new dependency), finding the workspace by alias (ListWorkspaces' alias filter is a PREFIX match), dating each image by ECR imagePushedAt in its own regional registry, the IAM grant (aps:QueryMetrics is resource-scoped, aps:ListWorkspaces is \"*\" only), and why zero series must read as UNMEASURABLE, never as fresh."
+    },
+    {
+      "name": "amp-alertmanager-pagerduty-proof",
+      "path": "skills/amp-alertmanager-pagerduty-proof/SKILL.md",
+      "files": [
+        "scripts/amp-pd-proof.sh"
+      ],
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Prove that an Amazon Managed Prometheus alert manager reaches PagerDuty (Events API v2) directly, with no SNS in between, and tear the proof down afterwards. Use when: (1) you are wiring AMP alerting to PagerDuty and the AWS docs you found say the AMP alert manager supports SNS only - two pages still do, while PagerDuty support launched 2025-08-29; (2) you need to show paging works BEFORE any real rule exists, so there is nothing to wait for and nothing to break; (3) an alert manager definition or rules namespace sits in CREATING and you do not know whether that is normal; (4) a POST to the alert manager returned 2xx and you are about to call that proof; (5) you deleted the rule and the PagerDuty incident did not resolve; (6) the routing key must never enter an agent transcript. Covers the KMS + Secrets Manager grant pair that aps.amazonaws.com needs, the SigV4 POST that fires an alert without a rule, measured timings for every step, and a cleanup that does not leave a customer KMS key behind."
     }
   ],
   "collections": [
@@ -1403,7 +1415,8 @@
         "mcp-streamable-http-client-no-sdk",
         "agent-eval-replay-history-leak",
         "git-subtree-add-into-lfs-repo",
-        "eks-running-image-from-amp-cadvisor"
+        "eks-running-image-from-amp-cadvisor",
+        "amp-alertmanager-pagerduty-proof"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3123,6 +3136,19 @@
         "eks-running-image-from-amp-cadvisor"
       ],
       "summary": "Single-skill plugin: eks-running-image-from-amp-cadvisor."
+    },
+    {
+      "name": "amp-alertmanager-pagerduty-proof",
+      "claude_manifest": "plugins/amp-alertmanager-pagerduty-proof/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/amp-alertmanager-pagerduty-proof/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "amp-alertmanager-pagerduty-proof"
+      ],
+      "summary": "Single-skill plugin: amp-alertmanager-pagerduty-proof."
     }
   ],
   "defaults": {
