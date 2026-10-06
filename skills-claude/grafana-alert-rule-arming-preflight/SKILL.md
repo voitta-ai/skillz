@@ -24,7 +24,7 @@ description: |
   about 2 minutes of provider retries -- the workspace alert-rule quota (AMG: 100, not adjustable)
   cannot hold both copies; check GET /api/org/quotas and see section 8 fact 4.
 author: Claude Code
-version: 1.4.1
+version: 1.5.0
 date: 2026-10-01
 ---
 
@@ -127,6 +127,24 @@ follow-up before reordering. Newer Grafana versions may accept client-chosen uid
 yours before relying on it. When
 moving rules between groups or folders, never destroy the old group in the same apply that creates
 the new one unless the create has been proven on this Grafana version.
+
+**Inserting a new rule in the MIDDLE of an existing group hands the next rule's uid to the new
+rule.** Position matching is not only a delete/reorder hazard - an in-place group update does it
+too, and this one changes what an existing uid means rather than merely moving it. Measured
+2026-10-01 to 10-06 on Grafana 10.4.7, provider 4.45.2, inserting at index 2 of a 3-rule group:
+
+- the old index-2 rule's uid now carries the NEW rule's title, query and receiver - in the measured
+  case a non-paging rule became paging;
+- the displaced rule was re-created at the end with a fresh uid, so its **state history reset**;
+- the original uid's annotation history now mixes two different rules.
+
+The tell in `terraform plan` is an **in-place** group update where an existing rule shows
+`~ title = "A" -> "B"` alongside a changed query and receiver, and a new rule block is appended at
+the end. That reads like a rename plus an addition. It is neither.
+
+Mitigation: **append new rules at the END of the group**, or pin the existing uids before
+inserting. And when reading alert history across such a change, filter by **title**, not by uid -
+the uid is no longer a stable identity for the rule it used to name.
 
 ### 5. Prove the rendered instance count
 
