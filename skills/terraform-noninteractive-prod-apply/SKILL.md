@@ -14,7 +14,7 @@ description: |
   alternative, reproducing a wrapper's computed variables, and why a plan
   file is a secret.
 author: Claude Code
-version: 1.2.0
+version: 1.3.0
 date: 2026-08-24
 ---
 
@@ -171,7 +171,7 @@ So "is every action line one I expect?" answers NO on a plan containing only
 expected actions. Exclude the continuation:
 
 ```bash
-grep -E '^  # ' plan.txt | grep -v '^  # (because' | grep -v '<expected address>'
+grep -E '^ {1,2}# ' plan.txt | grep -v '^  # (because' | grep -v '<expected address>'
 ```
 
 **`grep | head` returns head's status, which is always 0.** This always sets
@@ -192,12 +192,35 @@ A guard that held, for an expected 0 add / 0 change / 1 destroy:
 ```bash
 FAIL=0
 grep -qE '^Plan: 0 to add, 0 to change, 1 to destroy\.$' plan.txt || FAIL=1
-U=$(grep -E '^  # ' plan.txt | grep -v '^  # (because' | grep -v '<expected address>' || true)
+U=$(grep -E '^ {1,2}# ' plan.txt | grep -v '^  # (because' | grep -v '<expected address>' || true)
 [ -n "$U" ] && FAIL=1
 if grep -qE 'image .*->' plan.txt; then FAIL=1; fi
 [ "$FAIL" -ne 0 ] && { echo "NOT APPLYING"; exit 1; }
 terraform apply -auto-approve "$PLAN"
 ```
+
+**`^  # ` with two spaces misses `removed` / forget lines.** A resource leaving
+state without being destroyed prints with a **one-space** prefix:
+
+```
+ # <address> will no longer be managed by Terraform
+```
+
+so a guard anchored on two spaces **undercounts a plan that forgets resources** -
+reported on a real prod plan carrying 6 forgets the grep never saw. Forgetting
+is the one action a guard most needs to see, because nothing is created or
+destroyed and the plan summary line does not count it.
+
+Match `^ {1,2}# ` (above), or match the wording explicitly:
+
+```bash
+if grep -q 'will no longer be managed by Terraform' plan.txt; then
+  echo "GUARD: plan forgets resources"; FAIL=1
+fi
+```
+
+Reported by a peer session from a measured prod plan; the widened pattern is
+correct either way, since it is a superset of the original.
 
 **Why `image .*->` is worth guarding on even when images are not the subject.**
 A wrapper taking POSITIONAL arguments and passing no flags through turned
