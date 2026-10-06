@@ -1,0 +1,3 @@
+#!/bin/bash
+# cc-who: map every live Claude Code session to its cmux tab. Shim over `cc-names who`.
+exec "$(cd "$(dirname "$0")" && pwd)/cc-names" who "$@"

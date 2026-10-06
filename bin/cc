@@ -1,0 +1,50 @@
+#!/bin/bash
+# cc: launch Claude Code with one name in all three places.
+#
+#   cc [NAME] [claude args...]
+#
+# Resolves NAME (argument > human-set cmux tab title > folder basename, see
+# `cc-names pick`), renames the cmux tab this terminal lives in, then execs
+#   claude -n NAME --remote-control NAME [args...]
+#
+# Environment:
+#   CC_PROMPT=collide|always|never   when to ask for the name (default collide:
+#                                    only if NAME is already a live session or tab)
+#   CC_REMOTE_CONTROL=0              skip --remote-control
+#   CC_CLAUDE=/path/to/claude        binary to exec (default: claude on PATH)
+set -u
+
+name=""
+if [ $# -gt 0 ] && [ "${1#-}" = "$1" ]; then
+  name="$1"
+  shift
+fi
+
+here="$(cd "$(dirname "$0")" && pwd)"
+picker="$here/cc-names"
+command -v cc-names >/dev/null 2>&1 && picker="cc-names"
+
+picked="$("$picker" pick ${name:+"$name"})"
+rc=$?
+prompt="${CC_PROMPT:-collide}"
+if [ "$prompt" = "always" ] || { [ "$prompt" = "collide" ] && [ $rc -eq 3 ]; }; then
+  if [ $rc -eq 3 ]; then
+    echo "cc: '$picked' is already a live session or tab name" >&2
+  fi
+  printf 'session name [%s]: ' "$picked" >&2
+  read -r answer
+  [ -n "$answer" ] && picked="$answer"
+fi
+name="$picked"
+
+surface="$(cmux identify 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["caller"]["surface_ref"])' 2>/dev/null)"
+if [ -n "$surface" ]; then
+  cmux tab-action --action rename --surface "$surface" --title "$name" >/dev/null 2>&1 \
+    || echo "cc: tab rename failed for $surface" >&2
+fi
+
+set -- -n "$name" "$@"
+if [ "${CC_REMOTE_CONTROL:-1}" != "0" ]; then
+  set -- --remote-control "$name" "$@"
+fi
+exec "${CC_CLAUDE:-claude}" "$@"

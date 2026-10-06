@@ -1,0 +1,276 @@
+#!/usr/bin/env python3
+"""xs - append-only event log for agent-to-agent traffic, plus views over it.
+
+Every session appends one line per messaging event to a shared JSONL file. No
+daemon, no coordination: appends are made atomic by the POSIX guarantee that a
+single write() of at most PIPE_BUF bytes to an O_APPEND descriptor is not
+interleaved with another writer's. Lines are therefore capped below that.
+
+Subcommands:
+  log      append one event
+  tail     follow the log, formatted (this is what a traffic pane runs)
+  recent   print the last N events, formatted
+  status   derive current state from events: who is waiting on whom
+  path     print the log path
+  prune    keep only the most recent N lines
+
+Read the log with anything: it is JSONL.
+"""
+
+import argparse
+import json
+import os
+import sys
+import time
+
+# POSIX guarantees atomicity only up to PIPE_BUF for O_APPEND writes. 4096 is
+# the floor across platforms; staying under it is what makes concurrent
+# appends from many sessions safe without a lock.
+PIPE_BUF_FLOOR = 4096
+LINE_CAP = 2048
+
+KINDS = ("Q", "WO", "FYI", "RE")
+EVENTS = ("send", "recv", "answered", "expired", "note")
+
+
+def log_path():
+    """Honours XDG_STATE_HOME so it lands somewhere a user already backs up."""
+    base = os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state")
+    retval = os.path.join(base, "agent-xs", "events.jsonl")
+    return retval
+
+
+def now_iso():
+    retval = time.strftime("%Y-%m-%dT%H:%M:%S%z", time.localtime())
+    return retval
+
+
+def whoami():
+    """Best-effort identity for this session, in decreasing confidence."""
+    for var in ("XS_NAME", "CMUX_TAB_TITLE", "CMUX_WORKSPACE_NAME"):
+        val = os.environ.get(var)
+        if val:
+            return val
+    ws = os.environ.get("CMUX_WORKSPACE_ID", "")
+    retval = ("ws:" + ws[:8]) if ws else "unknown"
+    return retval
+
+
+def truncate_event(event):
+    """Shrink the only unbounded field until the encoded line fits the cap.
+
+    Truncating rather than rejecting is deliberate: a dropped event is worse
+    than a clipped topic, because the log's value is that it is complete."""
+    topic = event.get("topic") or ""
+    while True:
+        line = json.dumps(event, separators=(",", ":"), ensure_ascii=False)
+        encoded = line.encode("utf-8") + b"\n"
+        if len(encoded) <= LINE_CAP or not topic:
+            break
+        topic = topic[: max(0, len(topic) - 32)]
+        event["topic"] = topic + ("..." if topic else "")
+    retval = encoded
+    return retval
+
+
+def append(event):
+    path = log_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    encoded = truncate_event(event)
+    if len(encoded) > PIPE_BUF_FLOOR:
+        # Cannot happen with LINE_CAP well under the floor, but a silent
+        # interleave would corrupt other sessions' lines, so assert rather
+        # than hope.
+        print("xs: refusing to write %d bytes, above the atomic floor"
+              % len(encoded), file=sys.stderr)
+        return 1
+    fd = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
+    try:
+        os.write(fd, encoded)
+    finally:
+        os.close(fd)
+    return 0
+
+
+def cmd_log(args):
+    event = {
+        "ts": now_iso(),
+        "ev": args.event,
+        "from": args.sender or whoami(),
+        "to": args.to or "",
+        "kind": args.kind or "",
+        "topic": args.topic or "",
+        "ws": os.environ.get("CMUX_WORKSPACE_ID", ""),
+    }
+    retval = append(event)
+    return retval
+
+
+def read_events(path):
+    """Skip unparseable lines rather than dying: a torn or hand-edited line
+    must not cost you the rest of the history."""
+    events = []
+    if not os.path.exists(path):
+        return events
+    with open(path, "r", encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                events.append(json.loads(line))
+            except ValueError:
+                continue
+    retval = events
+    return retval
+
+
+ARROW = {"send": "->", "recv": "<-", "answered": "ok", "expired": "??", "note": " -"}
+
+
+def fmt(event, width=90):
+    ts = (event.get("ts") or "")[11:19]
+    ev = event.get("ev", "?")
+    arrow = ARROW.get(ev, " ?")
+    kind = event.get("kind") or ""
+    peer = event.get("to") or ""
+    who = event.get("from") or ""
+    topic = event.get("topic") or ""
+    # Clip for DISPLAY only. The stored topic is already capped for atomicity,
+    # but that cap is ~2KB - far too wide for a pane, and one long line would
+    # push every other event off the screen.
+    if len(topic) > width:
+        topic = topic[: width - 3] + "..."
+    retval = "%s  %-14s %s %-14s %-3s %s" % (ts, who[:14], arrow, peer[:14], kind, topic)
+    return retval
+
+
+def cmd_recent(args):
+    events = read_events(log_path())
+    for event in events[-args.n:]:
+        print(fmt(event))
+    return 0
+
+
+def cmd_tail(args):
+    """Follow by polling rather than inotify/kqueue: no dependency, and the
+    file only ever grows by appends so a byte offset is always valid."""
+    path = log_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if not os.path.exists(path):
+        open(path, "a", encoding="utf-8").close()
+    for event in read_events(path)[-args.n:]:
+        print(fmt(event))
+    sys.stdout.flush()
+    offset = os.path.getsize(path)
+    while True:
+        try:
+            size = os.path.getsize(path)
+        except OSError:
+            time.sleep(args.interval)
+            continue
+        if size < offset:
+            # Truncated or pruned under us; restart from the new end rather
+            # than replaying everything.
+            offset = 0
+        if size > offset:
+            with open(path, "r", encoding="utf-8", errors="replace") as fh:
+                fh.seek(offset)
+                chunk = fh.read()
+                offset = fh.tell()
+            for line in chunk.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    print(fmt(json.loads(line)))
+                except ValueError:
+                    continue
+            sys.stdout.flush()
+        time.sleep(args.interval)
+    return 0
+
+
+def cmd_status(args):
+    """Fold events into current state. An ask is outstanding until the same
+    pair sees an 'answered' or 'expired'; 'expired' means unknown, so it
+    clears the wait rather than recording an answer."""
+    outstanding = {}
+    for event in read_events(log_path()):
+        ev = event.get("ev")
+        pair = (event.get("from", ""), event.get("to", ""))
+        if ev == "send":
+            outstanding[pair] = event
+        elif ev in ("answered", "expired"):
+            outstanding.pop(pair, None)
+            outstanding.pop((pair[1], pair[0]), None)
+    if not outstanding:
+        print("nothing outstanding")
+        return 0
+    for (sender, target), event in sorted(outstanding.items()):
+        print("%s  %s -> %s  %s %s"
+              % ((event.get("ts") or "")[11:19], sender, target,
+                 event.get("kind") or "", event.get("topic") or ""))
+    return 0
+
+
+def cmd_prune(args):
+    """Rewrite via temp + rename so a reader never sees a half-written log.
+    Concurrent appenders may lose a line racing this; prune when quiet."""
+    path = log_path()
+    if not os.path.exists(path):
+        return 0
+    events = read_events(path)
+    keep = events[-args.keep:]
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        for event in keep:
+            fh.write(json.dumps(event, separators=(",", ":"), ensure_ascii=False) + "\n")
+    os.replace(tmp, path)
+    print("kept %d of %d events" % (len(keep), len(events)))
+    return 0
+
+
+def cmd_path(args):
+    print(log_path())
+    return 0
+
+
+def main():
+    parser = argparse.ArgumentParser(prog="xs", description=__doc__)
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p = sub.add_parser("log", help="append one event")
+    p.add_argument("event", choices=EVENTS)
+    p.add_argument("--to", help="peer name")
+    p.add_argument("--from", dest="sender", help="override sender identity")
+    p.add_argument("--kind", choices=KINDS)
+    p.add_argument("--topic", help="short human-readable subject")
+    p.set_defaults(func=cmd_log)
+
+    p = sub.add_parser("tail", help="follow the log, formatted")
+    p.add_argument("-n", type=int, default=20)
+    p.add_argument("--interval", type=float, default=1.0)
+    p.set_defaults(func=cmd_tail)
+
+    p = sub.add_parser("recent", help="print the last N events")
+    p.add_argument("-n", type=int, default=20)
+    p.set_defaults(func=cmd_recent)
+
+    p = sub.add_parser("status", help="who is waiting on whom, derived from events")
+    p.set_defaults(func=cmd_status)
+
+    p = sub.add_parser("prune", help="keep only the most recent N lines")
+    p.add_argument("--keep", type=int, default=5000)
+    p.set_defaults(func=cmd_prune)
+
+    p = sub.add_parser("path", help="print the log path")
+    p.set_defaults(func=cmd_path)
+
+    args = parser.parse_args()
+    retval = args.func(args)
+    return retval
+
+
+if __name__ == "__main__":
+    sys.exit(main())
