@@ -23,18 +23,72 @@ issue #188). Per-skill plugins are never exempt - their versions are
 independent cache keys, not a shared counter.
 
 Usage: check-plugin-version-bumps.py [--exempt <plugin>]... [<base-ref>]
-       (base-ref default: FETCH_HEAD)
+       (base-ref default: FETCH_HEAD; one of FETCH_HEAD, origin/master,
+       origin/next, master, next)
 """
 
 import json
 import pathlib
+import re
 import subprocess
 import sys
 
+# Every git argv below is a literal list at its own call site; refs and paths
+# that vary travel on stdin. A permission gate that judges a subprocess call by
+# its argv (voitta-ai/voitta-yolt#162, fixed in #167) can then see that this
+# script only reads, instead of refusing the repo's own release check. So the
+# base ref is one of the documented ones, each with its own literal call.
 
-def git(*args):
-    proc = subprocess.run(["git", *args], capture_output=True, text=True)
+
+def _stdout(proc):
     retval = proc.stdout if proc.returncode == 0 else None
+    return retval
+
+
+def diff_names(base):
+    """`git diff --name-only <base>`, for the documented bases only."""
+    if base == "FETCH_HEAD":
+        proc = subprocess.run(["git", "diff", "--name-only", "FETCH_HEAD"], capture_output=True, text=True)
+    elif base == "origin/master":
+        proc = subprocess.run(["git", "diff", "--name-only", "origin/master"], capture_output=True, text=True)
+    elif base == "origin/next":
+        proc = subprocess.run(["git", "diff", "--name-only", "origin/next"], capture_output=True, text=True)
+    elif base == "master":
+        proc = subprocess.run(["git", "diff", "--name-only", "master"], capture_output=True, text=True)
+    elif base == "next":
+        proc = subprocess.run(["git", "diff", "--name-only", "next"], capture_output=True, text=True)
+    else:
+        retval = None
+        return retval
+    retval = _stdout(proc)
+    return retval
+
+
+SUPPORTED_BASES = ("FETCH_HEAD", "origin/master", "origin/next", "master", "next")
+
+_OBJECT_HEADER = re.compile(rb"^[0-9a-f]{40}(?:[0-9a-f]{24})? [a-z]+ [0-9]+$")
+
+
+def show(spec):
+    """Contents of `<rev>:<path>` like `git show` prints a blob, or None if git
+    has no such object. The spec goes to `cat-file --batch` on stdin, which is
+    newline-framed, so a path containing a newline fails closed rather than
+    reading as a missing (brand-new) manifest."""
+    if "\n" in spec:
+        raise SystemExit(f"::error::cannot read {spec!r}: path contains a newline")
+    out = _stdout(subprocess.run(
+        ["git", "cat-file", "--batch"], input=(spec + "\n").encode(), capture_output=True,
+    ))
+    if out is None:
+        retval = None
+        return retval
+    header, _, rest = out.partition(b"\n")
+    # "<spec> missing" / "ambiguous", or a tree: only a blob can be a manifest.
+    if not _OBJECT_HEADER.match(header) or header.split(b" ")[1] != b"blob":
+        retval = None
+        return retval
+    size = int(header.rsplit(b" ", 1)[1])
+    retval = rest[:size].decode(errors="replace")
     return retval
 
 
@@ -61,7 +115,7 @@ def version_in(blob):
 
 def version_at(ref, path):
     """Version in `path` as of `ref`, or None if the file did not exist."""
-    retval = version_in(git("show", f"{ref}:{path}"))
+    retval = version_in(show(f"{ref}:{path}"))
     return retval
 
 
@@ -97,7 +151,13 @@ def parse_argv(argv):
 def main():
     base, exempt = parse_argv(sys.argv[1:])
 
-    diff = git("diff", "--name-only", base)
+    if base not in SUPPORTED_BASES:
+        print(
+            f"::error::unsupported base {base!r}; use one of: {', '.join(SUPPORTED_BASES)}",
+            file=sys.stderr,
+        )
+        return 1
+    diff = diff_names(base)
     if diff is None:
         print(f"::error::cannot diff against {base}", file=sys.stderr)
         return 1
