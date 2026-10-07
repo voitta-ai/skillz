@@ -1,6 +1,6 @@
 {
   "name": "playwright-mcp-upload-hidden-file-input",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Upload a file via Playwright MCP when the input is hidden: unhide+tag via evaluate, upload by id, verify via CDN/S3 URL.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",
