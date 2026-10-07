@@ -10,15 +10,16 @@ description: |
   whose work IS the skills repo (its worktrees, its registry PRs), (3) two
   sessions are about to edit catalog.json / marketplace.json / README
   registry files concurrently, (4) you received a handoff message naming a
-  content-only branch and need to know what the landing side owes. The
-  capture side works UP TO the PR: classify, author skills/<name>/ content
+  content-only branch and need to know what the landing side owes, (5) a
+  handoff seems to have no PR - check whether its content reached master
+  before saying so. The capture side works UP TO the PR: classify, author skills/<name>/ content
   only - never registry files - validate what it can, push branch
   add-skill-<name>, SendMessage the single skills-repo session; the landing
   side does registry, versions, validators, PR. Falls back to the full
   claudeception wiring when no such peer exists.
 author: Claude Code
-version: 1.2.0
-date: 2026-09-13
+version: 1.3.0
+date: 2026-10-07
 ---
 
 # Skill capture -> PR handoff
@@ -111,8 +112,10 @@ registry.
 3. Versions: bundle's two manifests advance past master and stay equal;
    every plugin whose content the diff touches bumps too.
 4. `validate-catalog.sh`, `check-plugin-version-bumps.py origin/master`.
-5. Open the PR; report the URL back - SendMessage to the capture session
-   if it is still alive, otherwise it lands in front of the user anyway.
+5. Open the PR; report the URL back in its own SendMessage to the capture
+   session (the `from` of the handoff message) if it is still alive,
+   otherwise it lands in front of the user anyway. A mention inside a
+   message to another session never reaches it.
 
 ## Why content-only branches
 
@@ -141,6 +144,24 @@ a rebase of the handoff branch is always trivial.
   though the capture side already ran it: the capture session is closer to
   the client context and may have missed a term the wordlist would catch
   on a machine with a richer denylist.
+- **No report is not "no PR".** The landing side opens its PR from a
+  branch of its own (`land/<topic>`), so the capture branch never becomes
+  a PR head, and it stays on the remote after the merge. A search such as
+  `gh pr list --state all --search "head:<capture-branch>"` is empty
+  before the merge and after it. Observed 2026-10-06: the lander merged a
+  hand-off within ten minutes but reported it only inside a message to a
+  third session. The capture session's search found nothing, so almost two
+  hours later it told the user and the lander that the hand-off had no PR.
+  Before saying that, check whether the content reached master:
+
+  ```bash
+  git fetch -q origin master
+  git diff --quiet <capture-sha> origin/master -- skills/<name>/ && echo landed
+  ```
+
+  Exit 0 means the content is on master as pushed. A non-zero exit means
+  it has not landed, or the lander edited it; read the diff to tell which.
+  Once it has landed, delete the capture branch.
 
 ## Related
 
