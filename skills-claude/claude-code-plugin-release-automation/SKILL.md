@@ -14,7 +14,9 @@ description: |
   missing bump instead of users catching it months later, (6) you need the
   tag to land on the squash commit in a squash-merge repo, (7) two PRs
   merged minutes apart and the second one's release never appeared even
-  though every check is green. Covers the two-job workflow (PR-side bump
+  though every check is green, (8) the repo ships several plugins that
+  install separately and no bundle, so no single manifest can anchor a
+  release. Covers the two-job workflow (PR-side bump
   gate + push-side tag-and-release), `paths-ignore` as the docs-only
   exemption, why the gate must NOT be a required status check, idempotence
   for re-runs and the same-version concurrent-merge gap it leaves (the
@@ -23,11 +25,13 @@ description: |
   bumping PRs against the gate (rebase + re-bump; a green gate goes stale
   because base-branch movement does not re-trigger PR CI), and the
   multi-plugin case where per-plugin versions are separate cache keys the
-  gate cannot see. Pairs with claude-code-plugin-update-flow, which
-  explains why the version is load-bearing in the first place.
+  gate cannot see, and the no-bundle case: one release stream per plugin
+  (`<plugin>-v<version>` tags, a per-plugin bump gate, `--notes-start-tag`).
+  Pairs with claude-code-plugin-update-flow, which explains why the version
+  is load-bearing in the first place.
 author: Claude Code
-version: 1.3.0
-date: 2026-08-27
+version: 1.4.0
+date: 2026-10-06
 ---
 
 # Claude Code plugin repos: automatic tags and release notes
@@ -300,7 +304,88 @@ gh api -X PUT "repos/$OWNER/$REPO/pulls/$pr/merge" -f merge_method=squash
   and still leaves that plugin's users on a stale cache forever. The gate
   cannot see this. Document it where contributors will read it, and if it
   bites often enough, add a changed-path-to-plugin-version check — but that
-  is a second, bigger check, not a tweak to this one.
+  is a second, bigger check, not a tweak to this one. The no-bundle gate
+  below is that check, in about twenty lines of shell.
+- **Multi-plugin repo with no bundle** (several plugins, each installed on
+  its own, nothing that ships them all): no manifest anchors a release, and
+  a repo-wide version invented for the purpose is no install's cache key.
+  Give each plugin its own release stream, tagged `<plugin>-v<version>`.
+  Both jobs loop over the manifests, and neither uses `paths-ignore`: a
+  plugin that owes nothing is skipped inside the job, so the job always
+  reports and can be a required check.
+
+  ```bash
+  # version-bumped (checkout with fetch-depth: 0, so the three-dot diff has
+  # a merge base). A plugin owes a bump only when the diff touches it.
+  git fetch --no-tags origin "$BASE"
+  status=0
+  for manifest in */.claude-plugin/plugin.json; do
+    plugin=${manifest%%/*}
+    if git diff --quiet FETCH_HEAD...HEAD -- "$plugin/"; then
+      continue
+    fi
+    new=$(jq -r .version "$manifest")
+    if ! git cat-file -e "FETCH_HEAD:$manifest" 2>/dev/null; then
+      echo "$plugin: new plugin at $new"
+      continue
+    fi
+    old=$(git show "FETCH_HEAD:$manifest" | jq -r .version)
+    if [ "$old" = "$new" ]; then
+      echo "::error file=$manifest::$plugin changed but its version is still $old - bump it."
+      status=1
+    elif [ "$(printf '%s\n%s\n' "$old" "$new" | sort -V | head -1)" != "$old" ]; then
+      echo "::error file=$manifest::$plugin version $new does not advance past $old."
+      status=1
+    else
+      echo "$plugin: $old -> $new"
+    fi
+  done
+  exit "$status"
+  ```
+
+  ```bash
+  # tag-and-release (checkout with fetch-depth: 0, which brings the tags).
+  for manifest in */.claude-plugin/plugin.json; do
+    plugin=${manifest%%/*}
+    version=$(jq -r .version "$manifest")
+    tag="$plugin-v$version"
+    if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+      echo "$tag is already tagged; nothing to release."
+      continue
+    fi
+    prev=$(git tag --list "$plugin-v*" --sort=-v:refname | head -1)
+    start=()
+    if [ -n "$prev" ]; then
+      start=(--notes-start-tag "$prev")
+    fi
+    gh release create "$tag" \
+      --title "$plugin v$version" \
+      --generate-notes \
+      --target "$GITHUB_SHA" \
+      "${start[@]}"
+  done
+  ```
+
+  Three things differ from the single-stream file:
+
+  - **Start each plugin's notes at its own previous tag.** GitHub's docs
+    give `previous_tag_name` (`--notes-start-tag`) "to manually specify the
+    range" and do not say what it picks when it is left out. With several
+    streams in one repo, do not leave it to GitHub: a range that starts at
+    another plugin's tag is wrong. The notes still list every PR merged in
+    the range, including PRs that touched only other plugins.
+  - **The first push after the workflow lands releases every plugin.** No
+    plugin has a tag yet, so each gets a first release whose notes cover the
+    whole history.
+  - **"Latest" is repo-wide.** GitHub marks the newest release of any
+    stream as Latest, so the badge names whichever plugin shipped last.
+
+  Observed on a two-plugin repo, 2026-10-06. In CI, the gate passed a PR
+  that touched only repo-level files. Run locally on the script extracted
+  from the workflow, it failed an unbumped change and a downgrade, and
+  passed a bump. The first push created both first releases, with both
+  tags on the merge commit. The `--notes-start-tag` path has run only
+  against a stubbed `gh`, because no plugin there has a second release yet.
 
 ### If the repo ships to Codex as well
 
