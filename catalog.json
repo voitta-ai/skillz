@@ -688,6 +688,15 @@
       "summary": "Actually rotate a leaked Slack bot or app-level token: reinstalling does NOT mint a new xoxb-, only destroying the OAuth grant does. Covers the channel-membership fallout, the incoming-webhook channel picker, and verification without printing tokens."
     },
     {
+      "name": "slack-socket-mode-shared-app-token",
+      "path": "skills/slack-socket-mode-shared-app-token/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Slack spreads an app's events and interactions across all its Socket Mode connections, so a second program on the same xapp- token silently takes a share of a bot's mentions; find it by hash, give every listener its own app, and share one app for approval cards."
+    },
+    {
       "name": "slack-xoxc-session-client",
       "path": "skills/slack-xoxc-session-client/SKILL.md",
       "files": [
@@ -1383,6 +1392,7 @@
         "session-transcript-mining",
         "slack-agent-cannot-wake-itself",
         "slack-app-token-rotation",
+        "slack-socket-mode-shared-app-token",
         "slack-xoxc-session-client",
         "spa-request-capture-and-block",
         "spring-profile-config-overlay-dedupe",
@@ -2193,6 +2203,19 @@
         "slack-app-token-rotation"
       ],
       "summary": "Single-skill plugin: slack-app-token-rotation."
+    },
+    {
+      "name": "slack-socket-mode-shared-app-token",
+      "claude_manifest": "plugins/slack-socket-mode-shared-app-token/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/slack-socket-mode-shared-app-token/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "slack-socket-mode-shared-app-token"
+      ],
+      "summary": "Single-skill plugin: slack-socket-mode-shared-app-token."
     },
     {
       "name": "slack-xoxc-session-client",

@@ -157,6 +157,11 @@
       "description": "Actually rotate a leaked Slack bot or app-level token: reinstalling does NOT mint a new xoxb-, only destroying the OAuth grant does. Covers the channel-membership fallout, the incoming-webhook channel picker, and verification without printing tokens."
     },
     {
+      "name": "slack-socket-mode-shared-app-token",
+      "source": "./plugins/slack-socket-mode-shared-app-token/",
+      "description": "Two Socket Mode clients on one Slack app split its events: a second consumer of a bot's xapp- token silently eats a share of its mentions. Diagnose by hash, fix with one consumer per app."
+    },
+    {
       "name": "slack-xoxc-session-client",
       "source": "./plugins/slack-xoxc-session-client/",
       "description": "Drive the Slack web API as yourself via a live browser session (xoxc token + httpOnly d cookie) when you cannot install a Slack app. Ships a runnable Python client."

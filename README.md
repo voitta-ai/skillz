@@ -224,6 +224,8 @@ environments and older Codex versions.
 | [`slack-agent-cannot-wake-itself` plugin](./plugins/slack-agent-cannot-wake-itself/) | plugin | Claude, Codex | Single-skill plugin: slack-agent-cannot-wake-itself |
 | [slack-app-token-rotation](./skills/slack-app-token-rotation/SKILL.md) | skill | Claude, Codex | Actually rotate a leaked Slack bot or app-level token: |
 | [`slack-app-token-rotation` plugin](./plugins/slack-app-token-rotation/) | plugin | Claude, Codex | Single-skill plugin: slack-app-token-rotation |
+| [slack-socket-mode-shared-app-token](./skills/slack-socket-mode-shared-app-token/SKILL.md) | skill | Claude, Codex | Two Socket Mode clients on one Slack app split its events: a second consumer of a bot's xapp- token silently eats a share of its mentions. |
+| [`slack-socket-mode-shared-app-token` plugin](./plugins/slack-socket-mode-shared-app-token/) | plugin | Claude, Codex | Single-skill plugin: slack-socket-mode-shared-app-token |
 | [slack-xoxc-session-client](./skills/slack-xoxc-session-client/SKILL.md) | skill | Claude, Codex | Drive the Slack web API as yourself via a live browser session (xoxc token + httpOnly d cookie) when you cannot install a Slack app; ships a runnable Python client that |
 | [`slack-xoxc-session-client` plugin](./plugins/slack-xoxc-session-client/) | plugin | Claude, Codex | Single-skill plugin: slack-xoxc-session-client |
 | [`subagent-no-report-channel` plugin](./plugins/subagent-no-report-channel/) | plugin | Claude, Codex | Single-skill plugin: subagent-no-report-channel |

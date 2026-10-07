@@ -1,0 +1,12 @@
+{
+  "name": "slack-socket-mode-shared-app-token",
+  "description": "Two Socket Mode clients on one Slack app split its events: a second consumer of a bot's xapp- token silently eats a share of its mentions. Diagnose by hash, fix with one consumer per app.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}
