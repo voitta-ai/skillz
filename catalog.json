@@ -436,15 +436,6 @@
       "summary": "Determine which merges in a queue of N branches actually conflict, and preview the fully-merged file content, using merge-tree --write-tree chained through commit-tree - no refs, worktrees, index or working tree touched."
     },
     {
-      "name": "git-worktree-add-relative-path-nests-inside-repo",
-      "path": "skills/git-worktree-add-relative-path-nests-inside-repo/SKILL.md",
-      "hosts": [
-        "claude",
-        "codex"
-      ],
-      "summary": "Fix a git worktree that landed INSIDE the repo instead of the sibling worktrees directory. Use when: (1) you ran `git worktree add <relative/path> <branch>` from within the repo and the worktree appeared at `<repo>/<relative/path>` instead of a sibling like `<repo>.worktrees/<name>`, (2) your convention keeps worktrees in a sibling dir (e.g. `project.worktrees/feature/x`) but a new one nested under the repo root, (3) a nested worktree is now polluting `git status` / risks being tracked. Root cause: `git worktree add` resolves a RELATIVE path against the current working directory (the repo root when run from inside), not against the repo's parent. Fix with an absolute path, or relocate a mistaken one with `git worktree move`."
-    },
-    {
       "name": "git-worktree-convention",
       "path": "skills/git-worktree-convention/SKILL.md",
       "hosts": [
@@ -1364,7 +1355,6 @@
         "git-graft-worktree-onto-remote",
         "git-pr-merge-unblock",
         "git-simulate-sequential-merges",
-        "git-worktree-add-relative-path-nests-inside-repo",
         "git-worktree-convention",
         "github-actions-startup-failure-triage",
         "github-oidc-immutable-subject-claim",
@@ -1877,19 +1867,6 @@
         "git-graft-worktree-onto-remote"
       ],
       "summary": "Single-skill plugin: git-graft-worktree-onto-remote."
-    },
-    {
-      "name": "git-worktree-add-relative-path-nests-inside-repo",
-      "claude_manifest": "plugins/git-worktree-add-relative-path-nests-inside-repo/.claude-plugin/plugin.json",
-      "codex_manifest": "plugins/git-worktree-add-relative-path-nests-inside-repo/.codex-plugin/plugin.json",
-      "hosts": [
-        "claude",
-        "codex"
-      ],
-      "skills": [
-        "git-worktree-add-relative-path-nests-inside-repo"
-      ],
-      "summary": "Single-skill plugin: git-worktree-add-relative-path-nests-inside-repo."
     },
     {
       "name": "git-worktree-convention",
