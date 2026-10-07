@@ -670,6 +670,11 @@
       "name": "amp-alertmanager-pagerduty-proof",
       "source": "./plugins/amp-alertmanager-pagerduty-proof/",
       "description": "Prove that an Amazon Managed Prometheus alert manager reaches PagerDuty (Events API v2) directly, with no SNS in between, and tear the proof down afterwards. Use when: (1) you are wiring AMP alerting to PagerDuty and the AWS docs you found say the AMP alert manager supports SNS only - two pages still do, while PagerDuty support launched 2025-08-29; (2) you need to show paging works BEFORE any real rule exists, so there is nothing to wait for and nothing to break; (3) an alert manager definition or rules namespace sits in CREATING and you do not know whether that is normal; (4) a POST to the alert manager returned 2xx and you are about to call that proof; (5) you deleted the rule and the PagerDuty incident did not resolve; (6) the routing key must never enter an agent transcript. Covers the KMS + Secrets Manager grant pair that aps.amazonaws.com needs, the SigV4 POST that fires an alert without a rule, measured timings for every step, and a cleanup that does not leave a customer KMS key behind."
+    },
+    {
+      "name": "gradle-dependency-removal-classpath-diff",
+      "source": "./plugins/gradle-dependency-removal-classpath-diff/",
+      "description": "Prove that removing a Gradle dependency did not silently DOWNGRADE transitive modules, by diffing the resolved runtime classpath before and after. Use when: (1) you are deleting the last direct dependency on a library family and the `platform(...)` / BOM line looks newly unused, (2) a dependency-removal PR is green and you are about to merge it on that basis, (3) a library you did not touch is suddenly resolving to an older version, (4) you need to know WHICH dependency pulls a transitive you thought you had removed, (5) you removed a provider or client and want to know whether its classes left the classpath at all. The failure this prevents is silent: no compile step, test or build gate notices that about twenty modules resolved down a minor version, because a downgrade is a successful resolution. Ships a normalizer that handles the `requested -> resolved` conflict form, which is the step a hand-rolled diff gets wrong."
     }
   ]
 }
