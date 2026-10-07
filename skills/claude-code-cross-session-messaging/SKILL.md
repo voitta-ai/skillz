@@ -16,7 +16,7 @@ description: |
   headless and in-process transports, the idle-subscription primitive that
   replaces polling, and the permission-laundering boundary.
 author: Claude Code
-version: 1.2.0
+version: 1.2.1
 date: 2026-08-20
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claude-code-cross-session-messaging/SKILL.md
@@ -253,19 +253,36 @@ there, so picking the newest is a guess.
 Measured in one such directory: **34 of 52 files share a single mtime minute.**
 Sorting by time cannot separate them.
 
-**Grep for your own peer name instead** - the count discriminates sharply,
-because the session that was talking to that peer mentions it constantly and the
-others do not at all:
+**Grep for THIS session's own name** - the first line of `ListAgents` - and not
+for the peer that replied. A peer that many sessions talk to, such as a skills
+or coordinator session, appears across many transcripts, so its count does not
+separate them.
 
 ```bash
 D=~/.claude/projects/<cwd-slug>
 for f in "$D"/*.jsonl; do
-  printf '%6s  %s\n' "$(grep -c '<peer-name>' "$f")" "$f"
-done | sort -rn | head -3
+  printf '%6s  %s\n' "$(grep -c '<this-session-name>' "$f")" "$f"
+done | sort -rn | head -5
 ```
 
-Measured: **43 hits in the right file, 0 in every other.** A path you already
-know the old session wrote also works, if you have one.
+Measured in a 28-file directory: **1033 and 44** matching lines in this session's
+two earlier transcripts, at most **12** in any other. The replying peer's name
+gave 65, 51, 18, 11 - and **the right file came fourth**, at 11. Second place
+went to a transcript with zero mentions of this session's name.
+
+**After more than one `/clear`, every earlier transcript of this session
+matches**, so the ranking alone is not the answer. The highest count is the
+longest-lived transcript, not the one that sent the request: in the measured case
+the 1033-line file held 7 `SendMessage`s to that peer but not the request being
+answered, which was in the 44-line file. Among the matches, take the one with the
+**latest `SendMessage` to the replying peer** (step 3).
+
+A path you already know the old session wrote also works, if you have one.
+
+**Validate the discriminator in a directory where this session has more than one
+transcript.** In a directory holding only one, both readings give a clean 1-vs-0
+split and the test proves nothing - which is how the wrong name shipped here
+first.
 
 ### 3. Read the request, not just the reply
 
