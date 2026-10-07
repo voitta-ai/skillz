@@ -1,6 +1,6 @@
 {
   "name": "claude-code-cross-session-messaging",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Talk to a Claude Code session that is already running via the native ListAgents + SendMessage pair instead of a headless claude -p call or a terminal-scraping bridge: addressing rules (the name is the address; refs do not survive the listing that produced them), the one-shot notify_when_idle subscription that replaces every polling loop, the no-TTY law that makes headless and in-process transports wedge silently instead of failing, multi-hop transport dependency failures, and the per-session permission boundary that forbids delegating around your own denials.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",
