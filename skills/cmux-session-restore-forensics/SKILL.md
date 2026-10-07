@@ -12,12 +12,13 @@ description: |
   cmux window full of duplicate tabs appeared and it looks like "two instances".
   Covers the on-disk session/closed-history JSON, the Core Data epoch gotcha in
   their timestamps, diffing two snapshots by session UUID, the agent journal,
-  ~/.cmuxterm/events.jsonl and the runningboardd log as evidence, replaying a
-  pane's stored resumeBinding through `cmux new-workspace`, and rewriting
-  crossed bindings offline with cmux quit.
+  ~/.cmuxterm/events.jsonl (whose session ids are base64-encoded) and the
+  runningboardd log as evidence, replaying a pane's stored resumeBinding
+  through `cmux new-workspace`, and rewriting crossed bindings offline with
+  cmux quit.
 author: Claude Code
-version: 1.3.0
-date: 2026-09-29
+version: 1.4.0
+date: 2026-10-06
 source: https://github.com/voitta-ai/skillz
 source_file: skills/cmux-session-restore-forensics/SKILL.md
 ---
@@ -95,7 +96,7 @@ anything.** A single-pane workspace lists its tabs in
 `{closedAt, id, entry}` where `entry` is a single-key dict — `workspace`,
 `panel`, or `window` — whose `_0.snapshot` holds the same structure as above.
 
-## Three gotchas that will mislead you
+## Four gotchas that will mislead you
 
 **1. `closedAt` uses the Core Data reference date, not the Unix epoch.**
 It counts seconds from 2001-01-01, so `datetime.fromtimestamp()` reports dates
@@ -115,6 +116,22 @@ heavily shell-quoted, e.g. `'\''--resume'\'' '\''<uuid>'\''`. A regex expecting
 `--resume <uuid>` with plain spacing silently matches nothing and you conclude
 no pane had a binding. Read `resumeBinding.checkpointId`, or search for the
 first UUID *after* the index of the literal `--resume`.
+
+**4. In `events.jsonl`, `session_id` is not the plain UUID.** In `agent.hook.*`
+events, `payload.session_id` is `cmux-feed-v1:<base64 "claude">:<base64 uuid>`
+(`Y2xhdWRl` is `claude`). On 0.64.25, all 5,148 `agent.hook.*` events in one
+log had this form. A filter such as `payload.session_id == "<uuid>"` matches
+nothing, so the pane looks as if it never ran that session. A plain
+`grep <uuid>` finds most rows through `payload._opencode_request_id`
+(`claude-<uuid>-<event>-<ms>`), but some rows lack that field: for one session
+it missed 4 of 152 rows, two of them `Stop`. Grep for the encoded UUID
+instead, which matched every row:
+
+```bash
+grep "$(printf %s '<uuid>' | base64)" ~/.cmuxterm/events.jsonl
+```
+
+The agent journal stores the plain UUID, next to the pane's `surface_id`.
 
 ## Solution
 
@@ -200,9 +217,9 @@ cmux's final save.
 
 **3. Find when the duplicates appeared.** `~/.cmuxterm/events.jsonl` has
 `window.created` and `surface.created` with timestamps; the burst of
-`agent.hook.SessionStart` right after it (payload `session_id`, plus the
-`workspace_id`) shows every session the new window launched. The agent journal
-gives the pane:
+`agent.hook.SessionStart` right after it (payload `session_id`, encoded as
+gotcha 4 describes, plus the `workspace_id`) shows every session the new window
+launched. The agent journal gives the pane:
 
 ```bash
 mkdir -p /tmp/j && cp ~/Library/Application\ Support/cmux/agent-journal-com.cmuxterm.app.sqlite3* /tmp/j/   # WAL: copy all three
