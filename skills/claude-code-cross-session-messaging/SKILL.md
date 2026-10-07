@@ -16,7 +16,7 @@ description: |
   headless and in-process transports, the idle-subscription primitive that
   replaces polling, and the permission-laundering boundary.
 author: Claude Code
-version: 1.1.0
+version: 1.2.0
 date: 2026-08-20
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claude-code-cross-session-messaging/SKILL.md
@@ -224,6 +224,65 @@ the user actually made.
 
 Route blocked work back to your user instead. This is not a style preference -
 delegating around a denial is the failure mode the boundary exists to prevent.
+
+## A reply arrives after this session was `/clear`ed
+
+The reply refers to a request you have no memory of making. Three traps, all
+measured 2026-10-06, and they compound: the first makes you answer for the wrong
+session, and the second sends you to the wrong transcript to check.
+
+### 1. Do not infer your identity from `cwd`
+
+A coordinator asked its peers for reports, then was `/clear`ed. A peer replied
+with "I sent both to `<skills session>`". The cleared session's `cwd` **was** the
+skills repo, so it read the reply as addressed to itself. It was not.
+
+**The authoritative identity is the first line of `ListAgents`** - `This session
+is <name> [ref]` - and that line survives a `/clear`. Read it before deciding a
+message is yours.
+
+`cwd` is not identity and is not close to it: one project directory here holds
+**52 transcripts**, every session ever started in it.
+
+### 2. `mtime` does not identify the right transcript
+
+The pre-clear conversation is a *different* `.jsonl` in
+`~/.claude/projects/<cwd-slug>/`. Every session started in that cwd writes
+there, so picking the newest is a guess.
+
+Measured in one such directory: **34 of 52 files share a single mtime minute.**
+Sorting by time cannot separate them.
+
+**Grep for your own peer name instead** - the count discriminates sharply,
+because the session that was talking to that peer mentions it constantly and the
+others do not at all:
+
+```bash
+D=~/.claude/projects/<cwd-slug>
+for f in "$D"/*.jsonl; do
+  printf '%6s  %s\n' "$(grep -c '<peer-name>' "$f")" "$f"
+done | sort -rn | head -3
+```
+
+Measured: **43 hits in the right file, 0 in every other.** A path you already
+know the old session wrote also works, if you have one.
+
+### 3. Read the request, not just the reply
+
+In that transcript, the `SendMessage` `tool_use` inputs hold **the exact request
+each peer is answering** - which is the context the reply assumes and you lack.
+The last assistant text shows what was still outstanding ("X is the only session
+that has not replied"), so you can tell a complete set from a partial one.
+
+### 4. Fold it into what the old session produced, and correct contradictions
+
+The late reply is evidence that arrived after the conclusion was written, so the
+conclusion may now be wrong. In the measured case the old session's next-day
+plan required an approval naming an "istiod roll"; the reply's dev evidence
+showed istiod does not restart. The plan needed changing, not annotating.
+
+Treat a late reply as a reason to re-check the artifact, not merely to append to
+it.
 
 ## Never fabricate a peer's reply
 
