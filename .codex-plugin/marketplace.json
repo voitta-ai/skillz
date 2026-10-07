@@ -675,6 +675,11 @@
       "name": "gradle-dependency-removal-classpath-diff",
       "source": "./plugins/gradle-dependency-removal-classpath-diff/",
       "description": "Prove that removing a Gradle dependency did not silently DOWNGRADE transitive modules, by diffing the resolved runtime classpath before and after. Use when: (1) you are deleting the last direct dependency on a library family and the `platform(...)` / BOM line looks newly unused, (2) a dependency-removal PR is green and you are about to merge it on that basis, (3) a library you did not touch is suddenly resolving to an older version, (4) you need to know WHICH dependency pulls a transitive you thought you had removed, (5) you removed a provider or client and want to know whether its classes left the classpath at all. The failure this prevents is silent: no compile step, test or build gate notices that about twenty modules resolved down a minor version, because a downgrade is a successful resolution. Ships a normalizer that handles the `requested -> resolved` conflict form, which is the step a hand-rolled diff gets wrong."
+    },
+    {
+      "name": "actions-log-secret-scrub",
+      "source": "./plugins/actions-log-secret-scrub/",
+      "description": "Remove a secret that a CI job printed into GitHub Actions logs, and verify the removal without being fooled by three tool-level false cleans. Use when: (1) a `terraform plan` in CI printed a secret because a NON-sensitive attribute embeds one - a subscription endpoint carrying a routing key, a connection string, a webhook URL - and the config only holds a placeholder; (2) every push to the default branch reprints it, so the leak is growing; (3) you need to delete a run's logs and `gh api -X DELETE .../logs` returns 500; (4) a grep over `gh api .../jobs/<id>/logs` reports zero hits and you are about to call that clean; (5) a post-delete check still shows the secret and you cannot tell whether the deletion failed. The three false cleans are the point: `gh api` prints NOTHING for a log containing terminal escape sequences unless told otherwise, `gh api | grep` hides gh's own failure behind the pipe's exit status, and `gh run view --log` leaves a zip of the whole log on disk that a later check reads instead of the API."
     }
   ]
 }
