@@ -16,7 +16,7 @@ description: |
   headless and in-process transports, the idle-subscription primitive that
   replaces polling, and the permission-laundering boundary.
 author: Claude Code
-version: 1.2.1
+version: 1.2.2
 date: 2026-08-20
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claude-code-cross-session-messaging/SKILL.md
@@ -279,10 +279,21 @@ answered, which was in the 44-line file. Among the matches, take the one with th
 
 A path you already know the old session wrote also works, if you have one.
 
-**Validate the discriminator in a directory where this session has more than one
-transcript.** In a directory holding only one, both readings give a clean 1-vs-0
-split and the test proves nothing - which is how the wrong name shipped here
-first.
+**Validate the discriminator where it can fail:** in a directory where this
+session has more than one transcript, *and* where other sessions talk to the same
+peer. The first condition exposes the every-transcript-matches trap; the second
+exposes the hub-peer trap. They are independent, and each needs its own witness.
+
+Where neither holds, both readings can split 1-vs-0, so a clean split proves
+nothing - which is how the wrong name shipped here first. Measured in such a
+directory: own name 426 against 0, peer name 51 against 0, both apparently
+perfect, because the session had one transcript there and no other session in it
+mentioned that peer.
+
+Where the second condition does hold, the peer reading fails on its own, whatever
+the transcript count: other sessions in the measured 28-file directory scored 18,
+10 and 5 on the peer's name, and a transcript with zero mentions of this session
+took second place at 51.
 
 ### 3. Read the request, not just the reply
 
