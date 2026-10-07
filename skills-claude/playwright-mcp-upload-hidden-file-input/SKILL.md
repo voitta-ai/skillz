@@ -11,7 +11,7 @@ description: |
   file and the input isn't visible. Workaround: unhide+tag the input via
   playwright_evaluate, then upload by id; verify via the resulting CDN/S3 URL.
 author: Claude Code
-version: 1.0.0
+version: 1.0.1
 date: 2026-06-15
 ---
 
@@ -68,7 +68,7 @@ hidden inputs; the MCP wrapper does not.
   ```
 
 ## Example
-On a 6-step listing wizard (staging.doubledoor.io), the "Media & Documents" step had
+On a 6-step listing wizard on a staging site, the "Media & Documents" step had
 three hidden inputs (`image/jpeg,image/png,image/webp`; `video/*`; `application/pdf`).
 `playwright_upload_file` on `input[type=file][accept*="image/png"]` timed out
 (`resolved to hidden`). Unhiding the image input + tagging it `#qa-upload-input`, then
