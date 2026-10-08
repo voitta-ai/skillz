@@ -1298,6 +1298,15 @@
         "codex"
       ],
       "summary": "Drive an injected widget whose UI is in a CLOSED shadow root from Playwright: patch Element.prototype.attachShadow to force mode open before the widget boots (addInitScript, or ahead of a bookmarklet injection), reach the UI via host.shadowRoot, and type into React inputs with the native value setter plus an input event."
+    },
+    {
+      "name": "codex-subscription-as-llm-provider",
+      "path": "skills/codex-subscription-as-llm-provider/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Run an app's OpenAI provider on a ChatGPT subscription via the codex CLI's login instead of an API key. Covers the undocumented endpoint contract (stream=true and store=false required, no max_output_tokens, flat tools with strict=false, the CLI's originator/User-Agent and ChatGPT-Account-Id headers), reading but never writing ~/.codex/auth.json so the CLI keeps owning token refresh, and listing models from the CLI's models_cache.json. Leads with the caveat: whether this use is permitted under OpenAI's terms is unresolved."
     }
   ],
   "collections": [
@@ -1469,7 +1478,8 @@
         "actions-log-secret-scrub",
         "faulthandler-wedged-python-service",
         "macos-loopback-speech-agent-testing",
-        "playwright-closed-shadow-root-widget"
+        "playwright-closed-shadow-root-widget",
+        "codex-subscription-as-llm-provider"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3267,6 +3277,19 @@
         "playwright-closed-shadow-root-widget"
       ],
       "summary": "Single-skill plugin: playwright-closed-shadow-root-widget."
+    },
+    {
+      "name": "codex-subscription-as-llm-provider",
+      "claude_manifest": "plugins/codex-subscription-as-llm-provider/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/codex-subscription-as-llm-provider/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "codex-subscription-as-llm-provider"
+      ],
+      "summary": "Single-skill plugin: codex-subscription-as-llm-provider."
     }
   ],
   "defaults": {

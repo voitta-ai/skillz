@@ -695,6 +695,11 @@
       "name": "playwright-closed-shadow-root-widget",
       "source": "./plugins/playwright-closed-shadow-root-widget/",
       "description": "Drive a widget in a closed shadow root with Playwright: force attachShadow open before boot, set React inputs via the native setter."
+    },
+    {
+      "name": "codex-subscription-as-llm-provider",
+      "source": "./plugins/codex-subscription-as-llm-provider/",
+      "description": "Use a ChatGPT plan through the codex CLI's own login as your app's OpenAI model backend instead of an API key: the endpoint contract, read-only credential handling, and model discovery. Caveat first: whether this is permitted under OpenAI's terms is unresolved, and the endpoint is undocumented."
     }
   ]
 }
