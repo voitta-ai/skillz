@@ -384,7 +384,7 @@
     {
       "name": "claude-code-plugin-publish-anthropic-marketplace",
       "source": "./plugins/claude-code-plugin-publish-anthropic-marketplace/",
-      "description": "Publish a Claude Code plugin to Anthropic's plugin marketplace, including the pre-submission validation pass."
+      "description": "Publish a Claude Code plugin to Anthropic's plugin directory through the self-serve developer portal: the checks that block or hold a version, what ships in the plugin folder, the built-bundle branch for repos that can't ship as-is, and how versions are tracked and published."
     },
     {
       "name": "claudeception",

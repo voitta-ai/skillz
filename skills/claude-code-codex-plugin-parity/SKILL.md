@@ -13,8 +13,8 @@ description: |
   parity, the version-pin release discipline shared by both, the plugin-root
   env-var compatibility aliases, and the runtime-protocol caveat.
 author: Claude Code
-version: 1.2.0
-date: 2026-06-11
+version: 1.2.1
+date: 2026-10-08
 ---
 
 # Claude Code <-> Codex CLI plugin parity
@@ -89,9 +89,9 @@ repo distributes to both ecosystems.
    contract but verify the exact fields your hook emits against the Codex
    hooks doc before declaring parity.
 
-3. **No self-serve official Codex marketplace (yet).** Anthropic has an
-   official-marketplace submission form (claude.ai/settings/plugins/submit,
-   platform.claude.com/plugins/submit). The Codex docs say an official Plugin
+3. **No self-serve official Codex marketplace (yet).** Anthropic has a
+   self-serve directory portal at claude.ai/directory/manage (see
+   `claude-code-plugin-publish-anthropic-marketplace`). The Codex docs say an official Plugin
    Directory and self-serve publishing are "coming soon"; for now you
    distribute via a repo- or user-scoped `marketplace.json`
    (`.agents/plugins/marketplace.json` or `~/.agents/plugins/marketplace.json`)
