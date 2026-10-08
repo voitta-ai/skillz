@@ -217,6 +217,8 @@ environments and older Codex versions.
 | [`rxjava-dofinally-terminal-then-finally-test-race` plugin](./plugins/rxjava-dofinally-terminal-then-finally-test-race/) | plugin | Claude, Codex | Single-skill plugin: rxjava-dofinally-terminal-then-finally-test-race |
 | [secrets-in-agent-sessions](./skills/secrets-in-agent-sessions/SKILL.md) | skill | Claude, Codex | Handle credentials during a coding-agent session without writing them into the transcript, tool-output cache, permission allowlist or logs |
 | [`secrets-in-agent-sessions` plugin](./plugins/secrets-in-agent-sessions/) | plugin | Claude, Codex | Single-skill plugin: secrets-in-agent-sessions |
+| [sensitive-terms-wordlist-suggest](./skills/sensitive-terms-wordlist-suggest/SKILL.md) | skill | Claude, Codex | End-of-session scan that suggests names for the private sensitive-terms wordlist: names and hostnames the session produced that look private and are not on the list yet, ranked, with where each appeared and an append command. Suggest-only; the report stays local |
+| [`sensitive-terms-wordlist-suggest` plugin](./plugins/sensitive-terms-wordlist-suggest/) | plugin | Claude, Codex | Single-skill plugin: sensitive-terms-wordlist-suggest |
 | [`session-transcript-mining` plugin](./plugins/session-transcript-mining/) | plugin | Claude, Codex | Single-skill plugin: session-transcript-mining |
 | [slack-agent-cannot-wake-itself](./skills/slack-agent-cannot-wake-itself/SKILL.md) | skill | Claude, Codex | A Slack agent never answers a message posted by its own app (no app_mention), so its bot token or its app's webhook cannot wake it or carry a human's authority; check the posting identity and post as the human (xoxc) or hand them the text. |
 | [`slack-agent-cannot-wake-itself` plugin](./plugins/slack-agent-cannot-wake-itself/) | plugin | Claude, Codex | Single-skill plugin: slack-agent-cannot-wake-itself |
@@ -1255,6 +1257,12 @@ are exactly the ones this repo must not carry.
 Run it on PR-body and commit-message drafts too (`check-sensitive-terms.sh
 /tmp/pr-body.md`) - CI scans repo files, never the PR text you are about to
 post around them.
+
+The gate only knows the names already on the list. To find names a session
+introduced that are not on it yet, run the
+[sensitive-terms-wordlist-suggest](./skills/sensitive-terms-wordlist-suggest/SKILL.md)
+skill at the end of the session; it suggests candidates and never writes the
+list.
 
 Clean exit = safe to promote. This is the automated form of the hard rule
 "the public repo must never contain account IDs, client names, domains, or
