@@ -58,13 +58,21 @@ jobs:
           # Maintainer-only paths ship nothing to an install, so they owe no
           # bump. This was paths-ignore on the trigger until the check became
           # required; it lives here now so the job still reports a status.
+          #
+          # hooks/ is this repo's own pre-push gate, enabled per clone with
+          # `git config core.hooksPath hooks`. Nothing installs it: install.sh
+          # does not copy it, no plugin manifest names it (plugins that ship
+          # hooks carry their own under plugins/<name>/hooks/), and the
+          # directory bundle builder copies only plugins/skillz. A hooks-only
+          # change therefore ships nothing, and bumping the bundle for one
+          # would publish a release whose content is identical to the last.
           changed=$(git diff --name-only FETCH_HEAD...HEAD)
           owed=1
           if [ -n "$changed" ]; then
             owed=0
             while IFS= read -r f; do
               case "$f" in
-                .github/*|scripts/*) ;;
+                .github/*|scripts/*|hooks/*) ;;
                 *) owed=1; break ;;
               esac
             done <<<"$changed"

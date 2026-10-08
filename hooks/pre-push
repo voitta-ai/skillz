@@ -16,6 +16,19 @@
 #
 # Skip once, deliberately: git push --no-verify
 #
+# What this hook judges: only the refs actually being pushed, read from stdin as
+# `<local ref> <local sha> <remote ref> <remote sha>` per ref. A deletion has an
+# all-zero LOCAL sha. Two consequences, both of them fixes for real failures:
+#
+#   - A push whose every ref is a deletion carries no content, so there is
+#     nothing to validate and the hook exits 0. It used to run the whole suite
+#     against the checked-out tree, which with a stale origin/master produced a
+#     wall of "still X - bump it" naming plugins the deletion never touched.
+#     Hit while deleting 52 merged branches; it read as real breakage.
+#   - Every check here reads the WORKING TREE, so it can only speak for the ref
+#     that is checked out. Pushing some other branch is refused with a message
+#     rather than silently validating the wrong tree.
+#
 # bash 3.2 compatible (macOS default).
 
 set -u
@@ -24,6 +37,45 @@ repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root" || exit 1
 
 fail=0
+
+# ---------------------------------------------------------------------------
+# Read the pushed refs from stdin. git always supplies them; a manual run with
+# no stdin (or a closed one) yields nothing, and we then fall through to
+# checking the working tree, which is the old behaviour and the safe default.
+# ---------------------------------------------------------------------------
+head_sha=$(git rev-parse HEAD 2>/dev/null || echo "")
+refs_seen=0
+content_refs=0
+mismatched=""
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -n "${local_ref:-}" ] || continue
+  refs_seen=$((refs_seen + 1))
+  case "$local_sha" in
+    *[!0]*)
+      # a real sha: this ref carries content
+      content_refs=$((content_refs + 1))
+      if [ -n "$head_sha" ] && [ "$local_sha" != "$head_sha" ]; then
+        mismatched="$mismatched $remote_ref"
+      fi
+      ;;
+    *)
+      # all zeros (or empty): a deletion, nothing to validate
+      ;;
+  esac
+done
+
+if [ "$refs_seen" -gt 0 ] && [ "$content_refs" -eq 0 ]; then
+  echo "pre-push: deletion-only push ($refs_seen ref(s)) - no content to check."
+  exit 0
+fi
+
+if [ -n "$mismatched" ]; then
+  echo "pre-push: refusing to validate a ref that is not checked out:$mismatched" >&2
+  echo "pre-push: every check here reads the working tree, so it can only speak" >&2
+  echo "          for HEAD ($(git rev-parse --abbrev-ref HEAD 2>/dev/null))." >&2
+  echo "pre-push: check out the branch you are pushing, or override with --no-verify." >&2
+  exit 1
+fi
 
 # A capture branch per skill-capture-pr-handoff carries skills/<name>/ content
 # and deliberately NO registry files, so validate-catalog's "SKILL.md but no
@@ -87,7 +139,22 @@ if [ "$capture" -eq 1 ]; then
   # to --no-verify. CI still enforces it, on the side that owes it.
   echo "pre-push: skipped - version bumps are the landing side's to supply."
 elif git rev-parse --verify --quiet origin/master >/dev/null; then
-  if ! python3 scripts/check-plugin-version-bumps.py origin/master; then
+  # A STALE local origin/master makes this check lie: it reads master's newer
+  # content as this push's changes and demands bumps for plugins never touched.
+  # The remote is already being contacted by the push itself, so one ls-remote
+  # is cheap, and saying "fetch" is far better than printing those errors.
+  # `${1:-origin}` is the remote git passes as the hook's first argument.
+  remote_name=${1:-origin}
+  remote_master=$(git ls-remote --heads "$remote_name" master 2>/dev/null | cut -f1)
+  local_master=$(git rev-parse origin/master)
+  if [ -n "$remote_master" ] && [ "$remote_master" != "$local_master" ] \
+     && git merge-base --is-ancestor "$local_master" "$remote_master" 2>/dev/null; then
+    behind=$(git rev-list --count "$local_master..$remote_master" 2>/dev/null || echo "?")
+    echo "pre-push: local origin/master is $behind commit(s) behind $remote_name/master." >&2
+    echo "pre-push: the version-bump check would report bumps owed for plugins this" >&2
+    echo "          push never touched. Run: git fetch $remote_name master" >&2
+    fail=1
+  elif ! python3 scripts/check-plugin-version-bumps.py origin/master; then
     fail=1
   fi
 else
