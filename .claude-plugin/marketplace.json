@@ -685,6 +685,11 @@
       "name": "faulthandler-wedged-python-service",
       "source": "./plugins/faulthandler-wedged-python-service/",
       "description": "Diagnose and recover a long-running Python service (a Slack Socket Mode bot, a queue worker, any daemon) that stops doing work while the PROCESS stays alive, so the supervisor's health check sees it as healthy and never restarts it. Use when: (1) a daemon goes silent with no new log lines and no events handled, but ps shows it running at about 0% CPU in state S; (2) a KeepAlive, launchd or systemd supervisor never restarts it because the process did not exit; (3) you need to know WHERE it is stuck without attaching a debugger; (4) you registered faulthandler on SIGUSR1 and kill -USR1 silently KILLS the process instead of dumping; (5) a wedge that was not an issue a few days ago is now frequent. Covers the faulthandler SIGUSR1 thread dump, the chain=False gotcha, reading the dump to tell a half-open socket from an idle worker from a deadlock, an out-of-process heartbeat as the recovery net and its blind spot, and the host-pressure angle behind a sudden rise in frequency."
+    },
+    {
+      "name": "macos-loopback-speech-agent-testing",
+      "source": "./plugins/macos-loopback-speech-agent-testing/",
+      "description": "Drive and verify a live speech-to-text agent (continuous capture, VAD or level segmentation, Whisper, LLM) end to end on macOS with nobody speaking, then harden it for a real microphone. Use when: (1) you built or changed a listener that captures from an audio device and need a repeatable end-to-end test, (2) you want a scripted, recordable demo of a voice agent, (3) the first utterance after start comes out garbled or missing, (4) the transcript shows \"Thank you.\", \"You\", or one phrase repeated for a whole line when nobody spoke, (5) proper nouns come out wrong, (6) it works on the loopback device but does not react on the real mic. Covers BlackHole plus say -a injection, readiness gating, warming the model before capture, Whisper phantom filtering (large-v3-turbo reports no_speech_prob 0.0 on noise and silence, so a whole-utterance phantom-phrase match plus compression_ratio above 2.4 is needed instead), vocabulary via initial_prompt, and how the real mic path differs."
     }
   ]
 }
