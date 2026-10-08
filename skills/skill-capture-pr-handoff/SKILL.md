@@ -103,7 +103,12 @@ registry.
    landing side must list each one in the catalog entry's `files`, or
    `validate-catalog.sh` fails), and what remains (registry + versions +
    validators + PR). Do not choose a bundle version: the landing side
-   owns that number. Then return to your real task - do not block on the
+   owns that number. The bundle version is a counter shared by every open
+   PR, so a number picked at capture time is stale or already claimed by
+   the time anyone lands it. Worse, if another PR holds the same number,
+   the landing side's rebase resolves cleanly and silently drops the bump
+   (git sees an identical edit on both sides), and nothing reports it.
+   Then return to your real task - do not block on the
    landing, do not poll.
 
 **Landing side** (the skills-repo session):
