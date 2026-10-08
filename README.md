@@ -309,6 +309,8 @@ environments and older Codex versions.
 | [`actions-log-secret-scrub` plugin](./plugins/actions-log-secret-scrub/) | plugin | Claude, Codex | Single-skill plugin: actions-log-secret-scrub |
 | [macos-loopback-speech-agent-testing](./skills/macos-loopback-speech-agent-testing/SKILL.md) | skill | Claude, Codex | Drive and verify a live speech-to-text agent on macOS with no human speaking: BlackHole + `say -a` injection, readiness gating, and warming the model before capture. Covers Whisper phantom filtering — `large-v3-turbo` reports `no_speech_prob 0.0` on noise *and* silence, so filtering needs a whole-utterance phantom-phrase match plus `compression_ratio > 2.4` — vocabulary via `initial_prompt`, and how the real mic path differs |
 | [`macos-loopback-speech-agent-testing` plugin](./plugins/macos-loopback-speech-agent-testing/) | plugin | Claude, Codex | Single-skill plugin: macos-loopback-speech-agent-testing |
+| [playwright-closed-shadow-root-widget](./skills/playwright-closed-shadow-root-widget/SKILL.md) | skill | Claude, Codex | Drive a widget in a closed shadow root with Playwright (force `attachShadow` open before boot, native setter for React inputs) |
+| [`playwright-closed-shadow-root-widget` plugin](./plugins/playwright-closed-shadow-root-widget/) | plugin | Claude, Codex | Single-skill plugin: playwright-closed-shadow-root-widget |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
