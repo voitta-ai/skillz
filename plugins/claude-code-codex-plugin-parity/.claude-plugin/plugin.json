@@ -1,7 +1,7 @@
 {
   "name": "claude-code-codex-plugin-parity",
   "description": "Port a Claude Code plugin to the Codex CLI (or back); where the two plugin systems match vs diverge, and the shared hooks.json caveats.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "voitta-ai"
   },
