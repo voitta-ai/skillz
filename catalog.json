@@ -1280,6 +1280,15 @@
         "codex"
       ],
       "summary": "A long-running Python daemon goes deaf while the process stays alive, so the supervisor never restarts it and nothing is logged. faulthandler.register(SIGUSR1, all_threads=True, chain=False) plus kill -USR1 dumps every thread's stack without attaching a debugger, and the dump distinguishes the causes: ssl.recv means a half-open socket, queue.get means merely idle, the same lock across threads means deadlock. The trap is chain=False: SIGUSR1's default action is terminate, so chain=True makes the diagnostic dump kill the process you were trying to inspect. Also covers an out-of-process heartbeat as the recovery net and its blind spot (a half-open-socket wedge keeps the interpreter responsive, so the heartbeat stays fresh), and why host pressure or leaked per-use containers explain a wedge that suddenly got more frequent."
+    },
+    {
+      "name": "macos-loopback-speech-agent-testing",
+      "path": "skills/macos-loopback-speech-agent-testing/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Test a live speech-to-text agent end to end on macOS without a human: inject scripted audio with BlackHole plus say -a, gate on readiness, and warm the model before capture so the first utterance is not garbled. The non-obvious part is phantom filtering: Whisper large-v3-turbo reports no_speech_prob 0.0 on both noise and silence, so that field cannot gate anything, and the working filter is a whole-utterance match against known phantom phrases plus compression_ratio above 2.4 - raw runs on noise and silence transcribed as \"You\" and \"Thank you.\", filtered runs as empty. Also covers vocabulary via initial_prompt for proper nouns a model mishears, and the ways the real microphone path differs from loopback."
     }
   ],
   "collections": [
@@ -1449,7 +1458,8 @@
         "amp-alertmanager-pagerduty-proof",
         "gradle-dependency-removal-classpath-diff",
         "actions-log-secret-scrub",
-        "faulthandler-wedged-python-service"
+        "faulthandler-wedged-python-service",
+        "macos-loopback-speech-agent-testing"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3221,6 +3231,19 @@
         "faulthandler-wedged-python-service"
       ],
       "summary": "Single-skill plugin: faulthandler-wedged-python-service."
+    },
+    {
+      "name": "macos-loopback-speech-agent-testing",
+      "claude_manifest": "plugins/macos-loopback-speech-agent-testing/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/macos-loopback-speech-agent-testing/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "macos-loopback-speech-agent-testing"
+      ],
+      "summary": "Single-skill plugin: macos-loopback-speech-agent-testing."
     }
   ],
   "defaults": {

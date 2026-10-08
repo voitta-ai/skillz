@@ -1,0 +1,12 @@
+{
+  "name": "macos-loopback-speech-agent-testing",
+  "version": "1.0.0",
+  "description": "Drive and verify a live speech-to-text agent (continuous capture, VAD or level segmentation, Whisper, LLM) end to end on macOS with nobody speaking, then harden it for a real microphone. Use when: (1) you built or changed a listener that captures from an audio device and need a repeatable end-to-end test, (2) you want a scripted, recordable demo of a voice agent, (3) the first utterance after start comes out garbled or missing, (4) the transcript shows \"Thank you.\", \"You\", or one phrase repeated for a whole line when nobody spoke, (5) proper nouns come out wrong, (6) it works on the loopback device but does not react on the real mic. Covers BlackHole plus say -a injection, readiness gating, warming the model before capture, Whisper phantom filtering (large-v3-turbo reports no_speech_prob 0.0 on noise and silence, so a whole-utterance phantom-phrase match plus compression_ratio above 2.4 is needed instead), vocabulary via initial_prompt, and how the real mic path differs.",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}
