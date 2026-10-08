@@ -59,12 +59,20 @@ status=0
 # AIza are fixed-case prefixes, and -i would only add false positives.
 CASE_FLAG=""
 
+# Set to "-w" by the wordlist pass: a name is matched as a WHOLE WORD.
+# Without it a short listed term matches inside unrelated longer words - an
+# identifier like `labelLarge`, or an ordinary English word that happens to
+# contain the name - and the gate blocks pushes that leak nothing. Structural
+# patterns never get -w: they carry their own anchors and boundaries, and -w
+# would break the ones that legitimately match mid-token.
+WORD_FLAG=""
+
 check_pattern() {
   label="$1"
   regex="$2"
   shift 2
   # grep -rEn over the paths; -I skips binaries. Suppress the "no match" exit.
-  matches=$(grep -rEnI $CASE_FLAG "$regex" "$@" 2>/dev/null)
+  matches=$(grep -rEnI $CASE_FLAG $WORD_FLAG "$regex" "$@" 2>/dev/null)
   if [ -n "$matches" ]; then
     echo "SENSITIVE [$label]:" >&2
     echo "$matches" | sed 's/^/  /' >&2
@@ -90,14 +98,16 @@ terms_file="${SKILLZ_SENSITIVE_TERMS_FILE:-$DEFAULT_TERMS_FILE}"
 
 if [ -f "$terms_file" ]; then
   CASE_FLAG="-i"
+  WORD_FLAG="-w"
   while IFS= read -r term; do
     case "$term" in
       ""|\#*) continue ;;
     esac
-    # Case-insensitive; the term is treated as an extended regex.
+    # Case-insensitive, whole-word; the term is treated as an extended regex.
     check_pattern "private-term" "$term" "$@"
   done < "$terms_file"
   CASE_FLAG=""
+  WORD_FLAG=""
 elif [ -n "${SKILLZ_SENSITIVE_TERMS_FILE:-}" ]; then
   # Explicitly pointed at a file that isn't there - that is an error, not a
   # silent downgrade to structural-only.
