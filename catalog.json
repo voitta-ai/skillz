@@ -1307,6 +1307,18 @@
         "codex"
       ],
       "summary": "Run an app's OpenAI provider on a ChatGPT subscription via the codex CLI's login instead of an API key. Covers the undocumented endpoint contract (stream=true and store=false required, no max_output_tokens, flat tools with strict=false, the CLI's originator/User-Agent and ChatGPT-Account-Id headers), reading but never writing ~/.codex/auth.json so the CLI keeps owning token refresh, and listing models from the CLI's models_cache.json. Leads with the caveat: whether this use is permitted under OpenAI's terms is unresolved."
+    },
+    {
+      "name": "sensitive-terms-wordlist-suggest",
+      "path": "skills/sensitive-terms-wordlist-suggest/SKILL.md",
+      "files": [
+        "scripts/suggest-terms.py"
+      ],
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "The name gate only catches names already on the private wordlist, and the list lags reality: names that first appear during a session reach the public repo because nobody has listed them yet. scripts/suggest-terms.py scans the session's transcript (Claude Code or Codex JSONL), its commits and saved PR or issue bodies for capitalized and CamelCase names and hostnames, drops ordinary dictionary words (with plural and tense endings stripped), well-known public names and anything already on the list (whole-word, case-insensitive, so a short entry inside a longer word neither hides nor raises a candidate), and prints a ranked local report with where each appeared plus a printf command to append the ones the user accepts. It never writes the list, never echoes it, and the report must never be posted anywhere."
     }
   ],
   "collections": [
@@ -1479,7 +1491,8 @@
         "faulthandler-wedged-python-service",
         "macos-loopback-speech-agent-testing",
         "playwright-closed-shadow-root-widget",
-        "codex-subscription-as-llm-provider"
+        "codex-subscription-as-llm-provider",
+        "sensitive-terms-wordlist-suggest"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3290,6 +3303,19 @@
         "codex-subscription-as-llm-provider"
       ],
       "summary": "Single-skill plugin: codex-subscription-as-llm-provider."
+    },
+    {
+      "name": "sensitive-terms-wordlist-suggest",
+      "claude_manifest": "plugins/sensitive-terms-wordlist-suggest/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/sensitive-terms-wordlist-suggest/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "sensitive-terms-wordlist-suggest"
+      ],
+      "summary": "Single-skill plugin: sensitive-terms-wordlist-suggest."
     }
   ],
   "defaults": {
