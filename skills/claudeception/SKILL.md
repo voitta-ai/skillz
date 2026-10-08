@@ -14,8 +14,8 @@ description: |
   `UserPromptSubmit` hooks instead of an explicit call; that entry point is
   `continuous-learning`, which defers here for the classification and the wiring.
 author: Claude Code
-version: 4.3.0
-date: 2026-06-14
+version: 4.4.0
+date: 2026-10-08
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claudeception/SKILL.md
 upstream: https://github.com/blader/Claudeception
@@ -276,9 +276,22 @@ is missing, clone it first. Always branch from `master`.)
 1. **Land the content**: copy the skill into `REPO/skills/NAME/` (at minimum `SKILL.md`;
    include `scripts/`, `resources/` if present). Keep any upstream `LICENSE` for a
    vendored third-party skill (MIT etc. require retaining the notice).
+
+   The Step 3 template is for skills in general; a skill landing in this repo
+   also needs `source: https://github.com/voitta-ai/skillz` and
+   `source_file: skills/NAME/SKILL.md` in its frontmatter, and a
+   `> **Canonical source.**` blockquote right under the title pointing at the
+   same file (copy the shape from any existing skill).
 2. **Register in `catalog.json`**: add a `skills` entry
    (`{ "name", "path": "skills/NAME/SKILL.md", "hosts": [...], "summary": "..." }`) and
    add `NAME` to the `skillz` bundle plugin's `skills` list.
+
+   **Every file besides `SKILL.md` goes in a `files` list** on that entry, as
+   paths relative to the skill dir (`"files": ["scripts/foo.sh"]`). Plugin
+   installs symlink the whole directory and ship extra files regardless; curl
+   installs fetch only what `files` names, so an undeclared script is silently
+   missing there. `validate-catalog.sh` errors on it ("curl installs would
+   silently omit it"), and that is the only place this was written down.
 
    **Insert the entry as text; never round-trip the file through a JSON
    load/dump.** `catalog.json` is deliberately unsorted, so re-serializing it
