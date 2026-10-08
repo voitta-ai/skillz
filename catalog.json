@@ -1289,6 +1289,15 @@
         "codex"
       ],
       "summary": "Test a live speech-to-text agent end to end on macOS without a human: inject scripted audio with BlackHole plus say -a, gate on readiness, and warm the model before capture so the first utterance is not garbled. The non-obvious part is phantom filtering: Whisper large-v3-turbo reports no_speech_prob 0.0 on both noise and silence, so that field cannot gate anything, and the working filter is a whole-utterance match against known phantom phrases plus compression_ratio above 2.4 - raw runs on noise and silence transcribed as \"You\" and \"Thank you.\", filtered runs as empty. Also covers vocabulary via initial_prompt for proper nouns a model mishears, and the ways the real microphone path differs from loopback."
+    },
+    {
+      "name": "playwright-closed-shadow-root-widget",
+      "path": "skills/playwright-closed-shadow-root-widget/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Drive an injected widget whose UI is in a CLOSED shadow root from Playwright: patch Element.prototype.attachShadow to force mode open before the widget boots (addInitScript, or ahead of a bookmarklet injection), reach the UI via host.shadowRoot, and type into React inputs with the native value setter plus an input event."
     }
   ],
   "collections": [
@@ -1459,7 +1468,8 @@
         "gradle-dependency-removal-classpath-diff",
         "actions-log-secret-scrub",
         "faulthandler-wedged-python-service",
-        "macos-loopback-speech-agent-testing"
+        "macos-loopback-speech-agent-testing",
+        "playwright-closed-shadow-root-widget"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3244,6 +3254,19 @@
         "macos-loopback-speech-agent-testing"
       ],
       "summary": "Single-skill plugin: macos-loopback-speech-agent-testing."
+    },
+    {
+      "name": "playwright-closed-shadow-root-widget",
+      "claude_manifest": "plugins/playwright-closed-shadow-root-widget/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/playwright-closed-shadow-root-widget/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "playwright-closed-shadow-root-widget"
+      ],
+      "summary": "Single-skill plugin: playwright-closed-shadow-root-widget."
     }
   ],
   "defaults": {
