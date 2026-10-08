@@ -1271,6 +1271,15 @@
         "codex"
       ],
       "summary": "Remove a secret that a CI job printed into GitHub Actions logs, and verify the removal without being fooled by three tool-level false cleans. Use when: (1) a `terraform plan` in CI printed a secret because a NON-sensitive attribute embeds one - a subscription endpoint carrying a routing key, a connection string, a webhook URL - and the config only holds a placeholder; (2) every push to the default branch reprints it, so the leak is growing; (3) you need to delete a run's logs and `gh api -X DELETE .../logs` returns 500; (4) a grep over `gh api .../jobs/<id>/logs` reports zero hits and you are about to call that clean; (5) a post-delete check still shows the secret and you cannot tell whether the deletion failed. The three false cleans are the point: `gh api` prints NOTHING for a log containing terminal escape sequences unless told otherwise, `gh api | grep` hides gh's own failure behind the pipe's exit status, and `gh run view --log` leaves a zip of the whole log on disk that a later check reads instead of the API."
+    },
+    {
+      "name": "faulthandler-wedged-python-service",
+      "path": "skills/faulthandler-wedged-python-service/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "A long-running Python daemon goes deaf while the process stays alive, so the supervisor never restarts it and nothing is logged. faulthandler.register(SIGUSR1, all_threads=True, chain=False) plus kill -USR1 dumps every thread's stack without attaching a debugger, and the dump distinguishes the causes: ssl.recv means a half-open socket, queue.get means merely idle, the same lock across threads means deadlock. The trap is chain=False: SIGUSR1's default action is terminate, so chain=True makes the diagnostic dump kill the process you were trying to inspect. Also covers an out-of-process heartbeat as the recovery net and its blind spot (a half-open-socket wedge keeps the interpreter responsive, so the heartbeat stays fresh), and why host pressure or leaked per-use containers explain a wedge that suddenly got more frequent."
     }
   ],
   "collections": [
@@ -1439,7 +1448,8 @@
         "eks-running-image-from-amp-cadvisor",
         "amp-alertmanager-pagerduty-proof",
         "gradle-dependency-removal-classpath-diff",
-        "actions-log-secret-scrub"
+        "actions-log-secret-scrub",
+        "faulthandler-wedged-python-service"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3198,6 +3208,19 @@
         "actions-log-secret-scrub"
       ],
       "summary": "Single-skill plugin: actions-log-secret-scrub."
+    },
+    {
+      "name": "faulthandler-wedged-python-service",
+      "claude_manifest": "plugins/faulthandler-wedged-python-service/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/faulthandler-wedged-python-service/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "faulthandler-wedged-python-service"
+      ],
+      "summary": "Single-skill plugin: faulthandler-wedged-python-service."
     }
   ],
   "defaults": {

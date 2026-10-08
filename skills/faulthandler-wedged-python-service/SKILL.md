@@ -17,9 +17,16 @@ description: |
 author: Claude Code
 version: 1.0.0
 date: 2026-10-05
+source: https://github.com/voitta-ai/skillz
+source_file: skills/faulthandler-wedged-python-service/SKILL.md
 ---
 
 # Finding where a deaf-but-alive Python service is stuck
+
+> **Canonical source.** This skill lives in the repo at
+> https://github.com/voitta-ai/skillz (file:
+> `skills/faulthandler-wedged-python-service/SKILL.md`).
+
 
 ## Problem
 
