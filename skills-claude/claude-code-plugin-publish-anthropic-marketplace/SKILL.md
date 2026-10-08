@@ -1,22 +1,24 @@
 ---
 name: claude-code-plugin-publish-anthropic-marketplace
 description: |
-  Publish a Claude Code plugin to Anthropic's plugin marketplace, and run
-  the pre-submission validation. Use when: (1) you have a plugin repo with
-  .claude-plugin/plugin.json (and optionally its own marketplace.json) and
-  want users to install it via Anthropic's directory, (2) you're unsure
-  whether to "open a PR" against an anthropics marketplace repo (you do
-  NOT — it's a read-only mirror; you submit via a web form), (3) you need
-  to know the difference between claude-plugins-official (curated,
-  invite-only, no submission path) and claude-plugins-community
-  (submission-gated, accepts third-party plugins), (4) `claude plugin
-  validate` behaves differently depending on the path you give it,
-  (5) the `claude` binary isn't on PATH or is shell-aliased so a script
-  can't call it. Covers self-hosted marketplace vs Anthropic listing
-  coexistence and how each pins versions.
+  Publish a Claude Code plugin to Anthropic's plugin directory through the
+  self-serve developer portal (claude.ai/directory/manage), get it past the
+  portal's validation and security scan, and keep later versions flowing. Use
+  when: (1) you have a plugin repo with .claude-plugin/plugin.json and want it
+  listed in the Claude directory; (2) you're about to open a PR against
+  anthropics/claude-plugins-community (don't: it's a read-only mirror);
+  (3) the portal blocks a version ("Secret in a shipped file", "README too
+  short", "License missing", symlinks, unpinned npx/uvx) or holds it for a
+  reviewer (files over 256 KiB, more than 512 files, binaries, package
+  installs); (4) a listed plugin stopped picking up new versions, or the live
+  version was flagged after a policy change; (5) your repo layout (symlinked
+  skills, dev files, tests at the root) can't ship as-is; (6) the `claude`
+  binary is shell-aliased so a script can't call it. Covers the portal flow,
+  tracking and version pinning, the blocking and holding checks, what ships,
+  and the built-bundle branch pattern.
 author: Claude Code
-version: 1.1.0
-date: 2026-06-11
+version: 2.0.0
+date: 2026-10-08
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claude-code-plugin-publish-anthropic-marketplace/SKILL.md
 ---
@@ -25,182 +27,222 @@ source_file: skills/claude-code-plugin-publish-anthropic-marketplace/SKILL.md
 > https://github.com/voitta-ai/skillz (file: `skills/claude-code-plugin-publish-anthropic-marketplace/SKILL.md`).
 > Updates go through the repo's worktree + PR workflow - open an issue,
 > branch, PR.
-# Publish a Claude Code plugin to Anthropic's marketplace
+# Publish a Claude Code plugin to Anthropic's directory
+
+Provenance tags used below: **[V]** verified first-hand while submitting real
+plugins (yolt and the skillz bundle), **[D]** taken from Anthropic's docs as of
+2026-10-08 and not independently exercised.
 
 ## Problem
 
 You have a working Claude Code plugin (a repo with `.claude-plugin/plugin.json`)
-and want it discoverable/installable through Anthropic's official plugin
-directory — not just via your own self-hosted git marketplace. The process
-is non-obvious: there is no "app store" upload, the submission is not a PR,
-and there are two Anthropic marketplaces with very different acceptance
-models.
+and want it installable from Anthropic's directory, not only from your own
+self-hosted git marketplace. Submission is not a PR, and the portal checks
+every version you publish. Several of its checks fail on ordinary repo layouts:
+symlinked skills, a missing plugin README, test fixtures that look like secrets.
 
 ## Context / Trigger Conditions
 
-- You're about to `git clone anthropics/claude-plugins-community` and open a
-  PR to add your plugin — STOP, that repo is a read-only mirror.
-- You want users to run `/plugin install NAME@claude-community`.
-- You're unsure which Anthropic marketplace accepts submissions.
-- `claude plugin validate` validates the "wrong" manifest depending on the
-  path argument.
-- A release script needs to call `claude` but it's not on `$PATH` (often
-  aliased to something like `claude --chrome` in an interactive shell).
+- You're about to clone `anthropics/claude-plugins-community` and open a PR.
+  STOP: its description says "Read-only mirror". **[V]**
+- You have an older submission made through the `clau.de/plugin-directory-submission`
+  form and wonder where it went. That shortlink now redirects to the
+  directory docs (`claude.com/docs/directory/publish`), and earlier submissions
+  show up in the portal. **[V]** The docs have a "Move an earlier submission to
+  the developer portal" section for any that don't. **[D]**
+- The portal shows a version as **Blocking**, **Policy hold**, "Held back from
+  going live by directory policy", or "The live version no longer meets
+  directory policy".
+- A release script needs to call `claude` but it's aliased in your shell.
 
 ## Solution
 
-### 1. Know the two Anthropic marketplaces (only one is submittable)
+### 1. Where and who
 
-| Marketplace | Submittable? | How |
-|---|---|---|
-| `claude-plugins-official` | **No** | Anthropic-curated, invite-only. No application/form. |
-| `claude-plugins-community` | **Yes** | Submit via web form. Anthropic-hosted, review-gated. |
+- **Portal:** `https://claude.ai/directory/manage` -> **Submit new**. **[V]**
+  It was announced 2026-09-25 ("Build plugins for Claude with the directory
+  submission portal"). **[V]**
+- **Who can submit:** paid Claude plans. **[D]** Your GitHub account must be
+  connected on claude.ai *in the organization you submit from*, with push
+  access to the repo. **[D]**
+- **Two paths** at "What would you like to submit?": **MCP connector** (one
+  remote MCP server) or **Plugin bundle** (a GitHub repo holding the plugin).
+  **[D]** This skill covers the plugin bundle.
+- After a submission the portal shows each version's checks, review status
+  and, once live, install and usage stats. **[V]**
 
-The git-based model still underlies everything: any repo with a
-`.claude-plugin/marketplace.json` is itself a marketplace that users add
-with `/plugin marketplace add owner/repo`. The Anthropic community
-marketplace is an *additional* listing on top of that, not a replacement.
+### 2. Validate locally, then in the portal
 
-### 2. Validate locally first (path-polymorphic command)
+`claude plugin validate` catches syntax and schema errors only. It doesn't
+check the directory's own rules (README, license, name collisions, file
+limits); the portal's **Validate** button does. **[D]** Run both.
 
-`claude plugin validate <path> --strict` resolves a DIFFERENT manifest
-depending on what you point it at. Validate BOTH before submitting:
+`claude plugin validate <path> --strict` resolves a different manifest
+depending on the path. Validate both: **[V]**
 
 ```bash
-claude plugin validate . --strict                          # -> marketplace.json (dir resolves to the marketplace manifest)
+claude plugin validate . --strict                          # -> .claude-plugin/marketplace.json
 claude plugin validate .claude-plugin/plugin.json --strict # -> the plugin manifest
 ```
 
-`--strict` treats warnings (unrecognized fields, missing metadata) as
-errors — use it so you catch what Anthropic's pipeline catches. Exit 0 +
-"Validation passed" on each is the green light.
-
-If `claude` is not on `$PATH` (common in non-interactive shells / scripts,
-or when your interactive shell aliases it, e.g. `claude --chrome`), resolve
-the real binary at the npm global prefix:
+In scripts, call the real binary. An interactive alias (for example
+`claude --chrome`) doesn't apply in non-interactive shells, and the native
+installer puts the binary at `~/.local/bin/claude`, a symlink to the current
+version. **[V]** The old `$(npm config get prefix)/bin/claude` path is only
+right for an npm-global install.
 
 ```bash
-CLAUDE="$(npm config get prefix)/bin/claude"   # e.g. ~/.nvm/versions/node/vX/bin/claude
+CLAUDE="$HOME/.local/bin/claude"
 "$CLAUDE" plugin validate . --strict
 ```
 
-### 3. Submit (NOT a pull request)
+In the portal, a validation report covers one commit. Push the fix, then
+select **Re-validate**. **[D]**
 
-The `anthropics/claude-plugins-community` repo is a **read-only mirror**.
-Its own repo description carries the canonical submission link:
+### 3. What blocks a version, and what holds it
 
-> "Read-only mirror — submit plugins at **clau.de/plugin-directory-submission**."
+Results are **Blocks** (fix before submitting, or the version can't go live),
+**Policy hold** (a reviewer reads that version before it can go live; not a
+rejection, and it can recur on each new version), **Warning** or **Note**.
+**[D]** The ones that bite ordinary repos:
 
-So the authoritative entry point is **https://clau.de/plugin-directory-submission**.
-It routes to a submission form (reported destinations, lower confidence than
-the shortlink: `https://platform.claude.com/plugins/submit` for individual
-authors; `https://claude.ai/admin-settings/directory/submissions/plugins/new`
-for Team/Enterprise orgs with directory-management access). Always prefer
-the `clau.de` shortlink — it's the one Anthropic publishes and will track if
-the backing forms move.
+**Blocks** **[D]**
 
-The form is multi-step (Back / Next). One step ("Plugin details") asks for
-(verified first-hand 2026-06-12):
+- Symbolic links, git submodules or LFS pointers where the plugin loads the
+  entry. A bundle whose `skills/` are symlinks to a shared tree fails here.
+  **[V]** for the skillz bundle.
+- No README of at least 40 words in the plugin folder (words in code blocks
+  don't count), or no license (`LICENSE` file or `license` in `plugin.json`).
+- A non-ASCII plugin `name`.
+- A reserved name: `claude`, `anthropic`, `official`, `plugin`, `mcp` or `test`
+  as the whole name, or a name already taken. Separately, `claude plugin
+  validate --strict` (CLI 2.1.294) rejects any plugin name that *starts with*
+  `claude-`, `anthropic-`, `anthropics-` or `cc-plugin-`, and flags names that
+  merely contain `claude`. **[V]** A marketplace repo whose older plugins
+  carry such names fails strict validation as a whole, even when the plugin
+  you are submitting is fine.
+- An unpinned package launcher: `npx`, `uvx`, `bunx`, `pnpm dlx`, `pipx run`
+  without an exact version, or `uv run` without `--locked`/`--frozen`.
+- A secret-shaped string in **any** shipped file, documentation and tests
+  included. In the report it's "Secret in a shipped file". **[V]**
+- `.DS_Store`, `Thumbs.db` and similar system files in the plugin folder.
 
-- **Plugin homepage** (optional) — public homepage/docs URL; the repo URL is
-  fine.
-- **Plugin name** * (required) — display name; "check it's not already taken,
-  and don't use brand names you don't own." Can be a human-friendly name
-  (e.g. "Voitta YOLT"), not necessarily the `plugin.json` `name`.
-- **Plugin description** * (required) — one/two sentences; the `plugin.json`
-  description works.
-- **Example use cases** * (required, and easy to miss) — free text in an
-  "Example 1: ... / Example 2: ..." format. Pre-write 3-4 concrete scenarios
-  BEFORE opening the form; sourcing them from a README "Example use cases"
-  section keeps them reusable and reviewable.
+**Held for a reviewer** **[D]**
 
-### 4. What happens after approval
+- Hooks or scripts that install packages, or a lockfile install
+  (`package.json` next to a lockfile at the plugin root).
+- Any non-image, non-font file over 256 KiB.
+- More than 512 files in the plugin folder.
+- Binaries other than PNG/JPEG/GIF/WebP images and fonts (`.ico`, `.pdf`,
+  `.zip`, executables).
+- Even an exactly pinned `npx`/`uvx` package is always held, because its own
+  dependencies resolve at install time.
 
-- Your plugin is pinned to a specific **commit SHA** in
-  `anthropics/claude-plugins-community`.
-- The community catalog (`.claude-plugin/marketplace.json` in that repo)
-  **syncs nightly** — expect ~24h before it appears.
-- CI **auto-re-pins** the SHA as you push new commits to your repo. You do
-  NOT manage SHAs by hand.
-- Users install with:
+### 4. The plugin folder is everything that ships
 
-```
-/plugin install NAME@claude-community
-```
+The plugin folder is the one holding `.claude-plugin/plugin.json`. Installs get
+that folder and nothing else, and the checks and the security scan read all of
+it. **[D]** If the plugin is the repo root, `tests/` ships and gets scanned. **[V]**
 
-### 5. Self-hosted + Anthropic listing coexist off ONE repo
+What happened to yolt (a credential-redacting plugin) **[V]**: its
+`tests/test_secret_redact.py` held fake tokens written as single string
+literals. The portal flagged them as "Secret in a shipped file". That blocked
+every version after the live one, and the live version was then flagged too
+("The live version no longer meets directory policy"), putting the whole plugin
+on hold: "Newer versions won't go live until Anthropic clears the hold." The
+portal's suggested fix (move the value to `userConfig` with `sensitive: true`)
+makes no sense for a test fixture.
 
-You don't choose one or the other. The same repo can be:
+- Splitting a fake token across concatenated strings got it past the scanner
+  in the same file. That is evasion, not a fix: the scanner can't tell a
+  fixture from a leak, and hiding the shape defeats it for everyone.
+- The honest fix is to keep test fixtures out of the shipped folder.
+- Moving the plugin into a subfolder for that has a cost. For a subfolder
+  plugin, hook and MCP command paths must be written in full from
+  `${CLAUDE_PLUGIN_ROOT}` (blocking), and non-shell programs that hooks run
+  are held for a reviewer. **[D]**
 
-- **Its own marketplace** (`.claude-plugin/marketplace.json`, `source: ./`):
-  users add `owner/repo` directly; a pushed release is immediately live;
-  upgrades pull via `/plugin marketplace update NAME`. This path pins on the
-  **`version` string** in `plugin.json` — so bump it every release or
-  existing users stay on the cached copy.
-- **Listed on `claude-plugins-community`**: pins on **commit SHA**, re-pinned
-  by CI on push, nightly sync.
+### 5. Repos that can't ship as-is: publish a built bundle branch
 
-Two different pin mechanisms, same `plugin.json` as the source of the
-displayed version. A typical release: bump `plugin.json` version + tag +
-push (serves the self-hosted marketplace); the community listing re-pins
-itself.
+If the repo layout depends on symlinks, or carries dev files you don't want to
+ship, build a self-contained plugin folder in CI and commit it to a dedicated
+branch. Then point the submission's **Branch or tag** at that branch. skillz does
+this: `scripts/build-directory-bundle.py` copies the bundle with every symlink
+dereferenced, adds a generated README and the LICENSE, and checks the file
+limits. `.github/workflows/directory-branch.yml` appends the result to the
+`directory` branch on each push to master. **[V]**
+
+Append to that branch, never force-push it. Published versions are pinned to
+commit SHAs, so every SHA the directory has seen must stay reachable.
+
+### 6. Tracking, versions and publishing
+
+- **Tracked branch or tag:** the submission follows one branch (the default
+  branch if left empty) or one tag. **[D]** You can't change the repository or
+  folder after submitting; you can change the tracked branch or tag on the
+  **Settings** tab, except while a reviewer has the plugin. **[D]**
+- **New commits:** the directory checks the tracked ref on a schedule. In
+  practice that was about every 6 hours **[V]**; the docs don't give an
+  interval. With the GitHub push webhook (the default choice at submit; needs
+  repo admin to install) it also checks on each push. **[D]** **Check for new
+  commits** on the plugin's page forces a check. **[D]**
+- **Pinning:** each version is pinned to a commit SHA. **[V]** If `plugin.json`
+  sets `version`, raise it every release. **[D]**
+- **Publishing:** a passing version isn't live until it's published. The
+  **Auto-publish** setting controls whether later passing versions go live
+  without manual approval. By default a reviewer publishes each version; a
+  reviewer can switch the plugin to auto-publish after the first one. **[D]**
+- **The listing keeps serving the last published version** while a newer one
+  is blocked or held. If the security scan fails a new version, later versions
+  also wait until a reviewer clears the plugin. **[D]**, and **[V]** for yolt.
+
+### 7. Self-hosted marketplace and directory listing coexist
+
+The same repo can be its own marketplace (`.claude-plugin/marketplace.json`,
+users run `/plugin marketplace add owner/repo`) and be listed in the directory.
+**[V]** The self-hosted path updates installed copies when the `version` string
+in `plugin.json` moves. The directory publishes per commit SHA, under its own
+checks and publish setting. A release bumps `version`, tags and pushes; the
+self-hosted marketplace has it immediately, and the directory picks it up at
+its next check.
 
 ## Verification
 
 - `claude plugin validate . --strict` and
-  `claude plugin validate .claude-plugin/plugin.json --strict` both exit 0.
-- After submission + approval + ~24h, your name appears in
-  `https://github.com/anthropics/claude-plugins-community/blob/main/.claude-plugin/marketplace.json`.
-- A clean machine can run `/plugin install NAME@claude-community`.
-
-## Example
-
-For the `yolt` plugin (repo `voitta-ai/voitta-yolt`, already its own
-marketplace):
-
-```bash
-CLAUDE="$(npm config get prefix)/bin/claude"
-"$CLAUDE" plugin validate . --strict                            # marketplace.json -> passed
-"$CLAUDE" plugin validate .claude-plugin/plugin.json --strict   # plugin.json -> passed
-# then: open https://clau.de/plugin-directory-submission and submit voitta-ai/voitta-yolt
-# after approval, users: /plugin install yolt@claude-community
-```
+  `claude plugin validate .claude-plugin/plugin.json --strict` both pass.
+- The portal's **Validate** report has no **Blocking** findings for the commit
+  you are about to submit.
+- After submitting, the plugin's **Versions** tab lists the commit with its
+  checks, and the overview says whether it is live or why not.
 
 ## Notes
 
-- Provenance of these facts (be honest when applying): the path-polymorphism
-  of `claude plugin validate`, the `claude`-binary-location workaround, and
-  the existence + read-only nature + `clau.de/plugin-directory-submission`
-  link of `anthropics/claude-plugins-community` were verified first-hand
-  (the last via `gh repo view anthropics/claude-plugins-community`). The
-  exact downstream form URLs (`platform.claude.com/plugins/submit`,
-  `claude.ai/admin-settings/...`) and the nightly-sync / auto-re-pin CI
-  behavior came from Claude Code docs research, not from a completed
-  end-to-end submission — treat as high-but-not-certain and re-confirm at
-  the `clau.de` link.
-- "Community marketplace is read-only" is the single most important thing
-  to internalize: do not waste time forking it or opening a PR.
-- This is distinct from the sibling skills: `claude-code-plugin-from-existing-repo`
-  (convert a copy-into-project repo into an installable plugin) and
-  `claude-code-plugin-update-flow` (the `/plugin marketplace update` + reload
-  upgrade path). This skill is specifically about getting LISTED on
-  Anthropic's directory.
+- Portal facts change; reconfirm a check's exact result in
+  `claude.com/docs/plugins/pre-submission-checklist` before relying on it.
+- Keep account names, IDs and install numbers from the portal out of anything
+  public.
+- Distinct from `claude-code-plugin-from-existing-repo` (turn a repo into an
+  installable plugin) and `claude-code-plugin-update-flow` (how installed
+  copies pick up a release). This skill is about getting and staying listed.
 
 ## References
 
-- `anthropics/claude-plugins-community` (verify the live submission link in
-  its repo description): https://github.com/anthropics/claude-plugins-community
-- Canonical submission link: https://clau.de/plugin-directory-submission
-- Plugin docs: https://code.claude.com/docs/en/plugins.md
-- Marketplace docs: https://code.claude.com/docs/en/plugin-marketplaces.md
+- Developer portal: https://claude.ai/directory/manage (sign-in required)
+- Submit your plugin: https://claude.com/docs/plugins/submit
+- Pre-submission checklist: https://claude.com/docs/plugins/pre-submission-checklist
+- Publish to the directory: https://claude.com/docs/directory/publish
+- Submission statuses: https://claude.com/docs/directory/submission-status
+- Announcement (2026-09-25): https://claude.com/blog/build-plugins-for-claude
+- Read-only community mirror: https://github.com/anthropics/claude-plugins-community
+- `claude plugin validate`: https://code.claude.com/docs/en/plugins/cli-reference
 
 ## Related
 
-- `claude-code-plugin-from-existing-repo` — producing the plugin this skill
+- `claude-code-plugin-from-existing-repo`: producing the plugin this skill
   submits.
-- `claude-code-plugin-release-automation` — tags and releases in your own repo.
-  Independent of directory listing: automating one does nothing for the other.
-- `claude-code-plugin-update-flow` — how an installed copy picks up what you
-  publish, and why a listing does not help if the version never moved.
-- `claude-code-codex-plugin-parity` — Codex has no self-serve marketplace
-  submission, so a dual-host plugin is distributed asymmetrically.
+- `claude-code-plugin-release-automation`: tags and releases in your own repo.
+  Independent of the directory, which tracks commits on its own schedule.
+- `claude-code-plugin-update-flow`: how an installed copy picks up what you
+  publish, and why nothing moves if the version never changed.
+- `claude-code-codex-plugin-parity`: Codex has no self-serve directory, so a
+  dual-host plugin is distributed asymmetrically.
