@@ -311,6 +311,8 @@ environments and older Codex versions.
 | [`macos-loopback-speech-agent-testing` plugin](./plugins/macos-loopback-speech-agent-testing/) | plugin | Claude, Codex | Single-skill plugin: macos-loopback-speech-agent-testing |
 | [playwright-closed-shadow-root-widget](./skills/playwright-closed-shadow-root-widget/SKILL.md) | skill | Claude, Codex | Drive a widget in a closed shadow root with Playwright (force `attachShadow` open before boot, native setter for React inputs) |
 | [`playwright-closed-shadow-root-widget` plugin](./plugins/playwright-closed-shadow-root-widget/) | plugin | Claude, Codex | Single-skill plugin: playwright-closed-shadow-root-widget |
+| [codex-subscription-as-llm-provider](./skills/codex-subscription-as-llm-provider/SKILL.md) | skill | Claude, Codex | Run an app's OpenAI provider on a ChatGPT subscription via the codex CLI's login instead of an API key. Covers the undocumented endpoint contract (stream=true and store=false required, no max_output_tokens, flat tools with strict=false, the CLI's originator/User-Agent and ChatGPT-Account-Id headers), reading but never writing ~/.codex/auth.json so the CLI keeps owning token refresh, and listing models from the CLI's models_cache.json. Leads with the caveat: whether this use is permitted under OpenAI's terms is unresolved. |
+| [`codex-subscription-as-llm-provider` plugin](./plugins/codex-subscription-as-llm-provider/) | plugin | Claude, Codex | Single-skill plugin: codex-subscription-as-llm-provider |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
