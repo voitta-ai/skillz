@@ -1,6 +1,6 @@
 {
   "name": "codex-subscription-as-llm-provider",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Use a ChatGPT plan through the codex CLI's own login as your app's OpenAI model backend instead of an API key: the endpoint contract, read-only credential handling, and model discovery. Caveat first: whether this is permitted under OpenAI's terms is unresolved, and the endpoint is undocumented.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",
