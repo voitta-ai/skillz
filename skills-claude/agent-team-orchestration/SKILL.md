@@ -19,7 +19,7 @@ description: |
   other multiplexers. Also use when (5) a spawned wave produces no commits, no
   dirty files and no replies - agents that are visible but wedged.
 author: Claude Code
-version: 1.9.0
+version: 1.9.1
 date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-team-orchestration/SKILL.md
@@ -487,8 +487,8 @@ a hook or a static `permissions.allow` entry covers it.
 
 | Metric | Source |
 |---|---|
-| Bash prompted and approved | the permission hook's decision log (`ask`) joined with its PostToolUse "ran" log: an `ask` that later ran was approved. With yolt: `~/.claude/yolt.log` and `~/.claude/yolt-ran.log` |
-| Bash auto-allowed | the hook's `safe` decisions, plus matches against static `permissions.allow` (those bypass the hook and are never logged by it) |
+| Bash prompted and approved | a `PermissionRequest` hook counts prompts directly. Alternatively, join the permission hook's decision log (`ask`) with its PostToolUse "ran" log: an `ask` that later ran was approved. With yolt: `~/.claude/yolt.log` and `~/.claude/yolt-ran.log` |
+| Bash auto-allowed | the hook's `safe` decisions. PreToolUse hooks run even when a static `permissions.allow` rule matches (verified on Claude Code 2.1.296), so allow-listed calls show up in the hook's log too |
 | Bash that fell through to a raw prompt | the hook's `unknown` decisions that later ran: a rules gap |
 | Permission mode | transcript `permissionMode`; segment every gating number by it |
 | Human judgment gates | transcript `AskUserQuestion` calls |
