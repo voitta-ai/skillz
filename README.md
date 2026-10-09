@@ -1232,7 +1232,11 @@ and exits non-zero on any hit.
 Client/account **names** can't live in a denylist in this public repo, so the
 script reads them from a private, out-of-repo wordlist — one term per line,
 blank lines and `#` comments ignored, each term matched case-insensitively
-(names get written `Foo`, `foo`, and `FOO`). It defaults to
+(names get written `Foo`, `foo`, and `FOO`) as a whole word, where a camelCase
+hump also counts as a word boundary: `AcmeCorpThing` is caught for `acmecorp`,
+while a short term inside `rubella` or `labelLarge` is not. A multi-word term is
+also matched in identifier spellings (`SeedsOfFog`, `seeds_of_fog`). The name
+pass is `scripts/match-sensitive-names.py`, since grep cannot express that rule. It defaults to
 `~/.config/skillz/sensitive-terms.txt`, so once that file exists the name
 check runs with no flags:
 

@@ -53,26 +53,15 @@ internal-domain|[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?\.(internal|corp|intranet)
 
 status=0
 
-# Set to "-i" by the wordlist pass: names are written in every casing
-# (Foo, foo, FOO), so a case-sensitive term match misses most of them.
-# Structural patterns stay case-SENSITIVE on purpose - AKIA, sk-, xoxb-,
-# AIza are fixed-case prefixes, and -i would only add false positives.
-CASE_FLAG=""
-
-# Set to "-w" by the wordlist pass: a name is matched as a WHOLE WORD.
-# Without it a short listed term matches inside unrelated longer words - an
-# identifier like `labelLarge`, or an ordinary English word that happens to
-# contain the name - and the gate blocks pushes that leak nothing. Structural
-# patterns never get -w: they carry their own anchors and boundaries, and -w
-# would break the ones that legitimately match mid-token.
-WORD_FLAG=""
-
+# Structural patterns are case-SENSITIVE on purpose - AKIA, sk-, xoxb-, AIza
+# are fixed-case prefixes, and -i would only add false positives. They carry
+# their own anchors and boundaries, so they are not matched as whole words.
 check_pattern() {
   label="$1"
   regex="$2"
   shift 2
   # grep -rEn over the paths; -I skips binaries. Suppress the "no match" exit.
-  matches=$(grep -rEnI $CASE_FLAG $WORD_FLAG "$regex" "$@" 2>/dev/null)
+  matches=$(grep -rEnI "$regex" "$@" 2>/dev/null)
   if [ -n "$matches" ]; then
     echo "SENSITIVE [$label]:" >&2
     echo "$matches" | sed 's/^/  /' >&2
@@ -97,17 +86,21 @@ DEFAULT_TERMS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/skillz/sensitive-terms.txt
 terms_file="${SKILLZ_SENSITIVE_TERMS_FILE:-$DEFAULT_TERMS_FILE}"
 
 if [ -f "$terms_file" ]; then
-  CASE_FLAG="-i"
-  WORD_FLAG="-w"
-  while IFS= read -r term; do
-    case "$term" in
-      ""|\#*) continue ;;
-    esac
-    # Case-insensitive, whole-word; the term is treated as an extended regex.
-    check_pattern "private-term" "$term" "$@"
-  done < "$terms_file"
-  CASE_FLAG=""
-  WORD_FLAG=""
+  # Names are matched case-insensitively (they get written Foo, foo, FOO) as
+  # whole words, where a camelCase hump also counts as a word boundary, so
+  # AcmeCorpThing is caught and a short term inside rubella or labelLarge is
+  # not. grep cannot express that, so the name pass is a small Python matcher;
+  # see its docstring for the exact rule.
+  matches=$(python3 "$(dirname "$0")/match-sensitive-names.py" "$terms_file" "$@")
+  rc=$?
+  if [ "$rc" -eq 1 ]; then
+    echo "SENSITIVE [private-term]:" >&2
+    echo "$matches" | sed 's/^/  /' >&2
+    status=1
+  elif [ "$rc" -ne 0 ]; then
+    echo "error: name matcher failed (exit $rc)" >&2
+    exit 2
+  fi
 elif [ -n "${SKILLZ_SENSITIVE_TERMS_FILE:-}" ]; then
   # Explicitly pointed at a file that isn't there - that is an error, not a
   # silent downgrade to structural-only.
