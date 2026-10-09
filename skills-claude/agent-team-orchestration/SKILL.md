@@ -4,7 +4,8 @@ description: |
   Run a team of AI agents against the outstanding issues of a GitHub repo:
   an architect plans what can be parallelized, then each issue gets a small
   squad - a developer, an adversarial reviewer, an SDET/QA, and a productivity
-  engineer that watches for process bottlenecks - with every agent individually
+  engineer that watches for process bottlenecks - while a product manager turns
+  underspecified issues into buildable ones, with every agent individually
   watchable and steerable. Use when: (1) you want to work a whole backlog (not
   one issue) with agents and need a division of labor that an architect derives
   from the issue graph; (2) you want per-issue dev + review + QA roles rather
@@ -18,7 +19,7 @@ description: |
   other multiplexers. Also use when (5) a spawned wave produces no commits, no
   dirty files and no replies - agents that are visible but wedged.
 author: Claude Code
-version: 1.8.0
+version: 1.9.0
 date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-team-orchestration/SKILL.md
@@ -246,6 +247,7 @@ no agent both writes and blesses the same code.
 | **Developer** | Implements the issue on its own branch/worktree, opens the PR, addresses review. | `work-on-pr` (author-side PR loop) |
 | **Adversarial reviewer** | Tries to *break* the developer's PR, not rubber-stamp it. A **different model provider** than the author; sees the **diff + contract only**; posts a **PR-visible verdict**. | `review-pr-loop`; Codex `/codex:adversarial-review` |
 | **SDET / QA** | Exercises the change like a user - crawls routes/forms, watches console+network, files real findings. | `sdet-explore`, `sdet-email-flow` |
+| **Product manager** | Turns an underspecified issue (a one-line idea, "brainstorm: can we do X?") into buildable ones. Interviews the operator on scope, users, constraints and appetite (legal/ToS, budget), then files each result as **task / guardrails / done when / verification**. Runs *before* any developer is assigned to that issue. | `AskUserQuestion`; the idempotency pre-flight |
 | **Productivity engineer** | Meta-role. Watches the whole run for *process* bottlenecks: what needed your confirmation, what info was missing, where agents stalled. Feeds improvements back. | telemetry pass below; `continuous-learning` / claudeception |
 
 Keep the developer and reviewer as **distinct agents**. The value of the
@@ -290,7 +292,21 @@ actually load-bearing:
     adds a finding. Scale N with diff size and blast radius, not a fixed count.
 
 ## Choosing the parallel set
-The architect's core deliverable. Heuristics:
+The architect's core deliverable. **Triage first:** classify each issue as
+*ready* (it has a definition of done a reviewer could check) or *underspecified*.
+Underspecified issues don't enter the parallel set: they go to the product-manager
+lane. A developer handed a one-line idea produces confident work against invented
+requirements.
+
+The PM lane uses wall-clock well. The PM interviews the operator in the
+**foreground** while ready squads build in the background, so the operator's
+attention (the real supervision cap) is spent on purpose rather than by
+interruption. The PM writes each resulting issue as task / guardrails / done when /
+verification, not as a step list. In a measured comparison, that shape beat step
+lists on outcome, and step lists got exactly the listed steps and nothing more. Issues
+the PM files become eligible for the *next* wave, so re-plan once the lane closes.
+
+Heuristics for the ready set:
 - **Independent** (parallelize): different directories/modules, no shared
   schema, no ordering dependency, separate PRs that won't conflict on merge.
 - **Serialize** (one wave after another): issues that edit the same files, a
@@ -503,6 +519,10 @@ decisions default to *yes*, with an opt-out** the supervisor can flip at any tim
 These are reversible, low-cost, and not architectural - so they don't earn a gate.
 Reserve your attention for the decisions below.
 
+The product manager is the exception: its job *is* asking. Its interview questions
+about scope and requirements are not process stalls, and the productivity
+engineer doesn't count them as such.
+
 ## Decisions that stay human gates - posed once
 Some decisions are genuine architectural judgment and should **not** be
 auto-resolved:
@@ -521,9 +541,12 @@ posing it twice is friction.
    `which cmux` and resolves the surface **once**, opinionatedly - full cmux,
    shim-without-CLI (proceed, skip tab naming), or background-agent. No
    spawn-time re-ask.
-2. **Architect conversation.** Architect reads issues + repo, proposes the wave
-   plan and squads. Default scope = all ready/independent issues up to the
-   supervision cap; only narrow if it exceeds what you can watch.
+2. **Architect conversation.** Architect reads issues + repo, triages each as
+   ready or underspecified, proposes the wave plan and squads. Default scope =
+   all ready/independent issues up to the supervision cap; only narrow if it
+   exceeds what you can watch. Underspecified issues go to the product-manager
+   lane, which runs in the foreground alongside the wave and files buildable
+   issues for the next one.
 3. **Idempotency pre-flight.** Before filing/creating anything, run
    `gh issue list` / `gh pr list` / `git branch -a`; extend existing work rather
    than duplicate.
