@@ -705,6 +705,11 @@
       "name": "sensitive-terms-wordlist-suggest",
       "source": "./plugins/sensitive-terms-wordlist-suggest/",
       "description": "Suggest names to add to the private sensitive-terms wordlist that the check-sensitive-terms.sh name gate reads, at the end of a session or on demand. Use when: (1) a session touched client, employer, product or person names, or internal hostnames, and you are about to push to or publish from a public repo; (2) the user asks what should go on their wordlist; (3) a name leaked to a public repo even though the gate ran, because the name was never on the list; (4) a session that touched both private and public repos is wrapping up. Suggests only: it never writes the wordlist, never prints its contents, and never posts candidates anywhere. Ships scripts/suggest-terms.py, which reads Claude Code and Codex transcripts, a git commit range and saved PR or issue bodies, and prints a ranked local report with pointers and a one-line append command."
+    },
+    {
+      "name": "followups",
+      "source": "./plugins/followups/",
+      "description": "Keep dated follow-ups on this machine (\"when the silence ends, confirm the alert recovered\") and have exactly one live Claude Code session check them every 3 hours with a recurring CronCreate job. Ships scripts/followups: items with a check time, an expiry and self-contained check text; a single-owner lock (pid plus process start time, heartbeat, takeover); re-arming before CronCreate's 7-day expiry; read-only handling of due items; and an optional SessionStart hook."
     }
   ]
 }

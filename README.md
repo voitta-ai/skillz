@@ -315,6 +315,8 @@ environments and older Codex versions.
 | [`playwright-closed-shadow-root-widget` plugin](./plugins/playwright-closed-shadow-root-widget/) | plugin | Claude, Codex | Single-skill plugin: playwright-closed-shadow-root-widget |
 | [codex-subscription-as-llm-provider](./skills/codex-subscription-as-llm-provider/SKILL.md) | skill | Claude, Codex | Run an app's OpenAI provider on a ChatGPT subscription via the codex CLI's login instead of an API key. Covers the undocumented endpoint contract (stream=true and store=false required, no max_output_tokens, flat tools with strict=false, the CLI's originator/User-Agent and ChatGPT-Account-Id headers), reading but never writing ~/.codex/auth.json so the CLI keeps owning token refresh, and listing models from the CLI's models_cache.json. Leads with the caveat: whether this use is permitted under OpenAI's terms is unresolved. |
 | [`codex-subscription-as-llm-provider` plugin](./plugins/codex-subscription-as-llm-provider/) | plugin | Claude, Codex | Single-skill plugin: codex-subscription-as-llm-provider |
+| [followups](./skills/followups/SKILL.md) | skill | Claude | Dated follow-ups on this machine, checked every 3 hours by one session's CronCreate loop: item format, single-owner lock with heartbeat takeover, re-arm before the 7-day expiry, SessionStart hook |
+| [`followups` plugin](./plugins/followups/) | plugin | Claude | Single-skill plugin: followups |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
