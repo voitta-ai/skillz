@@ -18,8 +18,8 @@ description: |
   other multiplexers. Also use when (5) a spawned wave produces no commits, no
   dirty files and no replies - agents that are visible but wedged.
 author: Claude Code
-version: 1.7.0
-date: 2026-08-21
+version: 1.8.0
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-team-orchestration/SKILL.md
 ---
@@ -460,6 +460,36 @@ Each recurring stall is a candidate fix: a new skill, a permission allowlist
 entry, a sharper issue template, or a default the architect should set next
 time. Promote the reusable ones via `continuous-learning` / claudeception into
 this catalog; keep the project-specific ones in memory or the project's docs.
+
+### Measuring the run (where each number actually lives)
+**Never measure permission friction from the session transcript.** When the human
+approves a prompt, the `tool_use` goes straight to its `tool_result`, which looks
+exactly like a call that never prompted. Only a denied or interrupted call leaves
+a marker. A transcript-only count of "0 stalls" means "0 denials", not "0 prompts".
+`permissionMode: acceptEdits` auto-accepts file edits only; Bash still prompts unless
+a hook or a static `permissions.allow` entry covers it.
+
+| Metric | Source |
+|---|---|
+| Bash prompted and approved | the permission hook's decision log (`ask`) joined with its PostToolUse "ran" log: an `ask` that later ran was approved. With yolt: `~/.claude/yolt.log` and `~/.claude/yolt-ran.log` |
+| Bash auto-allowed | the hook's `safe` decisions, plus matches against static `permissions.allow` (those bypass the hook and are never logged by it) |
+| Bash that fell through to a raw prompt | the hook's `unknown` decisions that later ran: a rules gap |
+| Permission mode | transcript `permissionMode`; segment every gating number by it |
+| Human judgment gates | transcript `AskUserQuestion` calls |
+| Rejections and steers | transcript `interrupted: true` |
+| Throughput, roles that ran, timestamps | transcript (`tool_use` counts, agent spawns) and `gh` (PRs, commits) |
+| Claims vs reality | transcript claims joined with `gh` PR, issue and deploy state |
+
+**Capture protocol.** A run counts as measured only if, at run end, the productivity
+engineer snapshots a telemetry bundle:
+1. Copies of the hook logs, taken per run. They rotate (yolt at 5 MB), so a long
+   run loses its early history if they are read later.
+2. The session transcripts.
+3. A `gh` snapshot of every touched repo's PRs and issues.
+4. The active permission mode(s) and the effective `permissions.allow` set.
+
+Then it emits the table above for the run. Only two bundles captured the same way
+can be compared, so this is what makes run-over-run claims valid.
 
 ## Defaults: don't ask for cheap process decisions
 A confirmation stall is only worth it for a real judgment call. **Cheap process
