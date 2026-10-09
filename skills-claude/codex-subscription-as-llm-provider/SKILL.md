@@ -15,9 +15,9 @@ description: |
   permitted under OpenAI's terms is unresolved, and the endpoint is
   undocumented.
 author: Claude Code
-version: 1.0.0
+version: 1.0.1
 date: 2026-10-08
-source: voitta-ai/voitta-compute PR #9 (merged 2026-10-01), mirroring the codex rung in voitta-ai/shmobster's provider waterfall
+source: voitta-ai/voitta-bookmarklet (formerly voitta-compute) PR #9 (merged 2026-10-01), mirroring the codex rung in voitta-ai/shmobster's provider waterfall
 source_file: skills/codex-subscription-as-llm-provider/SKILL.md
 ---
 
