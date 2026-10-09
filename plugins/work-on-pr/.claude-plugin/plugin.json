@@ -1,7 +1,7 @@
 {
   "name": "work-on-pr",
   "description": "Author-side PR iteration loop. Watches a PR for new review comments and addresses them across rounds.",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "author": {
     "name": "voitta-ai"
   },
