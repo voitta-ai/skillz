@@ -1,7 +1,7 @@
 {
   "name": "subagent-no-report-channel",
-  "version": "1.0.0",
-  "description": "Recover the work of a spawned subagent that finished but never reported, and tell that case apart from a genuinely wedged one. Root cause: an agent type's declared toolset may omit a messaging tool, so a correct, completed agent has no channel to deliver through -- or it is a forward-only wrapper scoped not to poll the background job it dispatched. Idle notifications are runtime-generated and are NOT evidence the agent's own send worked; the reliable oracle is the transcript (tool_use with no tool_result). Covers recovering the result from the agent's final text, from the job runtime's state directory, and the one-sentence fallback brief that prevents the loss.",
+  "version": "1.1.0",
+  "description": "Recover the result of a spawned agent whose report never reached you, now that the host delivers most reports itself (a subagent's final text as its result or completion notification; SubagentHandback in auto mode on 2.1.271+). What is left: wrapper agents that dispatch to a background job runtime (e.g. codex-rescue) and report only the hand-off, whose result sits in the runtime's state directory; thin reports outside auto mode or from a fork, recoverable from the transcript; and the transcript wedge check (tool_use with no tool_result, after looking for the agent's permission prompt in the main or lead session).",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",
   "repository": "https://github.com/voitta-ai/skillz",

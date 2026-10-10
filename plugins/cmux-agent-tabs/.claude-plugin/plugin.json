@@ -1,7 +1,7 @@
 {
   "name": "cmux-agent-tabs",
-  "description": "Make AI coding agents show up as watchable cmux tabs/panes, and diagnose the six distinct reasons they do not: wrong launch path, Agent-tool spawn path (never tabs; they surface in the native agent list), a shim shadowed on PATH by a real tmux, the shim's own bare cmux being off PATH so tmux dies with exec: cmux: not found, a resumed pane with no $TMUX that starts an invisible real tmux server, and a teammate mode that resolved to in-process so every agent wedges with no pane, no TTY and no visible permission prompt. Includes the one-shot both-hops test, the ps check that separates a wedged transport from an agent that never launched, and reading the live process env rather than the shell's.",
-  "version": "1.4.0",
+  "description": "Make AI coding agents show up as watchable cmux tabs/panes, and diagnose the six distinct reasons they do not: wrong launch path, Agent-tool spawn path (never tabs; they surface in the native agent list), a shim shadowed on PATH by a real tmux, the shim's own bare cmux being off PATH so tmux dies with exec: cmux: not found, a resumed pane with no $TMUX that starts an invisible real tmux server, and a teammate mode that resolved to in-process (the documented default), where teammates run in the lead's terminal with their permission prompts in the lead session but get no tab. Includes the one-shot both-hops test, the ps check that separates a wedged transport from an agent that never launched, and reading the live process env rather than the shell's.",
+  "version": "1.4.1",
   "author": {
     "name": "voitta-ai"
   },

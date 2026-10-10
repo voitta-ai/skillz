@@ -1,7 +1,7 @@
 {
   "name": "cmux-cross-session-visibility",
-  "description": "Make agent-to-agent traffic visible to the human watching: a structured SendMessage envelope (kind + direction + topic in the summary field, plus a one-line header that survives raw transcripts) paired with a cmux sidebar status pill per workspace showing whether a session is waiting on a peer or owes one an answer. Covers why spawned teams are cross-workspace traffic by construction (tmux-compat maps a window to a workspace), why the pill key must not collide with cmux's own claude_code key, and the stale-pill failure mode plus every exit that must clear it.",
-  "version": "1.1.0",
+  "description": "Make agent-to-agent traffic visible to the human watching: a structured SendMessage envelope (kind + direction + topic in the summary field, plus a one-line header that survives raw transcripts) paired with a cmux sidebar status pill per workspace showing whether a session is waiting on a peer or owes one an answer. Covers where cmux teammates actually land (split panes beside the leader), why the pill key must not collide with cmux's own claude_code key, the stale-pill failure mode plus every exit that must clear it, and the agent-traffic-log and UserPromptSubmit hooks that take over from discipline.",
+  "version": "1.1.1",
   "author": {
     "name": "voitta-ai"
   },
