@@ -44,7 +44,7 @@
     {
       "name": "claude-code-plugin-update-flow",
       "source": "./plugins/claude-code-plugin-update-flow/",
-      "description": "Update an installed Claude Code plugin via /plugin marketplace update + /reload-plugins, not the discovery-picker /plugin update."
+      "description": "Get an installed Claude Code plugin to run new code: the install cache is keyed on the resolved version, so bump it (or omit it to track the commit SHA), then /reload-plugins; verify against the cache, not the clone."
     },
     {
       "name": "claude-code-plugin-release-automation",
@@ -294,7 +294,7 @@
     {
       "name": "cmux-claude-codex-cross-runtime-messaging",
       "source": "./plugins/cmux-claude-codex-cross-runtime-messaging/",
-      "description": "Claude Code <-> Codex CLI agents as messaging peers in cmux panes: keystroke-injection transport, self-named tabs, both sides in the traffic log."
+      "description": "Claude Code <-> Codex CLI agents as messaging peers in cmux panes: codex queue first, keystroke injection as fallback, self-named tabs, both sides in the traffic log."
     },
     {
       "name": "tamarian",

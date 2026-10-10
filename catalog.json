@@ -143,7 +143,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Talk to a Claude Code session that is already running via the native ListAgents + SendMessage pair instead of a headless `claude -p` call or a terminal-scraping bridge. Covers addressing (the name is the address; refs do not survive outside the listing that produced them), the idle-subscription primitive that replaces every polling loop, the no-TTY law that makes headless and in-process transports wedge silently rather than fail, multi-hop transport dependency failures, the per-session permission boundary that forbids delegating around your own denials, and the honest dividing line where a launch-a-callee tool is still the right answer."
+      "summary": "What the Claude Code cross-session messaging docs leave out: the peer's reply and its idle notice are different signals, so read the answer from the reply; recovering a reply that lands after /clear (the rewind menu's previous-session entry or /resume first, a grep for this session's own name as the fallback); never fabricating a reply that has not arrived; diagnosing a silent agent now that -p denies rather than waits and teammate and background-subagent permission prompts surface in the lead session; and the dividing line where a launch-a-callee tool is still the right answer."
     },
     {
       "name": "claude-code-plugin-from-existing-repo",
@@ -152,7 +152,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Convert an existing repo that ships Claude Code slash commands and/or hooks (typically as a dotclaude/ or .claude/ directory the user copies into their project) into a Claude Code plugin so users can install with `/plugin marketplace add OWNER/REPO` + `/plugin install NAME@MARKETPLACE`. Use when: (1) repo currently has a commands/ + hooks/ layout meant for manual copy-into-project install, (2) you want to add plugin install without breaking the manual install path, (3) confused about where marketplace.json vs plugin.json live, (4) confused about which env var the plugin's hooks should reference, (5) the installed plugin shows \"failed to load\" with `Duplicate hooks file detected` after you declared a `hooks` pointer in plugin.json. Covers coexistence of manual and plugin install via a shared source directory."
+      "summary": "Convert an existing repo that ships Claude Code slash commands and/or hooks (typically as a dotclaude/ or .claude/ directory the user copies into their project) into a Claude Code plugin so users can install with `/plugin marketplace add OWNER/REPO` + `/plugin install NAME@MARKETPLACE`. Use when: (1) repo currently has a commands/ + hooks/ layout meant for manual copy-into-project install, (2) you want to add plugin install without breaking the manual install path, (3) confused about where marketplace.json vs plugin.json live, (4) confused about which env var the plugin's hooks should reference, (5) an older Claude Code build shows the plugin as \"failed to load\" with `Duplicate hooks file detected` after you declared a `hooks` pointer in plugin.json. Covers coexistence of manual and plugin install via a shared source directory."
     },
     {
       "name": "claude-code-plugin-publish-anthropic-marketplace",
@@ -302,7 +302,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Run a Claude Code agent and a Codex CLI agent as messaging peers in cmux panes, each named as a tab and both in the agent traffic log. Codex has no SendMessage and Claude's peer socket needs auth, so the cross-runtime hop is keystroke injection (cmux send + send-key Enter) through a small helper that also logs to xs explicitly; each agent names its own tab first via cmux identify + tab-action rename. Covers the Codex TUI parking on a startup modal with no way to read its screen (diagnose from ~/.codex logs and the missing rollout file, inject one Enter), and where the lead, teammate and Codex transcripts live on disk afterwards. Verified 2026-08-27: five rounds in 50 s, every message exactly once."
+      "summary": "Run a Claude Code agent and a Codex CLI agent as messaging peers in cmux panes, each named as a tab and both in the agent traffic log. Codex has no SendMessage, so the Claude -> Codex hop is codex queue --thread into the live Codex session first, with keystroke injection (cmux send + send-key Enter) as the fallback and for the Codex -> Claude hop, through a small helper that also logs to xs explicitly; each agent names its own tab first via cmux identify + tab-action rename. Covers the Codex TUI parking on a startup modal (read it with cmux read-screen, answer it), and where the lead, teammate and Codex transcripts live on disk afterwards. Verified 2026-08-27 with injection both ways: five rounds in 50 s, every message exactly once."
     },
     {
       "name": "cmux-config-silent-drop-triage",
@@ -320,7 +320,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Make agent-to-agent traffic visible to the human watching: a structured SendMessage envelope (kind + direction + topic in the summary field, plus a one-line header that survives raw transcripts) paired with a cmux sidebar status pill per workspace showing whether a session is waiting on a peer or owes one an answer. Covers why spawned teams are cross-workspace traffic by construction (tmux-compat maps a window to a workspace), why the pill key must not collide with cmux's own claude_code key, and the stale-pill failure mode plus every exit that must clear it."
+      "summary": "Make agent-to-agent traffic visible to the human watching: a structured SendMessage envelope (kind + direction + topic in the summary field, plus a one-line header that survives raw transcripts) paired with a cmux sidebar status pill per workspace showing whether a session is waiting on a peer or owes one an answer. Covers where cmux teammates actually land (split panes beside the leader), why the pill key must not collide with cmux's own claude_code key, the stale-pill failure mode plus every exit that must clear it, and the agent-traffic-log and UserPromptSubmit hooks that take over from discipline."
     },
     {
       "name": "cmux-search",
@@ -725,7 +725,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Recover the work of a spawned subagent that finished but never reported, and tell that case apart from a genuinely wedged one. Root cause: an agent type's declared toolset may omit a messaging tool, so a correct, completed agent has no channel to deliver through -- or it is a forward-only wrapper scoped not to poll the background job it dispatched. Idle notifications are runtime-generated and are NOT evidence the agent's own send worked; the reliable oracle is the transcript (tool_use with no tool_result). Covers recovering the result from the agent's final text, from the job runtime's state directory, and the one-sentence fallback brief that prevents the loss."
+      "summary": "Recover the result of a spawned agent whose report never reached you, now that the host delivers most reports itself (a subagent's final text as its result or completion notification; SubagentHandback in auto mode on 2.1.271+). What is left: wrapper agents that dispatch to a background job runtime (e.g. codex-rescue) and report only the hand-off, whose result sits in the runtime's state directory; thin reports outside auto mode or from a fork, recoverable from the transcript; and the transcript wedge check (tool_use with no tool_result, after looking for the agent's permission prompt in the main or lead session)."
     },
     {
       "name": "tamarian",
@@ -1024,7 +1024,7 @@
         "claude",
         "codex"
       ],
-      "summary": "One name for a Claude Code session in all three places peers and humans look: the ListAgents/SendMessage display name, the Remote Control name and the cmux tab title. Ships cc/cx launch wrappers (resolve name from argument, human-set tab title or folder; prompt only on collision; exec claude -n X --remote-control X with the tab renamed to X), cc-names who/pick/sync over ~/.claude/sessions/<pid>.json joined to cmux tree, and a Stop hook that pushes a mid-session /rename to the tab."
+      "summary": "One name for a Claude Code session launched in cmux in all three places peers and humans look: the ListAgents/SendMessage display name, the Remote Control name and the cmux tab title. Claude Code now carries a -n or /rename name to the tab title and Remote Control itself; the gap is sessions cmux launches or restores without -n. Ships cc/cx launch wrappers (resolve name from argument, human-set tab title or folder; prompt only on collision; exec claude -n X --remote-control X with the tab renamed to X), cc-names who/pick/sync over ~/.claude/sessions/<pid>.json joined to cmux tree, and a Stop hook that re-asserts the tab title after each turn."
     },
     {
       "name": "micronaut-endpoints-config-root-level",
