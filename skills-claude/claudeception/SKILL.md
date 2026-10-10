@@ -14,8 +14,8 @@ description: |
   `UserPromptSubmit` hooks instead of an explicit call; that entry point is
   `continuous-learning`, which defers here for the classification and the wiring.
 author: Claude Code
-version: 4.3.0
-date: 2026-06-14
+version: 4.4.0
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claudeception/SKILL.md
 upstream: https://github.com/blader/Claudeception
@@ -205,7 +205,19 @@ description: |
   Turborepo, and npm workspaces.
 ```
 
+The description is loaded every turn, so prune it harder than the body:
+
+- **One trigger per branch.** Synonyms that rename the same case are one trigger
+  written twice; keep only genuinely distinct cases.
+- **Cut identity the body already carries** (history, authorship, how it was found).
+
 ### Step 5: Classify, then save
+
+First, route by kind. A **mechanical** mistake (a fixed pattern, a banned call, a
+file-location rule) becomes a deterministic check - a hook, a lint rule, a CI job,
+whichever the repo already has the cheapest home for - not prose an agent must
+remember. Only a **judgement call** becomes guidance, and that guidance goes through
+the split below.
 
 One classification, asked once: **is this a repeatable procedure, or a specific
 recollection?**
@@ -528,3 +540,7 @@ should have the opportunity to benefit future work sessions.
   and this file owns it.
 - `agent-host-skill-loading` — reaching a third host that has neither of the
   above, by loading `SKILL.md` files directly.
+
+The mechanical-vs-judgement routing and the description-pruning rules are adapted
+from [mattpocock/skills](https://github.com/mattpocock/skills) `retro` and
+`writing-for-agents` (MIT).

@@ -3,7 +3,7 @@ name: work-on-pr
 description: |
   Iteratively work on a GitHub pull request as the author. Watch for new review comments, issue comments, and inline threads; if nothing new exists yet, wait and re-check instead of exiting. For each actionable item, implement the fix in the PR worktree, run relevant tests, commit and push, then reply with a summary and commit SHA. Continue until the PR is approved, merged or closed, or the user stops the loop. Also accepts an issue reference instead of a PR: in that case the skill creates the PR (if absent), guarantees the PR body contains `Closes #<issue>`, and then enters the watch loop. A bare problem statement works too — the skill opens the issue first, then takes the issue path. Optionally drives its own reviewer by running `codex-adversarial-pr-review` on the PR each round, so the loop closes without a second human. Use when you want the agent to own the start-PR or address-test-push-reply-wait cycle across multiple review rounds rather than handling a single review comment.
 author: Claude Code
-version: 1.13.1
+version: 1.14.0
 date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/work-on-pr/SKILL.md
@@ -132,6 +132,12 @@ command (see "Hosts that cannot self-schedule").
        commit on the branch is fine even if it is just a scaffolding
        commit; subsequent rounds add real fixes. After creation,
        continue with step 2 on the just-created PR.
+     - Besides the summary, the body carries two sections, filled in
+       once real work lands: `## Evidence` (before and after: the
+       command output or screenshot that showed the problem, then the
+       same one showing it gone) and `## Merge danger` (one-way or
+       two-way door, i.e. can a revert undo it, and the blast radius:
+       what else breaks if it is wrong).
      - If a PR exists, hand off to step 1a.
    - **1c. Issue-linkage repair (existing PR + known issue):**
      when the invocation arg is an issue ref AND an open PR was
@@ -334,6 +340,11 @@ command (see "Hosts that cannot self-schedule").
 
    b. **Plan + implement** in the worktree. Edit files, follow
       the project's conventions (read CLAUDE.md / README).
+      For a bug, fails first: before the fix, have one command,
+      already run and its output shown, that fails on the exact
+      symptom reported; after the fix, rerun it (or show the diff)
+      to prove the change landed. `standalone-typecheck-repro`'s
+      orig/broken/fixed check is a worked case.
 
    c. **Run the project's test suite.** No commits / pushes if tests
       fail. Diagnose, fix, re-run. If a test failure surfaces an
@@ -1115,6 +1126,9 @@ User: "/work-on-pr Issue https://github.com/foo/bar/issues/42"
 - [GitHub REST: list issue comments](https://docs.github.com/en/rest/issues/comments)
 - [GitHub REST: list review comments on a PR](https://docs.github.com/en/rest/pulls/comments)
 - [gh pr view / gh pr comment](https://cli.github.com/manual/gh_pr)
+- Evidence / Merge danger sections and the fails-first rule adapted from
+  [mattpocock/skills](https://github.com/mattpocock/skills) `pr` (itself
+  credited to Humanlayer's `show-me`) and `diagnosing-bugs` (MIT).
 
 ## Related
 
