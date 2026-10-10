@@ -19,8 +19,8 @@ description: |
   other multiplexers. Also use when (5) a spawned wave produces no commits, no
   dirty files and no replies - agents that are visible but wedged.
 author: Claude Code
-version: 1.10.0
-date: 2026-10-09
+version: 1.10.1
+date: 2026-10-10
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-team-orchestration/SKILL.md
 ---
@@ -201,14 +201,30 @@ worktree**, never to `/tmp` or another path outside the project, because
 first call against the mode before you spawn. (Learned the hard way: a probe
 briefed to report via `Write` to a scratchpad path hung on that very call.)
 
+Inside the worktree is necessary but **not sufficient**: on 2.1.220 a probe also
+wedged on a marker `Write` *inside* cwd. The marker is itself a gated call, so it
+can be the wedge point. Make the oracle one-directional:
+- **`main` polls for the marker file on a timer, and its absence is the signal.**
+  Don't make the negative case depend on a `SendMessage`, because a wedged agent
+  never reaches its outbox.
+- **Run the control before calling the harness broken.** `main` performs the
+  same operation on the same path class. If `main` succeeds instantly and the
+  subagent hangs, it's the subagent path, not an unanswered prompt, and the
+  result also pins the effective permission mode without reading the TUI.
+- **Grepping the permission hook's log for the probe's path matches your own
+  grep**, because the hook logs your diagnostic command verbatim. Exclude your
+  own command lines before reading a hit as the probe's.
+
 Fan out to the remaining squads **only after the probe confirms**. The probe
 costs ~90 seconds and catches every cause of a wedge - permission mode, quota,
 a dead runtime - not just the one you thought to check.
 
 **If the probe stays silent past ~2 minutes, that is a hard stop.** Do not spawn
 the rest of the wave. Surface it to the operator, because in the common case
-(the session is in a permission mode that gates each tool call, and a background
-subagent has no operator to prompt) **only they can change it.** Recover with
+(the session is in a permission mode that gates each tool call) **only they can
+change it.** On Claude Code 2.1.296 the docs say a background subagent's prompt
+surfaces in the main session, naming the subagent, so look there first. A
+permission hook may also deny such calls outright rather than letting them hang. Recover with
 `TaskStop` per agent by name: it leaves worktrees, branches, and any prepared
 baseline intact, so a restart after the mode is fixed is cheap.
 
