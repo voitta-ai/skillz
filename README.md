@@ -738,6 +738,9 @@ bundle; see [Contributing](#contributing).
 
 ## Contributing
 
+Before proposing a skill, read [SCOPE.md](./SCOPE.md): the bar a skill has to clear,
+and [`.out-of-scope/`](./.out-of-scope/) for ideas already rejected on evidence.
+
 ### What a new skill consists of
 
 Six places, not one. A skill that exists only in `skills/` installs for nobody:
