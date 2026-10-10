@@ -21,8 +21,13 @@
 #   SKILLZ_SENSITIVE_TERMS_FILE=/other/list.txt \
 #     scripts/check-sensitive-terms.sh skills/my-skill/
 #
-# Exit codes: 0 = clean, 1 = matches found, 2 = usage error or a
-# SKILLZ_SENSITIVE_TERMS_FILE that was set but does not exist.
+# Set SKILLZ_SENSITIVE_TERMS_REQUIRED=1 to make a missing wordlist, or one with
+# no terms after blank and # lines are dropped, an error instead of a note.
+# hooks/pre-push sets it; CI does not, since CI has no wordlist by design.
+#
+# Exit codes: 0 = clean, 1 = matches found, 2 = usage error, a
+# SKILLZ_SENSITIVE_TERMS_FILE that was set but does not exist, or a missing or
+# empty wordlist while SKILLZ_SENSITIVE_TERMS_REQUIRED=1.
 #
 # bash 3.2 compatible (macOS default); no bashisms beyond 3.2.
 
@@ -84,6 +89,20 @@ rm -f /tmp/.skillz_structural.$$
 # 2) optional private wordlist (client/account names etc.)
 DEFAULT_TERMS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/skillz/sensitive-terms.txt"
 terms_file="${SKILLZ_SENSITIVE_TERMS_FILE:-$DEFAULT_TERMS_FILE}"
+
+if [ "${SKILLZ_SENSITIVE_TERMS_REQUIRED:-}" = "1" ]; then
+  # A placeholder file with only comments must not satisfy the requirement.
+  n_terms=0
+  [ -f "$terms_file" ] && n_terms=$(grep -cvE '^[[:space:]]*(#|$)' "$terms_file")
+  if [ "$n_terms" -eq 0 ]; then
+    echo "error: the name wordlist is required here but $terms_file is missing or has no terms." >&2
+    echo "       Without it, a clean result only means no key, IP or domain shapes." >&2
+    echo "       Provide it, e.g. symlink your private copy:" >&2
+    echo "         mkdir -p \"$(dirname "$terms_file")\" && ln -s <private-copy> \"$terms_file\"" >&2
+    echo "       or override this push deliberately with git push --no-verify." >&2
+    exit 2
+  fi
+fi
 
 if [ -f "$terms_file" ]; then
   # Names are matched case-insensitively (they get written Foo, foo, FOO) as

@@ -119,7 +119,9 @@ fi
 echo "pre-push: sensitive-term gate..."
 # Same paths as CI, plus the wordlist half via the default
 # ~/.config/skillz/sensitive-terms.txt (or $SKILLZ_SENSITIVE_TERMS_FILE).
-if ! bash scripts/check-sensitive-terms.sh \
+# Locally the wordlist is required (fail closed): a push from a machine without
+# it is how client names reached this repo before (#384, #385, #386).
+if ! SKILLZ_SENSITIVE_TERMS_REQUIRED=1 bash scripts/check-sensitive-terms.sh \
        skills/ docs/ plugins/ README.md catalog.json; then
   fail=1
 fi

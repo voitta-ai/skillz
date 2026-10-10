@@ -1257,9 +1257,12 @@ is set to a path that doesn't exist the script exits `2` rather than quietly
 downgrading to structural-only — a typo'd path should fail loudly, not look
 clean.
 
-Without a wordlist you get structural checks only, and the script says so.
-That is the expected state for anyone outside the org: the names that matter
-are exactly the ones this repo must not carry.
+Without a wordlist the script runs structural checks only and says so. That is
+the expected state in CI and for anyone outside the org: the names that matter
+are exactly the ones this repo must not carry. The local `pre-push` hook is
+stricter. It sets `SKILLZ_SENSITIVE_TERMS_REQUIRED=1`, so a missing wordlist, or
+one with no terms, fails the push with instructions. `git push --no-verify`
+remains the deliberate override.
 
 Run it on PR-body and commit-message drafts too (`check-sensitive-terms.sh
 /tmp/pr-body.md`) - CI scans repo files, never the PR text you are about to
