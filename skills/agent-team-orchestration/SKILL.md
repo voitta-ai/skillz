@@ -19,7 +19,7 @@ description: |
   other multiplexers. Also use when (5) a spawned wave produces no commits, no
   dirty files and no replies - agents that are visible but wedged.
 author: Claude Code
-version: 1.10.1
+version: 1.10.2
 date: 2026-10-10
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-team-orchestration/SKILL.md
@@ -590,7 +590,15 @@ posing it twice is friction.
    up) and file findings.
 8. **Productivity engineer watches** and logs confirmation/info/rework stalls;
    auto-saves durable learnings by default. Liveness is checked against the
-   filesystem, not the agent list.
+   filesystem, not the agent list. For background squads (no cmux tab to
+   watch), every brief requires an external artifact at each milestone: a
+   commit, a PR comment or an issue comment. Answer "where are we?" from those
+   artifacts, `gh`, and the agent's busy/idle state in `ListAgents`. Never read
+   an agent's raw transcript file, which floods the orchestrator's context. Wait
+   on completion notifications or `notify_when_idle` rather than polling. Treat
+   no new artifact for twice the step's expected time as stale: ping the agent
+   once with `SendMessage`, then escalate. Observed durations: a reviewer pass
+   ran about 8 minutes, a developer pass 6 to 96 minutes.
 9. **Integrate + re-plan.** Architect merges independent PRs on green review,
    escalating only genuine ordering/shared-file conflicts; tracks open vs.
    decided design gates so none is re-posed; re-derives the next wave.
