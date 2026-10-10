@@ -7,15 +7,17 @@ description: |
   Claude <-> Codex agent-to-agent traffic and discover Codex has no
   SendMessage/ListAgents, (2) a Codex TUI launched into a cmux split never
   starts a thread (no ~/.codex/sessions rollout file, "configWarning" in
-  ~/.codex/logs_2.sqlite) and you cannot see its screen, (3) the traffic log
-  shows only the Claude half, (4) you must collect the on-disk transcripts of
+  ~/.codex/logs_2.sqlite), (3) the traffic log shows only the Claude half,
+  (4) you must collect the on-disk transcripts of
   a lead, a Claude teammate and a Codex session afterwards. Encodes the
-  keystroke-injection transport (cmux send + send-key Enter), the self-naming
-  step for tabs, explicit xs logging for the Codex side, and where each log
-  lives.
+  transport order (`codex queue --thread` into a live Codex session first,
+  keystroke injection with cmux send + send-key Enter as the fallback and for
+  the Codex -> Claude hop), reading a pane with `cmux read-screen`, the
+  self-naming step for tabs, explicit xs logging for the Codex side, and where
+  each log lives.
 author: Claude Code
-version: 1.0.0
-date: 2026-08-27
+version: 1.1.0
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/cmux-claude-codex-cross-runtime-messaging/SKILL.md
 ---
@@ -30,10 +32,12 @@ source_file: skills/cmux-claude-codex-cross-runtime-messaging/SKILL.md
 ## Problem
 
 Claude Code's native `ListAgents` / `SendMessage` only reaches Claude sessions.
-Codex CLI has no equivalent tool, and Claude's peer socket
-(`/tmp/cc-socks/<pid>.sock`) requires an auth handshake, so a Codex process
-cannot write to it. `codex:codex-rescue` subagents have Bash only and cannot
-report back either. Yet you want the two runtimes to exchange messages, each
+Codex CLI has no equivalent tool. (Claude's inbox socket, `/status` ->
+`Peer address`, takes an optional `{"type":"auth",...}` first line on macOS and
+Linux and a required one on native Windows, per
+https://code.claude.com/docs/en/cross-session-messaging; this skill does not
+post to it.) `codex:codex-rescue` subagents have Bash only and cannot report
+back either. Yet you want the two runtimes to exchange messages, each
 visible as a named cmux tab, and both halves in the `xs` traffic log.
 
 ## Context / Trigger Conditions
@@ -48,10 +52,23 @@ visible as a named cmux tab, and both halves in the `xs` traffic log.
 
 ## Solution
 
-Transport = **keystroke injection into the peer's pane**. Each agent runs one
-Bash helper per message; the helper logs to `xs`, appends to a shared
-transcript, then types the text into the peer's surface and presses Enter.
-Both runtimes treat injected text as an ordinary user turn.
+Transport, in order of preference:
+
+1. **Claude -> Codex: `codex queue`.** Codex CLI (0.160.1) can queue a message
+   into a live session by UUID or exact session name:
+   ```bash
+   codex queue --thread <session-uuid-or-name> --message "ping 1"
+   ```
+   The thread id is in `~/.codex/state_5.sqlite` (`threads` table) or the
+   rollout file name. A target that is not live fails loudly with
+   `Error: No active session found matching '<name>'.` - fall back to
+   injection then. Not yet re-run against the cmux TUI setup below; the
+   verified run used injection both ways.
+2. **Fallback, and Codex -> Claude: keystroke injection into the peer's pane.**
+   Each agent runs one Bash helper per message; the helper logs to `xs`,
+   appends to a shared transcript, then types the text into the peer's surface
+   and presses Enter. Both runtimes treat injected text as an ordinary user
+   turn. `scripts/pp-send` implements this route.
 
 1. **Lead prepares a shared dir** `$PP` with `scripts/pp-send`, `scripts/pp-register`,
    an empty `addr/` and `transcript.log`.
@@ -74,9 +91,10 @@ Both runtimes treat injected text as an ordinary user turn.
    `danger-full-access` is needed because the seatbelt sandbox blocks the
    cmux unix socket and `~/.local/state` writes; keep the cwd a scratch dir.
 4. **If no rollout file appears within ~30 s**, the TUI is parked on a startup
-   modal. cmux has no read-screen command and `screencapture` needs TCC, so
-   don't try to look; send one Enter: `cmux send-key --surface surface:M Enter`.
-   Verified: thread started immediately. Confirm with the newest
+   modal. Look at it with `cmux read-screen --surface surface:M` (alias
+   `capture-pane`; add `--scrollback` for history), then answer it - in the
+   verified run one Enter cleared it:
+   `cmux send-key --surface surface:M Enter`. Thread started immediately. Confirm with the newest
    `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl` (assistant message "ready").
 5. **Spawn the Claude side as a named teammate** (`Agent(name: "pinger", ...)`
    under `cmux claude-teams`, `teammateMode: tmux`). Its brief starts with
@@ -120,8 +138,9 @@ classifies `pong*` as `answered/RE` and everything else as `send/Q`, so
 - Teammate panes may print `Stop hook error: /bin/sh: node: command not found`
   on cmux 0.64.22 (manaflow-ai/cmux#10198, unreleased) — cosmetic.
 - Codex also reads `~/.codex/AGENTS.md` on top of the brief.
-- This is terminal input, not a runtime messaging API: no delivery receipt,
-  and a message injected mid-turn queues as the next user turn.
+- Injection is terminal input, not a runtime messaging API: no delivery
+  receipt, and a message injected mid-turn queues as the next user turn.
+  `codex queue` at least fails when the target is not live.
 - `pp-register` uses `cmux identify` `caller.surface_ref`; `$CMUX_TAB_ID` can
   alias the workspace id, so do not rename with the default target.
 

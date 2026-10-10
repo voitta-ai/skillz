@@ -17,18 +17,18 @@ description: |
   use when: (5) `which tmux` returns a REAL tmux and teammates run but never
   tab; (6) the shim resolves yet dies with `exec: cmux: not found`, which reads
   as a tmux bug and is not one; (7) teammates spawned from a RESUMED pane start
-  an invisible real tmux server; (8) every teammate wedges with no output, no
-  error and no permission dialog because teammate mode resolved to
-  `in-process`; (9) you need to tell a wedged transport apart from an agent
-  that was never launched at all; (10) teammates DID tab but every tab is
+  an invisible real tmux server; (8) teammates run but never tab because
+  teammate mode resolved to `in-process` (the documented default); (9) you
+  need to tell a wedged transport apart from an agent that was never launched
+  at all; (10) teammates DID tab but every tab is
   titled by agent type (`general-purpose`, `general-purpose`, ...) instead of
   the name you gave it; (11) teammates stack vertically in one column and you
   want to know whether cmux or Claude Code chose that; (12) `which tmux`
   resolves to `.../cmux-cli-shims/<uuid>/tmux` and you are not sure that is
   the shim.
 author: Claude Code
-version: 1.4.0
-date: 2026-08-26
+version: 1.4.1
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/cmux-agent-tabs/SKILL.md
 ---
@@ -136,7 +136,8 @@ exec "${CMUX_CLAUDE_TEAMS_CMUX_BIN:-cmux}" __tmux-compat "$@"
 
 cmux also sets `$TMUX` to a synthetic socket path. No tmux server exists
 anywhere - Claude Code thinks it is talking to tmux, cmux answers, and each
-`new-window` becomes a tab. When healthy, `tmux -V` returns `tmux 3.4` and
+teammate's `split-window` becomes a split pane in the leader's workspace (a
+tmux window maps to a cmux workspace). When healthy, `tmux -V` returns `tmux 3.4` and
 `tmux list-windows` enumerates your cmux workspaces as tmux windows.
 
 If the launching process resolves `tmux` to a **real** tmux instead of the
@@ -257,15 +258,21 @@ Two consequences:
 
 ## Teammate mode: `auto` can silently pick `in-process`
 
-Distinct from `PATH`, same symptom class, worse failure. The wrapper defaults
-teammate mode to `auto`, and `auto` can resolve to **`in-process`** - which
-gives the teammate no cmux pane and therefore **no TTY**. Every background
-subagent then wedges: first tool call never returns, no result, no error, no
-timeout, and no permission dialog or pending indicator anywhere in the TUI,
-because a prompt has nowhere to render.
+Distinct from `PATH`, same symptom class. The wrapper defaults teammate mode to
+`auto`, and `auto` resolves to split panes only when the session is inside tmux
+(or iTerm2 with `it2`); otherwise it falls back to **`in-process`**, which is
+also Claude Code's default when nothing sets the mode. In-process teammates run
+inside the lead's terminal - select one in the agent panel below the prompt
+and press Enter to view it - so they get no cmux pane, but they are not
+wedged: their permission prompts appear in the lead session
+(https://code.claude.com/docs/en/agent-teams). If a teammate seems stuck, look
+for its prompt in the lead before anything else.
 
-Allowed values (not in `claude --help`; obtain them by passing an invalid one):
-`auto, tmux, iterm2, in-process`.
+The values are documented in the settings reference
+(https://code.claude.com/docs/en/settings-reference#teammatemode):
+`in-process` (default), `auto`, `tmux`, `iterm2`. `--teammate-mode <value>`
+overrides the setting for one session; it is experimental and not in
+`claude --help`.
 
 **Fix it in settings, not with a CLI flag.** `teammateMode` is a top-level
 Claude Code settings key, so it applies to every launch path including resumed
@@ -277,11 +284,11 @@ panes:
 ```
 
 Setting the mode is necessary but not sufficient - the shim must also win both
-`PATH` hops above. And do **not** reach for a bypass-permissions flag here:
-issuing the same operation from a pane that *does* have a TTY returns
-instantly, which proves the parent is already permissive and the call never
-reached the permission layer at all. Bypassing that layer fixes nothing and
-costs real safety.
+`PATH` hops above. And do **not** reach for a bypass-permissions flag to unstick
+a teammate: its pending prompt is in the lead session, and if issuing the same
+operation from the lead returns instantly, the parent is already permissive and
+the call never reached the permission layer at all. Bypassing that layer fixes
+nothing and costs real safety.
 
 ## Fix
 - **Claude agents as tabs:** launch the root session through the wrapper:
@@ -363,8 +370,9 @@ cmux tab-action --action clear-name --tab surface:16        # revert to auto tit
 - "No tabs" has **six** distinct causes - wrong launch path, Agent-tool spawn
   path, shadowed shim (hop one), shim's own `cmux` off `PATH` (hop two), a
   resumed pane with no `$TMUX`, and a teammate mode that resolved to
-  `in-process`. Only the first is fixed by re-launching alone, and the
-  never-launched case is fixed by nothing environmental at all.
+  `in-process` (no tab, but not wedged). Only the first is fixed by
+  re-launching alone, and the never-launched case is fixed by nothing
+  environmental at all.
 - `cmux open <path-or-url>` opens files/dirs/URLs (markdown/file/browser
   previews); it is **not** a way to spawn a terminal running a chosen command in
   a titled tab. Don't reach for it to "open an agent in a tab."
@@ -387,7 +395,7 @@ cmux tab-action --action clear-name --tab surface:16        # revert to auto tit
 | Shim's own `cmux` reachable? | `ln -s /Applications/cmux.app/Contents/Resources/bin/cmux ~/.local/bin/cmux` |
 | Wedged or never launched? | `ps` for a `__tmux-compat` process; absent => spawn never reached tmux |
 | What env did the agent really get? | `ps -Eww -o command= -p <pid> \| tr ' ' '\n' \| grep -E '^(TMUX\|PATH)='` |
-| Teammates wedge with no prompt | set `"teammateMode": "tmux"` in `~/.claude/settings.json` |
+| Teammates run but never tab (in-process) | set `"teammateMode": "tmux"` in `~/.claude/settings.json`; their prompts are in the lead meanwhile |
 | List surfaces + refs | `cmux tree --all` |
 | Rename a tab | `cmux tab-action --action rename --tab surface:N --title "..."` |
 

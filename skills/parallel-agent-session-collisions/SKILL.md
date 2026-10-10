@@ -26,8 +26,10 @@ description: |
   reconcile without losing the better version, and what to audit when you have
   already merged under a peer.
 author: Claude Code
-version: 1.6.0
-date: 2026-08-20
+version: 1.6.1
+date: 2026-10-09
+source: https://github.com/voitta-ai/skillz
+source_file: skills/parallel-agent-session-collisions/SKILL.md
 ---
 
 # Colliding with a parallel agent session
@@ -537,9 +539,10 @@ You have collided if any of these are true. Check before acting, not after:
   did not create. Read the plan, never infer it from your own diff.
 - The failure is not carelessness — it is a fresh session's missing memory. The
   remedy is the pre-flight check, not trying harder to remember.
-- Related: `github-api-list-endpoint-staleness-fresh-pr` (list endpoints can
-  return `[]` for minutes on a fresh PR, so an empty result is not proof of
-  absence).
+- Related: `github-api-list-endpoint-staleness-fresh-pr`, in
+  [voitta-ai/skillz-memory](https://github.com/voitta-ai/skillz-memory) (list
+  endpoints can return `[]` for minutes on a fresh PR, so an empty result is not
+  proof of absence).
 
 ## Related
 

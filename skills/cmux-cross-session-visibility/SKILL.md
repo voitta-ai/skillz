@@ -7,7 +7,7 @@ description: |
   message envelope every agent writes, and a cmux sidebar status pill every
   agent maintains. Use when: (1) agents message each other across cmux
   workspaces and you cannot tell from the outside that a conversation is
-  happening at all; (2) a spawned team scatters across workspaces and the
+  happening at all; (2) a spawned team runs in panes beside the launcher and the
   launcher pane gives no sign of what it is waiting on; (3) you want to know
   whether a session is blocked on a peer versus merely busy; (4) an idle notice
   or transcript line tells you a message was sent but not what it was about;
@@ -15,8 +15,8 @@ description: |
   cheap conventions first. Also covers why a stale pill is the main failure
   mode and what must clear it.
 author: Claude Code
-version: 1.1.0
-date: 2026-08-21
+version: 1.1.1
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/cmux-cross-session-visibility/SKILL.md
 ---
@@ -35,12 +35,16 @@ peer a question, wait on it, and answer it, and the only trace a human sees is
 prose buried in two different transcripts. Nothing on any surface says a
 conversation is in progress, who started it, or whether anyone is blocked.
 
-This gets worse with spawned teams rather than better. cmux's tmux-compat layer
-maps a tmux **window** to a cmux **workspace**, so teammates spawned by a main
-agent land in *separate workspaces*, not as tabs beside the launcher. Team
-traffic is therefore cross-workspace traffic by construction, and the launcher
-pane - the one you are actually watching - shows nothing about what its team is
-doing.
+This gets worse with spawned teams rather than better. Under
+`cmux claude-teams`, Claude Code 2.1.296 sees `$TMUX`, takes its
+inside-tmux path and creates each teammate with `split-window` off the
+leader's pane, so teammates land as split panes in the launcher's workspace
+(see `cmux-agent-tabs`). The tmux-compat layer maps a tmux **window** to a
+cmux **workspace**, so only Claude Code's outside-tmux path (`new-window` into
+a separate `claude-swarm` session) would produce separate workspaces, and that
+path runs against a real tmux, not cmux. Either way the launcher pane - the one
+you are actually watching - shows nothing about what its team is saying to
+whom.
 
 ## Two conventions, not a system
 
@@ -152,13 +156,15 @@ re-set each turn cannot go stale for longer than one turn.
 - **No toasts.** Transient by definition, so they answer nothing durably. Worth
   adding only if you find you are missing messages in unfocused tabs.
 - **No traffic pane / no shared log.** The org-wide view - who asked whom, when,
-  answered or not - needs an append-only log that does not exist yet, and a
-  pane to tail it. That is the build worth doing next, and it is the only one
-  that produces a record you could mine later.
-- **No automatic hooking.** There is no cmux event on message receipt, so both
-  halves are agent discipline enforced by this skill, not infrastructure. If a
-  host hook fires on cross-session receipt, wire the pill to it and the whole
-  convention stops depending on an agent remembering.
+  answered or not - is `agent-traffic-log`: an append-only log, a pane that
+  tails it, and a `PostToolUse` hook that records every `SendMessage`.
+- **No automatic hooking of the pill.** There is no cmux event on message
+  receipt, so both halves are agent discipline enforced by this skill. The host
+  does fire one: Claude Code runs `UserPromptSubmit` on a message another
+  session sends to your main conversation
+  (https://code.claude.com/docs/en/hooks#userpromptsubmit). Wiring the inbound
+  pill to it would stop that half depending on an agent remembering; this
+  skill does not ship that hook.
 
 ## Quick reference
 
@@ -177,5 +183,7 @@ re-set each turn cannot go stale for longer than one turn.
 - `claude-code-cross-session-messaging` - the transport these conventions
   decorate: addressing, `notify_when_idle`, and why the reply and the idle
   notice are different signals.
-- `cmux-agent-tabs` - why teammates land in separate workspaces at all, and
+- `agent-traffic-log` - the durable event log and traffic pane behind the
+  pill.
+- `cmux-agent-tabs` - where teammates land (split panes beside the leader), and
   the `PATH` failures that stop them appearing anywhere.

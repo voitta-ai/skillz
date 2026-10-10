@@ -1,7 +1,7 @@
 {
   "name": "claude-code-cross-session-messaging",
-  "version": "1.2.2",
-  "description": "Talk to a Claude Code session that is already running via the native ListAgents + SendMessage pair instead of a headless claude -p call or a terminal-scraping bridge: addressing rules (the name is the address; refs do not survive the listing that produced them), the one-shot notify_when_idle subscription that replaces every polling loop, the no-TTY law that makes headless and in-process transports wedge silently instead of failing, multi-hop transport dependency failures, and the per-session permission boundary that forbids delegating around your own denials.",
+  "version": "1.3.0",
+  "description": "What the Claude Code cross-session messaging docs leave out: the peer's reply and its idle notice are different signals, so read the answer from the reply; recovering a reply that lands after /clear (the rewind menu's previous-session entry or /resume first, a grep for this session's own name as the fallback); never fabricating a reply that has not arrived; diagnosing a silent agent now that -p denies rather than waits and teammate and background-subagent permission prompts surface in the lead session; and the dividing line where a launch-a-callee tool is still the right answer.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",
   "repository": "https://github.com/voitta-ai/skillz",
