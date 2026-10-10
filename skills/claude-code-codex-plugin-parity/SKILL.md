@@ -9,12 +9,14 @@ description: |
   reuse the existing hooks.json, (3) a ported plugin installs under Codex but
   its hooks misbehave or do nothing, (4) you need to confirm which plugin-root
   env vars a hook sees under Codex, (5) you need to know whether "submit to the
-  official marketplace" has a Codex equivalent. Covers the manifest/marketplace
+  official marketplace" has a Codex equivalent, (6) a Codex plugin install
+  reports success but lands zero skills. Covers the manifest/marketplace
   parity, the version-pin release discipline shared by both, the plugin-root
-  env-var compatibility aliases, and the runtime-protocol caveat.
+  env-var compatibility aliases, hook trust review, the symlink divergence,
+  and the runtime-protocol caveat.
 author: Claude Code
-version: 1.2.1
-date: 2026-10-08
+version: 1.3.0
+date: 2026-10-09
 ---
 
 # Claude Code <-> Codex CLI plugin parity
@@ -25,9 +27,10 @@ Codex CLI (plugins added ~v0.117) ships a plugin system that looks almost
 identical to Claude Code's - close enough that you assume a Claude Code plugin
 drops into Codex unchanged. The manifest and the hook *registration* shape do
 port directly, and Codex even sets compatibility env-var aliases so a
-`${CLAUDE_PLUGIN_ROOT}` hook path still resolves. The one thing that can still
-bite is the hook *runtime protocol* (the stdin payload and the stdout/exit
-decision contract). This skill is the map of what is shared vs what is not, so
+`${CLAUDE_PLUGIN_ROOT}` hook path still resolves. What can still bite is the
+hook *runtime protocol* (the stdin payload and the stdout/exit decision
+contract), Codex's hook trust gate, and symlinked skill dirs that Codex's
+installer drops. This skill is the map of what is shared vs what is not, so
 a port is a 20-minute job, not a day of guessing.
 
 ## Context / Trigger Conditions
@@ -47,7 +50,7 @@ a port is a 20-minute job, not a day of guessing.
 | Manifest path | `.claude-plugin/plugin.json` | `.codex-plugin/plugin.json` |
 | Manifest fields | `name`, `version`, `description`, `author`, `homepage`, `repository`, `license`, `keywords` + component pointers | **same fields** |
 | Component pointers | (varies) | `skills: "./skills/"`, `hooks: "./hooks/hooks.json"`, `mcpServers: "./.mcp.json"`, `apps: "./.app.json"` |
-| Marketplace file | `.claude-plugin/marketplace.json` | `marketplace.json` (local: `~/.agents/plugins/marketplace.json`) |
+| Marketplace file | `.claude-plugin/marketplace.json` | `.agents/plugins/marketplace.json` (personal: `~/.agents/plugins/marketplace.json`); Codex also reads `.claude-plugin/marketplace.json` as a "legacy-compatible marketplace", so one file can serve both |
 | Hook registration shape | `hooks.json` with `PreToolUse` + `"matcher": "Bash"` + `{"type":"command","command":...}` | **same shape, same event names** (`PreToolUse`, `PostToolUse`, `SessionStart`, `Stop`, `UserPromptSubmit`, ...) |
 | Version pinning | pins on the `version` string | **same** |
 | Install cache | marketplace clone | `~/.codex/plugins/cache/$MARKETPLACE/$PLUGIN/$VERSION/` |
@@ -89,16 +92,30 @@ repo distributes to both ecosystems.
    contract but verify the exact fields your hook emits against the Codex
    hooks doc before declaring parity.
 
-3. **No self-serve official Codex marketplace (yet).** Anthropic has a
+3. **Plugin hooks are skipped until the user trusts them.** "Installing or
+   enabling a plugin doesn't automatically trust its hooks"; Codex treats
+   plugin-bundled hooks as non-managed and skips them until the user
+   reviews and trusts the current hook definition. A ported hook that
+   "does nothing" under Codex may simply be untrusted - check that before
+   suspecting the protocol.
+
+4. **Symlinked skill dirs do not survive a Codex install.** Codex copies
+   only the plugin subtree into `~/.codex/plugins/cache/...`, so a
+   `skills/` entry that is a symlink pointing outside the plugin root
+   dangles and the install lands zero skills, with no error (observed on
+   Codex 0.160.1, skillz#176). Claude Code's installer dereferences the same
+   links, so the layout works there and the breakage is invisible unless you
+   count `SKILL.md` files in the Codex cache. Ship real files (or links that
+   stay inside the plugin root) to anything Codex installs.
+
+5. **Both hosts now have an official directory.** Anthropic has a
    self-serve directory portal at claude.ai/directory/manage (see
-   `claude-code-plugin-publish-anthropic-marketplace`). The Codex docs say an official Plugin
-   Directory and self-serve publishing are "coming soon"; for now you
-   distribute via a repo- or user-scoped `marketplace.json`
-   (`.agents/plugins/marketplace.json` or `~/.agents/plugins/marketplace.json`)
-   added with `codex plugin marketplace add <owner/repo>`, or via Codex-app
-   workspace sharing to named teammates. So "submit to the official
-   marketplace" has a Claude Code path but, as of mid-2026, no Codex
-   equivalent - only the repo/marketplace path maps.
+   `claude-code-plugin-publish-anthropic-marketplace`). OpenAI publishes
+   public plugins to a universal directory shared by ChatGPT and Codex,
+   through its plugin submission portal (including a guide for submitting
+   an existing Claude Code plugin). Repo- or user-scoped marketplaces still
+   work alongside it: `codex plugin marketplace add <owner/repo>`, then
+   `codex plugin add PLUGIN@MARKETPLACE`.
 
 ## Solution (port checklist, CC -> Codex)
 
@@ -110,27 +127,33 @@ repo distributes to both ecosystems.
    command path resolves. Use `${PLUGIN_ROOT}` only when you want the native
    Codex name in a Codex-specific hooks file.
 3. Verify the hook's stdin/stdout/exit contract under an actual Codex run
-   before declaring parity (see the documented contract above).
+   before declaring parity (see the documented contract above). Trust the
+   plugin's hooks first, or Codex skips them.
 4. Keep both manifests' `version` in lockstep; bump both per release.
-5. Distribute via a repo- or user-scoped `marketplace.json` added with
-   `codex plugin marketplace add <owner/repo>`; there is no
-   official-marketplace submission to do.
+5. Make sure no shipped skill dir is a symlink that leaves the plugin root.
+6. Distribute via the existing `.claude-plugin/marketplace.json` (Codex
+   reads it) or a `.agents/plugins/marketplace.json`, added with
+   `codex plugin marketplace add <owner/repo>`; submit to OpenAI's portal
+   if you want a public directory listing.
 
 ## Verification
 
 - `codex plugin marketplace add <owner/repo>` then `codex plugin marketplace
-  list` shows the marketplace; open the `codex plugin` browser to install the
-  plugin and confirm its `name` / `version` / enabled state.
+  list` shows the marketplace; `codex plugin add PLUGIN@MARKETPLACE` (or the
+  `/plugins` browser) installs it, and `codex plugin list` shows its
+  `name` / `version` / enabled state.
+- Count `SKILL.md` files under the printed install root; zero means the
+  symlink divergence above.
 - Trigger the hooked event and confirm the hook command actually runs - echo
   `$PLUGIN_ROOT` (and `$CLAUDE_PLUGIN_ROOT`, which should match) from the hook
   to confirm both are populated under Codex.
 
 ## Notes
 
-- Codex plugin CLI: `codex plugin marketplace add|list|upgrade|remove` manages
-  marketplaces; `codex plugin` opens an interactive browser to install /
-  enable / disable individual plugins. Plugins can bundle skills, MCP servers,
-  apps, and hooks.
+- Codex plugin CLI (0.160.1): `codex plugin marketplace add|list|upgrade|remove`
+  manages marketplaces; `codex plugin add|list|remove` installs, lists and
+  uninstalls plugins; `/plugins` inside Codex is the interactive browser.
+  Plugins can bundle skills, MCP servers, apps, and hooks.
 - Cross-pollination already exists: OpenAI ships `codex@openai-codex` as a
   *Claude Code* plugin (the rescue bridge), so the two marketplaces reference
   each other.
@@ -144,11 +167,12 @@ repo distributes to both ecosystems.
 
 ## References
 
-- Codex plugins overview: https://developers.openai.com/codex/plugins
-- Codex build plugins (manifest, marketplace, distribution): https://developers.openai.com/codex/plugins/build
-- Codex hooks (PLUGIN_ROOT + CLAUDE_PLUGIN_ROOT compat alias; hook I/O contract): https://developers.openai.com/codex/hooks
+- Package your plugin (manifest, marketplace, legacy-compatible `.claude-plugin/marketplace.json`, hook trust): https://developers.openai.com/plugins/build/plugins
+- Upload and submit your plugin (directory submission portal): https://developers.openai.com/plugins/deploy/submission
+- Submit your Claude Code plugin to OpenAI: https://developers.openai.com/plugins/guides/submit-claude-plugin
+- Codex hooks (PLUGIN_ROOT + CLAUDE_PLUGIN_ROOT compat alias; hook I/O contract; plugin hook trust): https://developers.openai.com/codex/hooks
 - Codex changelog (plugin feature history): https://developers.openai.com/codex/changelog
-- Community plugin list + "no self-serve marketplace submission" note: https://github.com/hashgraph-online/awesome-codex-plugins
+- Codex install drops symlinked skill dirs: https://github.com/voitta-ai/skillz/issues/176
 - Claude Code plugin marketplaces (version resolution / SHA pinning): https://code.claude.com/docs/en/plugin-marketplaces
 
 ## Related

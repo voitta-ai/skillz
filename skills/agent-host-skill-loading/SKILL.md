@@ -3,8 +3,8 @@ name: agent-host-skill-loading
 description: |
   Make a non-Claude, non-Codex agent load skillz-format `SKILL.md` files, so procedures written once reach every agent you run instead of being restated per host. Covers the two-stage disclosure that keeps the standing prompt small (menu line in the system prompt, full body behind a `load_skill` tool), the measured cost of each alternative, frontmatter parsing that survives block scalars, ordered-path precedence with shadow reporting, refresh without a restart and the turn-boundary gotcha that comes with it, and why the reload belongs behind a privilege gate even though it only reads files. Use when: (1) you have a custom agent loop (Slack bot, service, own harness) that cannot use the skills your Claude Code or Codex installs already have, (2) you are deciding how much of a skill catalog to put in a system prompt versus behind a tool, (3) your standing prompt is growing with every skill added and cheaper fallback models in a waterfall are paying for it, (4) a skill catalog is loaded but the model never invokes it, or (5) two catalogs (public plus private) define the same skill name and you need a defined winner.
 author: Claude Code
-version: 1.1.1
-date: 2026-08-20
+version: 1.1.2
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-host-skill-loading/SKILL.md
 ---
@@ -66,9 +66,17 @@ below are from a 44-skill catalog; scale linearly.
 
 | Approach | Standing cost | Failure mode |
 |---|---|---|
-| Full descriptions inline (what Claude Code does) | ~25 KB | Every turn, every fallback model, pays for 44 skills to use zero or one |
+| Full descriptions inline | ~25 KB | Every turn, every fallback model, pays for 44 skills to use zero or one |
 | Nothing in prompt, `find_skill(query)` tool only | 0 | Never invoked — **a model cannot search for what it does not know exists** |
 | Menu line per skill + `load_skill(name)` tool | ~7 KB | None material; costs one extra tool round-trip on the turns that use a skill |
+
+Claude Code started at the first row and now bounds it. Each listed entry
+(`description` plus `when_to_use`) is cut at 1,536 characters, and the whole
+listing gets a budget of 1% of the model's context window. When the listing
+overflows, it keeps every name but drops descriptions, starting with the
+skills invoked least. That is a capped version of the third row with
+usage-ranked eviction, which is worth copying if your catalog outgrows a
+fixed menu cap.
 
 The third is the one to build. Concretely:
 

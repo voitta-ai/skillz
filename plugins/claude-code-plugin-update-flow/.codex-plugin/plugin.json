@@ -1,7 +1,7 @@
 {
   "name": "claude-code-plugin-update-flow",
-  "version": "1.3.0",
-  "description": "Update an installed Claude Code plugin via /plugin marketplace update + /reload-plugins, not the discovery-picker /plugin update.",
+  "version": "1.4.0",
+  "description": "Get an installed Claude Code plugin to run new code: the install cache is keyed on the resolved version, so bump it (or omit it to track the commit SHA), then /reload-plugins; verify against the cache, not the clone.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",
   "repository": "https://github.com/voitta-ai/skillz",
