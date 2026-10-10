@@ -16,8 +16,8 @@ description: |
   file pruning, frontmatter `source:` field rewrite, and the
   redirect-README pattern that points users at the new repo.
 author: Claude Code
-version: 1.2.0
-date: 2026-05-14
+version: 1.2.1
+date: 2026-10-09
 ---
 
 # Gist → repo migration preserving full revision history
@@ -151,8 +151,8 @@ gh gist edit <gist-id> --remove SKILL_review-pr-loop.md
 gh gist edit <gist-id> --remove install.sh
 ```
 
-`gh gist edit --remove` deletes a file from the gist. It is not
-prominent in `gh --help`; you have to know it exists.
+`gh gist edit --remove` deletes a file from the gist. It is listed in
+`gh gist edit --help` (`-r, --remove`), not in top-level `gh --help`.
 
 ### 7. Update any installer / fetcher to point at the repo
 

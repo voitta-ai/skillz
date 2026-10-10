@@ -197,7 +197,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Recover an undocumented Claude Code settings block from the shipped bun-compiled CLI binary with strings when the public JSON schema omits it: run strings to a file first (a context-window grep at the raw binary times out), then read BOTH the generator prompt text for the slot vocabulary and the validator bodies for the limits actually enforced. Notes that which claude often returns a wrapper shim, and that bundled-JS megalines must be truncated when read."
+      "summary": "Recover an undocumented Claude Code settings block from the shipped bun-compiled CLI binary with strings when neither the official settings reference (check it first) nor the public JSON schema describes it: run strings to a file first (a context-window grep at the raw binary times out), then read BOTH the generator prompt text for the slot vocabulary and the validator bodies for the limits actually enforced. Notes that which claude often returns a wrapper shim, and that bundled-JS megalines must be truncated when read."
     },
     {
       "name": "claude-json-mcp-migration-slice",
@@ -961,7 +961,7 @@
         "claude",
         "codex"
       ],
-      "summary": "Diagnose which permission gate refused a command when two are active, and why a standing allow rule did not stop it. Records the opt-in setting autoMode.classifyAllShell (default false), which when enabled suspends every Bash/PowerShell allow rule while auto mode is active, and the diagnostic order to use when it is off - which is the usual case. Pairs with permission-gate-inherits-operator-allow-list as the opposite symptom of one design gap."
+      "summary": "Diagnose which permission gate refused a command when two are active, and why a standing allow rule did not stop it. Gives the diagnostic order (mode, rule shape, hook, server-side gate), noting that PreToolUse hooks run before allow rules and linking the docs for how auto mode and the opt-in autoMode.classifyAllShell treat shell allow rules. Pairs with permission-gate-inherits-operator-allow-list as the opposite symptom of one design gap."
     },
     {
       "name": "permission-gate-inherits-operator-allow-list",

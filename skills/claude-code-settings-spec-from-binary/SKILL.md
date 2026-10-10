@@ -3,19 +3,20 @@ name: claude-code-settings-spec-from-binary
 description: |
   Recover an undocumented Claude Code settings block or slash-command
   contract from the shipped bun-compiled CLI binary with `strings`, when
-  the public JSON schema does not describe it. Use when: (1) a key exists
-  in a real `~/.claude/settings.json` but is absent from
-  `json.schemastore.org/claude-code-settings.json`; (2) you need the limits
+  the official settings reference does not describe it. Use when: (1) a key
+  exists in a real `~/.claude/settings.json` but is absent from
+  `code.claude.com/docs/en/settings-reference` (check that first, then
+  `json.schemastore.org/claude-code-settings.json`); (2) you need the limits
   a setting is actually validated against, not just its shape; (3) you need
   the full enum of labels/slots a generated block is supposed to contain, to
   tell a stale block from a malformed one; (4) `grep` straight at the binary
   hangs or times out; (5) someone reports the Claude binary cannot be found
   because `which claude` returned a wrapper shim. Records the two-source
   read - generator prompt text for intent, validator function bodies for
-  enforced limits - and the `autoMode.environment` worked example.
+  enforced limits.
 author: Claude Code
-version: 1.1.0
-date: 2026-09-16
+version: 1.2.0
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claude-code-settings-spec-from-binary/SKILL.md
 ---
@@ -27,8 +28,12 @@ source_file: skills/claude-code-settings-spec-from-binary/SKILL.md
 
 ## Problem
 
-Claude Code ships settings keys that the public schema at
-`https://json.schemastore.org/claude-code-settings.json` does not describe.
+Look in the official settings reference first:
+https://code.claude.com/docs/en/settings-reference, then the community schema
+at `https://json.schemastore.org/claude-code-settings.json`. Only when neither
+describes a key does the rest of this skill apply.
+
+Claude Code still ships settings keys that neither of those describes.
 A key can be sitting in a live `~/.claude/settings.json`, written by a
 first-party flow, with no published documentation of its shape, its label
 vocabulary, or the limits it is validated against.
@@ -44,7 +49,7 @@ Reading only one of them yields a half-answer.
 
 Invoke when:
 
-- A settings key is present on disk and absent from the published schema.
+- A settings key is present on disk and absent from the settings reference.
 - You need the *enforced* constraint (max entries, max length, forbidden
   characters, required literal values), not the nominal shape.
 - You need the complete label or slot enum, so that a block missing one slot
@@ -57,7 +62,8 @@ Do NOT invoke when:
 
 - The question is runtime behavior ("does this setting actually change what
   the classifier decides"). Strings give the contract, never the behavior.
-- The key is already in the published schema - read that instead.
+- The key is already in the settings reference or the published schema -
+  read that instead.
 
 ## Solution
 
@@ -173,31 +179,10 @@ than presenting it as the contract.
 
 ## Example
 
-Recovering `autoMode.environment` - a key written by `/auto-mode-setup`, absent
-from the public schema:
-
-```bash
-BIN=$(readlink -f ~/.local/bin/claude)
-strings -n 10 "$BIN" > /tmp/cc-strings.txt
-grep -n "### Org-wide" /tmp/cc-strings.txt          # -> the generator prompt
-grep -n "contains an entry of" /tmp/cc-strings.txt  # -> the validator
-awk 'NR>=278815 && NR<=278880' /tmp/cc-strings.txt | cut -c1-400
-```
-
-The prompt half yields the format - a flat array of markdown lines, two
-literal `### Org-wide` / `### User-specific` headers detected by
-`startsWith("### ")`, with `**Label**: value` bullets between them and a fixed
-label vocabulary.
-
-The validator half yields what the prompt never states: at most 200 entries,
-at most 10000 characters per entry, no empty entries, no control characters,
-no invisible or bidirectional characters, no literal `<settings_` template
-token or `cc_automode` region marker, and - inverting the sibling rule for the
-`allow` / `soft_deny` / `hard_deny` arrays, where the literal `"$defaults"`
-must be present or the array *replaces* the shipped rules - `environment` must
-not contain `"$defaults"` at all.
-
-Only the validator explains why an otherwise-reasonable block gets refused.
+The original worked example, `autoMode.environment`, is now documented
+(https://code.claude.com/docs/en/settings-reference#automode and
+https://code.claude.com/docs/en/auto-mode-config), so read it there. The
+technique above still applies to the next key that is not.
 
 ## Notes
 
@@ -217,7 +202,9 @@ Only the validator explains why an otherwise-reasonable block gets refused.
 
 ## References
 
-- Public settings schema (what it omits is the whole premise):
+- Official settings reference (check first):
+  https://code.claude.com/docs/en/settings-reference
+- Community settings schema:
   https://json.schemastore.org/claude-code-settings.json
 
 ## Related

@@ -1,7 +1,7 @@
 {
   "name": "claude-transcript-permission-mining",
   "description": "Count permission outcomes (auto-mode refusals, operator rejections) from Claude Code transcripts without the traps that corrupt the number while leaving the output plausible:",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "voitta-ai"
   },
