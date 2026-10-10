@@ -1,6 +1,6 @@
 {
   "name": "work-on-pr",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Author-side PR iteration loop. Watches a PR for new review comments and addresses them across rounds.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",

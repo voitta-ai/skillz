@@ -1,6 +1,6 @@
 {
   "name": "cmux-runbook-in-sibling-tab",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Run a runbook step by step in a sibling cmux terminal tab with exit-code receipts; stage irreversible steps for a human Enter (scripts/cmux-step + YOLT rule).",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",

@@ -1,6 +1,6 @@
 {
   "name": "claude-transcript-permission-mining",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Count permission outcomes (auto-mode refusals, operator rejections) from Claude Code transcripts without the traps that corrupt the number while leaving the output plausible:",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",

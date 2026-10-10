@@ -17,10 +17,12 @@ description: |
   normalization against work volume that varies a hundredfold day to day,
   the single forward pass that recovers the refused command, and the standing
   limit that approved prompts are byte-identical to ungated calls so prompt
-  volume is unrecoverable.
+  volume is unrecoverable. Scope: transcripts already on disk. For anything
+  going forward, record outcomes at the source with `PermissionDenied` /
+  `PermissionRequest` hooks or `/permissions` > Recently denied instead.
 author: Claude Code
-version: 1.0.0
-date: 2026-08-28
+version: 1.1.0
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/claude-transcript-permission-mining/SKILL.md
 ---
@@ -36,6 +38,15 @@ Claude Code's transcript store is the only local record of what the
 permission layer actually did. Mining it looks like a ten-line `grep`, and
 the ten-line version produces numbers that are wrong in ways that do not
 announce themselves -- the output is plausible, monotonic, and off.
+
+**Scope: history only.** This skill is for counting what already happened in
+transcripts on disk. For anything going forward, capture the outcome when it
+happens instead of reconstructing it: a `PermissionDenied` hook fires on every
+auto-mode denial with `tool_name`, `tool_input` and `reason`; a
+`PermissionRequest` hook fires the moment a prompt is about to be shown (which
+also recovers the approved-prompt volume this store cannot, see Notes); and
+`/permissions` > **Recently denied** lists auto-mode denials for review and
+retry. See https://code.claude.com/docs/en/hooks.
 
 Three distinct failures, all observed on one measurement:
 
@@ -71,11 +82,16 @@ Invoke when:
 ### 1. Anchor the marker, do not substring it
 
 The refusal text is the *beginning* of a `tool_result` block. Match it there,
-allowing the optional `Error: ` prefix the host adds on some paths:
+allowing the optional `Error: ` prefix the host adds on some paths. There are
+two auto-mode refusal prefixes; the host's own check (2.1.296) treats a result
+starting with either as an auto-mode denial, so count both:
 
 ```python
-MARKER = "Permission for this action was denied by the Claude Code auto mode"
-ANCHORS = tuple(p + MARKER for p in ("", "Error: "))
+MARKERS = (
+    "Permission for this action was denied by the Claude Code auto mode",
+    "Permission for this action has been denied. Reason: ",
+)
+ANCHORS = tuple(p + m for m in MARKERS for p in ("", "Error: "))
 
 if not text.startswith(ANCHORS):
     continue
@@ -110,7 +126,7 @@ State at the top of the file which of these it counts:
 | population | marker | operator saw a prompt? |
 |---|---|---|
 | operator rejection | `Permission denied by user`, `the user doesn't want to proceed with this tool use` | yes, and said no |
-| auto-mode refusal | `Permission for this action was denied by the Claude Code auto mode` | no |
+| auto-mode refusal | `Permission for this action was denied by the Claude Code auto mode`, `Permission for this action has been denied. Reason: ` | no |
 
 If a prior measurement reports a different number, check which population it
 counted before assuming either is broken. On one store the two instruments
@@ -157,7 +173,8 @@ recollection of when they worked, not the day after.
 - Approved prompts are **not** recoverable: an approved prompt is byte-identical
   in the transcript to a call that was never gated. Only refusals persist. Any
   gate built on "how often was I interrupted" is unbuildable from this store;
-  the refusal tail is the available proxy.
+  the refusal tail is the available proxy. Going forward, a `PermissionRequest`
+  hook that logs each call is the direct measure.
 
 ## References
 

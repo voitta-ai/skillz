@@ -9,15 +9,13 @@ description: |
   and gated in the next with no config change between them; (4) you are about
   to loosen a config to get past a gate and want to know first whether that
   config is even being read; (5) a refusal might be masking a second,
-  server-side gate. Records the opt-in setting `autoMode.classifyAllShell`
-  (Claude Code, **default false**), which when enabled suspends EVERY
-  `Bash(...)` and PowerShell allow rule while auto mode is active - and the
-  fact that outside auto mode those same rules apply and bypass `PreToolUse`
-  hooks entirely. Also records the diagnostic order to use when a rule is not
-  taking effect and that setting is off, which is the usual case.
+  server-side gate. The per-mode behaviour of allow rules (including the
+  opt-in `autoMode.classifyAllShell`, default false) is in the Claude Code
+  docs; this skill is the diagnostic order for finding which gate refused,
+  given that `PreToolUse` hooks run before allow rules are consulted.
 author: Claude Code
-version: 1.1.0
-date: 2026-09-16
+version: 1.2.0
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/permission-gate-allow-list-not-decisive/SKILL.md
 ---
@@ -40,25 +38,19 @@ work. The expensive part is the response: with nothing identifying the gate,
 the natural move is to loosen the config further, which changes nothing and
 ratchets the permission surface looser on every attempt.
 
-One setting makes an allow-list stop counting, and it is off by default.
-From Claude Code's settings schema in the 2.1.273 binary:
+How an allow rule behaves per permission mode is documented: auto mode drops
+broad rules that grant arbitrary code execution (`Bash(*)`, wildcarded
+interpreters) and keeps narrow ones, and the opt-in
+`autoMode.classifyAllShell: true` suspends every shell allow rule while auto
+mode is active. See https://code.claude.com/docs/en/permission-modes,
+https://code.claude.com/docs/en/auto-mode-config#route-all-shell-commands-through-the-classifier
+and https://code.claude.com/docs/en/permissions. None of it is announced at
+the prompt, which is the whole problem: the same rule behaves differently by
+mode and the refusal names none of it.
 
-```
-classifyAllShell: ...describe("When true, every Bash/PowerShell allow rule is
-suspended while auto mode is active so all shell commands are routed through
-the classifier (higher safety, more classifier calls). Default: false.")
-```
-
-So `Bash(gh pr merge*)` in `~/.claude/settings.json` is:
-
-| mode | effect of the rule |
-|---|---|
-| normal | auto-approves, and **bypasses `PreToolUse` hooks entirely** |
-| auto, `classifyAllShell` unset (**default**) | applies, as in normal mode |
-| auto, `classifyAllShell: true` | **suspended** - the classifier decides as if it were absent |
-
-All three are deliberate. None is announced at the prompt, which is the whole
-problem: the same rule has three behaviours and the refusal names none of them.
+Independently of mode, `PreToolUse` hooks run **before** allow rules are
+evaluated: a hook is invoked even for a call an allow rule matches, and a
+hook that blocks (exit 2) wins over the allow rule.
 
 **Check the setting before you believe it is the cause.** `classifyAllShell`
 is opt-in, so on most machines it is off and is *not* why your rule failed.
@@ -78,8 +70,8 @@ Invoke when:
 - A command is gated despite a matching entry in `permissions.allow`.
 - A denial tells you to add a permission rule that is already present.
 - The same command behaves differently across sessions with no config change.
-- A hook you installed appears not to fire (in normal mode, an allow rule
-  that matches is why - the hook never sees the command).
+- A hook you installed blocks a command you allow-listed (hooks run before
+  allow rules, so the block wins).
 - You are about to widen a config to get past a refusal.
 
 Do NOT invoke when:
@@ -91,30 +83,26 @@ Do NOT invoke when:
 
 ### 1. Establish the mode before touching any config
 
-Auto mode and normal mode give opposite answers about whether a Bash allow
-rule counts. Determine which you are in first; everything else depends on it.
+Auto mode can drop or suspend a Bash allow rule that normal mode honours.
+Determine which you are in first; everything else depends on it.
 A hook that receives the payload can read `permission_mode` directly - it is
 always present.
 
 ### 2. Check the rule's shape, not just its presence
 
-Under auto mode the ignore is categorical for shell: every `Bash(...)` and
-PowerShell rule, not a subset. A non-shell rule is unaffected. So "my rule is
-there" and "my rule applies" are different claims, and only the second
-matters.
+Under auto mode with `classifyAllShell: true`, every `Bash(...)` and
+PowerShell rule is suspended, not a subset. With the default (`false`), only
+broad rules - a bare or wildcard `Bash`, an interpreter or wrapper prefix
+(`Bash(python *)`) - are dropped and narrow ones still apply. A non-shell rule
+is unaffected either way. So "my rule is there" and "my rule applies" are
+different claims, and only the second matters.
 
-Auto-mode setup also rejects and auto-strips certain rules at runtime
-regardless of mode - a bare or wildcard `Bash`, an interpreter or wrapper
-prefix (`Bash(python:*)`, `Bash(sudo:*)`), and any `Agent` rule.
+### 3. Ask whether the hook refused
 
-### 3. Ask whether the hook fired at all
-
-In normal mode a matching allow rule short-circuits `PreToolUse`, so a hook
-that "did nothing" may have been correctly bypassed rather than broken. In
-auto mode the same rule is ignored, so the hook *does* run - meaning turning
-auto mode on can make a hook start firing on commands it never saw before.
-This inversion is the single most confusing consequence, and it is worth
-checking the hook's own log rather than reasoning about it.
+`PreToolUse` hooks run before allow rules in every mode, so an allow rule
+never hides a command from a hook, and a hook that blocks overrides the allow
+rule. If a command you allow-listed is refused, check the hook's own log
+before blaming the allow-list.
 
 ### 4. Look for a second gate before believing the first
 
@@ -131,8 +119,9 @@ obstacle.
 
 ### 5. If the docs do not say, read the binary
 
-None of the above is in the published settings schema. See
-`claude-code-settings-spec-from-binary` for the extraction procedure.
+The mode behaviour above is in the docs now. For the next undocumented
+setting, see `claude-code-settings-spec-from-binary` for the extraction
+procedure.
 
 ## Verification
 
@@ -164,8 +153,11 @@ identified it yet.
 
 ## References
 
-- Claude Code settings schema (which omits all of the above):
-  https://json.schemastore.org/claude-code-settings.json
+- Permission modes: https://code.claude.com/docs/en/permission-modes
+- `autoMode.classifyAllShell`:
+  https://code.claude.com/docs/en/settings-reference#automode-classifyallshell
+- Hooks vs. permission rules:
+  https://code.claude.com/docs/en/permissions#extend-permissions-with-hooks
 
 ## Related
 
@@ -180,10 +172,3 @@ identified it yet.
   singly they look like contradictions.
 - `claude-code-settings-spec-from-binary` - how the `classifyAllShell` fact
   above was recovered, and the procedure for the next undocumented one.
-
-The normal-mode half is worth stating on its own, because it surprises hook
-authors in the opposite direction: outside auto mode a matching static allow
-rule means your `PreToolUse` hook is never invoked at all. A hook that "does
-nothing" on exactly the commands you allow-listed is working correctly. Do
-not add wildcard entries such as `Bash(gh:*)` or `Bash(python3:*)` to get
-past prompts - they silently retire your hook for everything underneath them.

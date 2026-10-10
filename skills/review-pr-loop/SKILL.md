@@ -3,8 +3,8 @@ name: review-pr-loop
 description: |
   Iteratively review a GitHub pull request across multiple rounds. Each round, read the linked issue(s), prior review comments, issue comments, and inline threads before reviewing only the new diff or the author's latest response. If no author response exists yet, wait and re-check instead of exiting. Leave structured feedback (REQUEST_CHANGES, COMMENT, or APPROVE) and continue until you approve, the PR is merged or closed, or the user stops the loop. Use when you are the reviewer on a non-trivial PR and want the agent to own the back-and-forth review cycle rather than doing a one-shot review.
 author: Claude Code
-version: 1.8.0
-date: 2026-06-22
+version: 1.8.1
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/review-pr-loop/SKILL.md
 ---
@@ -452,7 +452,7 @@ these patterns to `~/.claude/settings.json#permissions.allow`:
       "Bash(gh api repos/*/pulls/*/comments)",
       "Bash(gh api repos/*/pulls/*/comments/*/replies)",
       "Bash(gh issue comment:*)",
-      "Write(/tmp/**)"
+      "Edit(//tmp/**)"
     ]
   }
 }
@@ -467,10 +467,14 @@ these patterns to `~/.claude/settings.json#permissions.allow`:
 - The `/reviews` POST and `/comments/<id>/replies` POST entries
   cover the inline-comment path when `gh pr review` is not
   enough.
-- `Write(/tmp/**)` covers the heredoc-to-file pattern used for
+- `Edit(//tmp/**)` covers the heredoc-to-file pattern used for
   every review body (`/tmp/body.md`, `/tmp/r<N>.md`,
   `/tmp/approval.md`). Heredoc files must live in `/tmp/`, not
-  in the cwd — same convention as `work-on-pr`.
+  in the cwd — same convention as `work-on-pr`. Claude Code
+  consults only `Edit` and `Read` path rules (an `Edit` rule
+  covers the Write tool; a `Write(...)` path rule is never
+  consulted), and a single leading `/` is relative to the
+  settings file, so the absolute `/tmp` needs `//`.
 
 ### Avoiding the python3 `-c` inline-script prompt
 
@@ -485,7 +489,7 @@ delivered as a single string without parsing it as Python — and
 the matcher conservatively asks. A real file at `/tmp/<name>.py`
 is analyzable and routes through the safe path.
 
-The `Write(/tmp/**)` allow entry above already covers creating
+The `Edit(//tmp/**)` allow entry above already covers creating
 the script file. Add `Bash(python3 /tmp/*)` to
 `permissions.allow` if you also want to silence the run prompt.
 
