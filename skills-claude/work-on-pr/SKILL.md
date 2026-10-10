@@ -3,8 +3,8 @@ name: work-on-pr
 description: |
   Iteratively work on a GitHub pull request as the author. Watch for new review comments, issue comments, and inline threads; if nothing new exists yet, wait and re-check instead of exiting. For each actionable item, implement the fix in the PR worktree, run relevant tests, commit and push, then reply with a summary and commit SHA. Continue until the PR is approved, merged or closed, or the user stops the loop. Also accepts an issue reference instead of a PR: in that case the skill creates the PR (if absent), guarantees the PR body contains `Closes #<issue>`, and then enters the watch loop. A bare problem statement works too — the skill opens the issue first, then takes the issue path. Optionally drives its own reviewer by running `codex-adversarial-pr-review` on the PR each round, so the loop closes without a second human. Use when you want the agent to own the start-PR or address-test-push-reply-wait cycle across multiple review rounds rather than handling a single review comment.
 author: Claude Code
-version: 1.13.0
-date: 2026-06-22
+version: 1.13.1
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/work-on-pr/SKILL.md
 ---
@@ -198,10 +198,11 @@ command (see "Hosts that cannot self-schedule").
      `origin/<headRefName>`.
    - Run subsequent git operations in single-shot form via
      `git -C <worktree-path> <subcommand> ...`. Do NOT chain a
-     `cd <worktree>` with `&&` in front of `git`. The compound
-     does not match any single `Bash(git ...)` allow pattern, so
-     it forces a permission prompt every time even when the
-     standalone git command would have been auto-allowed. See the
+     `cd <worktree>` with `&&` in front of `git`. A `cd` into
+     another directory combined with `git` prompts every time
+     (running `git` in a new directory can execute that
+     directory's hooks), even when the standalone git command
+     would have been auto-allowed. See the
      "Auto-approved operations" section below for the matching
      allow entries.
    - For ad-hoc reads (`git status`, `git --no-pager diff`, etc.)
@@ -351,7 +352,7 @@ command (see "Hosts that cannot self-schedule").
       Never write the heredoc body file inside the worktree, cwd,
       or any other tracked location: that creates an untracked file
       the next `git add` may stage by accident, AND it falls outside
-      the `Write(/tmp/**)` allow entry below so the Write tool will
+      the `Edit(//tmp/**)` allow entry below so the Write tool will
       prompt. The basename alone (`issue-<N>-commit.txt`) without the
       `/tmp/` prefix is the most common form of this mistake.
 
@@ -578,7 +579,7 @@ permission prompts every iteration. Add these patterns to
       "Bash(git -C * --no-pager log:*)",
       "Bash(git -C * --no-pager diff:*)",
       "Bash(git -C * --no-pager show:*)",
-      "Write(/tmp/**)",
+      "Edit(//tmp/**)",
       "Edit",
       "Write",
       "MultiEdit"
@@ -594,39 +595,44 @@ does not strip flags, so `Bash(git -C * push origin feature/*)`
 does NOT match a `-u` push. Both shapes are listed so the first
 push and subsequent follow-up pushes are both auto-allowed.
 
-**Why `Write(/tmp/**)`.** The skill writes commit-body, reply-body,
+**Why `Edit(//tmp/**)`.** The skill writes commit-body, reply-body,
 and PR-body heredocs to `/tmp/<file>` and passes them via
 `--body-file` / `git commit -F`. The `Write` tool prompts on every
-new file without this entry. `/tmp` is process-local scratch — no
+new file without this entry. Claude Code consults only `Edit` and
+`Read` path rules (an `Edit` rule covers the Write tool; a
+`Write(...)` path rule is accepted but never consulted), and a
+single leading `/` is relative to the settings file, so the
+absolute `/tmp` needs `//`. `/tmp` is process-local scratch — no
 risk of overwriting persistent data.
 
 **The `Edit` / `Write` / `MultiEdit` tradeoff.** Listing the tools
 without a path scope allows edits to ANY file from ANY cwd, not
 just the worktree. This is the simplest way to silence per-edit
-prompts because CC's allow matcher does not accept a path glob for
-`Edit` / `Write` (e.g. `Edit(/path/to/repo.worktrees/**)` is not
-honored). If you'd rather keep `Edit` prompting outside the loop
-and only auto-allow inside the worktree, omit those three entries
-and accept one prompt per file edit per iteration.
+prompts. If you'd rather keep `Edit` prompting outside the loop
+and only auto-allow inside the worktree, replace those three
+entries with `Edit(//path/to/repo.worktrees/**)`. Note the double
+slash: `Edit(/path/to/repo.worktrees/**)` is anchored at the
+settings file, not the filesystem root, and does not match.
 
 Rationale: every entry is a *write* the loop does on the agent's
 own work — opening the PR, replying to its reviews, pushing
 follow-up commits to its feature branch. None of them touch shared
 infrastructure or master directly. Static `Bash(...)` entries in
-`permissions.allow` short-circuit CC's native permission layer and
-its PreToolUse hooks (see
-`claude-code-static-allow-bypasses-hook`), so once these are in
-place the loop runs without prompts **from CC's own permission
-matcher**. A separately-installed PreToolUse hook may still
-intercept — see "YOLT-specific gotcha" below for the one case we
-know of in practice.
+`permissions.allow` satisfy CC's native permission layer, so once
+these are in place the loop runs without prompts **from CC's own
+permission matcher**. PreToolUse hooks run before allow rules are
+evaluated, so a separately-installed PreToolUse hook still sees
+every call and may still intercept — see "YOLT-specific gotcha"
+below for the one case we know of in practice.
 
-**Why the `git -C *` patterns matter.** Claude Code matches each
-`Bash(...)` allow entry against the *full* command string. A
-compound like `cd <worktree> && git push origin <branch>` starts
-with `cd`, so `Bash(git push origin feature/*)` never fires on it
-even though the second segment would match on its own. The
-host's Bash-tool description is explicit:
+**Why the `git -C *` patterns matter.** Claude Code splits a
+compound command on `&&`, `||`, `;`, `|` and newlines and requires
+each subcommand to match an allow rule on its own. But a `cd` into
+a different directory combined with `git` prompts regardless,
+because running `git` in a new directory can execute that
+directory's hooks. So `cd <worktree> && git push origin <branch>`
+prompts even though `Bash(git push origin feature/*)` matches the
+second segment. The host's Bash-tool description is explicit:
 
 > never prepend `cd <current-directory>` to a `git` command —
 > the compound triggers a permission prompt
@@ -638,10 +644,10 @@ entries above cover that form; the original `Bash(git push origin
 feature/*)` is kept for the (rarer) case where the agent really is
 in the worktree's cwd.
 
-The same compound-matching rule applies to multi-step chains like
-`git -C X commit ... && git -C X push ...`. Issue separate Bash
-tool calls instead of chaining with `&&`. CC's allow matcher does
-not split compounds for you.
+Multi-step chains without a `cd`, like
+`git -C X commit ... && git -C X push ...`, are split and each
+segment is matched independently, so the chain runs without a
+prompt only if every segment matches an allow entry.
 
 For commands that an allowlist cannot reasonably cover — the most
 common one being a quick `cat <file> | python3 -c "<inline>"`

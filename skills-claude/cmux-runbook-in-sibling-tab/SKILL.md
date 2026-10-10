@@ -16,8 +16,8 @@ description: |
   another surface. Also covers why a sibling tab does NOT satisfy "quit every
   interactive session first", and why a driven tab is still transcribed.
 author: Claude Code
-version: 1.0.0
-date: 2026-08-29
+version: 1.0.1
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/cmux-runbook-in-sibling-tab/SKILL.md
 ---
@@ -63,7 +63,7 @@ agent to run what it was just denied** - see "Stage or fire" below.
 | | Bash tool / `!` | sibling tab |
 |---|---|---|
 | tty | none (`tty` prints `not a tty`) | real pty; Ctrl-C works |
-| duration | Bash tool caps a call at 600 s | none |
+| duration | Bash tool caps a call at 600 s by default (`BASH_MAX_TIMEOUT_MS`) | none |
 | output | lands in the conversation | stays in the tab's scrollback |
 | survives the session | no | yes - the tab is a separate cmux surface |
 | who pressed Enter | the agent (Bash) / the human (`!`) | either, and it is visible which |
@@ -153,7 +153,7 @@ What the step file does for you:
 - a unique token per invocation.
 
 `run` blocks up to `CMUX_STEP_TIMEOUT` (default 540 s, under the Bash tool's
-600 s cap) and exits 124 without a receipt; the step keeps running in the tab
+default 600 s cap, which `BASH_MAX_TIMEOUT_MS` can raise) and exits 124 without a receipt; the step keeps running in the tab
 and `wait <n>` resumes the wait - **waits are resumable**, nothing is lost by
 timing out. For a step you expect to take longer, or for any staged step, do
 not block a foreground tool call at all: `stage`, end the turn with one line
