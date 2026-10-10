@@ -26,12 +26,14 @@ description: |
   because base-branch movement does not re-trigger PR CI), and the
   multi-plugin case where per-plugin versions are separate cache keys the
   gate cannot see, and the no-bundle case: one release stream per plugin
-  (`<plugin>-v<version>` tags, a per-plugin bump gate, `--notes-start-tag`).
+  (`<plugin>--v<version>` tags, the convention `claude plugin tag` uses,
+  a per-plugin bump gate, `--notes-start-tag`), plus
+  `claude plugin validate --strict` as a CI step.
   Pairs with claude-code-plugin-update-flow, which explains why the version
   is load-bearing in the first place.
 author: Claude Code
-version: 1.4.0
-date: 2026-10-06
+version: 1.5.0
+date: 2026-10-09
 ---
 
 # Claude Code plugin repos: automatic tags and release notes
@@ -169,6 +171,25 @@ when the tag exists, so re-runs and replays converge instead of colliding,
 and no state is needed anywhere. But that same exit 0 has a documented blind
 spot when two merges land close together carrying the *same* version — the
 next section is that failure, observed in this catalog.
+
+### Optional: validate the manifests in the same PR job
+
+The version gate checks one field. `claude plugin validate --strict` checks
+the rest of the manifest and fails (exit 1) on warnings the runtime would
+tolerate, such as unrecognized fields and missing metadata. Add it as a
+step in `version-bumped`:
+
+```yaml
+      - name: Validate plugin manifests
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude plugin validate . --strict
+```
+
+Given the repo root, it validates `.claude-plugin/marketplace.json` when
+one exists, but a marketplace run does not open the plugins it lists in
+other directories. In a multi-plugin repo, run it once per plugin
+directory as well.
 
 ### Where idempotence fails: two merges, one version
 
@@ -309,8 +330,11 @@ gh api -X PUT "repos/$OWNER/$REPO/pulls/$pr/merge" -f merge_method=squash
 - **Multi-plugin repo with no bundle** (several plugins, each installed on
   its own, nothing that ships them all): no manifest anchors a release, and
   a repo-wide version invented for the purpose is no install's cache key.
-  Give each plugin its own release stream, tagged `<plugin>-v<version>`.
-  Both jobs loop over the manifests, and neither uses `paths-ignore`: a
+  Give each plugin its own release stream, tagged `<plugin>--v<version>`.
+  That is the tag `claude plugin tag [path]` creates locally (after checking
+  that `plugin.json` and any enclosing marketplace entry agree on the
+  version), so a hand-cut tag and a CI-cut one cannot diverge. Both jobs
+  loop over the manifests, and neither uses `paths-ignore`: a
   plugin that owes nothing is skipped inside the job, so the job always
   reports and can be a required check.
 
@@ -348,12 +372,12 @@ gh api -X PUT "repos/$OWNER/$REPO/pulls/$pr/merge" -f merge_method=squash
   for manifest in */.claude-plugin/plugin.json; do
     plugin=${manifest%%/*}
     version=$(jq -r .version "$manifest")
-    tag="$plugin-v$version"
+    tag="$plugin--v$version"
     if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
       echo "$tag is already tagged; nothing to release."
       continue
     fi
-    prev=$(git tag --list "$plugin-v*" --sort=-v:refname | head -1)
+    prev=$(git tag --list "$plugin--v*" --sort=-v:refname | head -1)
     start=()
     if [ -n "$prev" ]; then
       start=(--notes-start-tag "$prev")
