@@ -18,8 +18,8 @@ description: |
   authorization-code flow, store the token, then publish. NOT for self-hosted
   WordPress using application-password REST - this targets public-api.wordpress.com.
 author: Claude Code
-version: 1.4.1
-date: 2026-09-16
+version: 1.4.2
+date: 2026-10-10
 source: https://github.com/voitta-ai/skillz
 source_file: skills/wordpress-com-publish/SKILL.md
 ---
@@ -96,12 +96,18 @@ opaque to the editor. Three shapes are easy to get subtly wrong:
 - **Horizontal rules** are `wp:separator` with
   `class="wp-block-separator has-alpha-channel-opacity"`.
 
-**Two non-obvious traps (each cost real time):**
+**Three non-obvious traps (each cost real time):**
 - pandoc's default `--wrap=auto` line-wraps the HTML output - that is what
   injects `\n` into long headings (it is NOT WordPress doing it). You MUST pass
   `--wrap=none`. Also `--no-highlight` so code is plain `<pre><code>`, not
   highlight-span soup. (Do NOT use `--syntax-highlighting=none` - it is not a
   real pandoc flag and makes pandoc exit non-zero, failing the whole convert.)
+- `-f gfm` enables `tex_math_dollars`, so two `$` amounts in one paragraph
+  ("cost $30.95; grading was $51.90") are parsed as inline math. The text
+  between them is destroyed into a `math inline` span with every letter
+  italicised, and pandoc still exits 0. Pass `-f gfm-tex_math_dollars`. After
+  converting anything with currency in it, grep the stored markup for
+  `math inline`.
 - The POST/PUT response `content` is the **rendered** HTML (block comments
   stripped), so it never matches what you sent. To verify the stored block
   markup, GET the post with `?context=edit`.
@@ -131,7 +137,7 @@ def _items(raw, tag):
 
 def to_blocks(md_path, shift=1):
     html = subprocess.run(
-        ["pandoc", "-f", "gfm", "-t", "html", "--no-highlight",
+        ["pandoc", "-f", "gfm-tex_math_dollars", "-t", "html", "--no-highlight",
          "--wrap=none", f"--shift-heading-level-by={shift}", md_path],
         capture_output=True, text=True, check=True).stdout
 
