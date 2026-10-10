@@ -19,7 +19,7 @@ description: |
   other multiplexers. Also use when (5) a spawned wave produces no commits, no
   dirty files and no replies - agents that are visible but wedged.
 author: Claude Code
-version: 1.9.1
+version: 1.10.0
 date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-team-orchestration/SKILL.md
@@ -311,7 +311,16 @@ Heuristics for the ready set:
   schema, no ordering dependency, separate PRs that won't conflict on merge.
 - **Serialize** (one wave after another): issues that edit the same files, a
   migration or interface change others build on, or anything where issue B's
-  acceptance depends on A having landed.
+  acceptance depends on A having landed. Record each such edge as a native
+  GitHub "blocked by" link (`repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by`),
+  or as a sub-issue when the pieces split one parent, so the next wave's frontier
+  (issues whose blockers are all closed) is a query, not a re-read.
+- **Wide refactors** (one mechanical change that breaks every call site at once)
+  cannot land as one green slice. Order them expand, migrate, contract: add the new
+  form beside the old, migrate call sites in batches (one issue each, blocked by the
+  expand), then delete the old form in an issue blocked by every batch.
+  (Both rules adapted from [mattpocock/skills](https://github.com/mattpocock/skills)
+  `to-tickets`, MIT.)
 - **Cap the wave** to the number of squads you can actually watch and unblock.
   Parallelism you can't supervise just moves the bottleneck onto you.
 

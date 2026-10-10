@@ -3,7 +3,7 @@ name: review-pr-loop
 description: |
   Iteratively review a GitHub pull request across multiple rounds. Each round, read the linked issue(s), prior review comments, issue comments, and inline threads before reviewing only the new diff or the author's latest response. If no author response exists yet, wait and re-check instead of exiting. Leave structured feedback (REQUEST_CHANGES, COMMENT, or APPROVE) and continue until you approve, the PR is merged or closed, or the user stops the loop. Use when you are the reviewer on a non-trivial PR and want the agent to own the back-and-forth review cycle rather than doing a one-shot review.
 author: Claude Code
-version: 1.8.1
+version: 1.9.0
 date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/review-pr-loop/SKILL.md
@@ -191,7 +191,9 @@ iteration:
 5. **First round (no prior review by you)**:
    - Treat the entire PR diff as in scope.
    - Reconcile diff against the underlying issue's acceptance
-     criteria from step 1a.
+     criteria from step 1a, both ways: what the issue asked for that
+     is missing or wrong, and behaviour in the diff the issue did not
+     ask for (scope creep).
    - Optionally delegate the detailed code-quality pass to
      `pr-review-toolkit:review-pr` (one-shot) and consume its output
      as input to your synthesis.
@@ -217,6 +219,13 @@ iteration:
    For each blocking finding, write a self-contained reproduction
    or concrete example. Reviewer one-liners that compress 4
    different concerns into one sentence force the author to guess.
+
+   Report them under two headings, `Standards` (the repo's documented
+   conventions) and `Spec` (the linked issue, including scope creep),
+   and never re-rank across the two. Code can follow every convention
+   and still build the wrong thing, or the reverse; one merged list
+   lets either axis mask the other. Name the worst finding *within*
+   each axis, not one winner overall.
 
 8. **Decide the review event.**
    - Any blocking finding remains → `REQUEST_CHANGES` (or
@@ -700,6 +709,8 @@ Iteration 7:
 - [GitHub REST: pulls/comments (inline)](https://docs.github.com/en/rest/pulls/comments)
 - [GitHub REST: issues/comments (top-level)](https://docs.github.com/en/rest/issues/comments)
 - [gh pr review](https://cli.github.com/manual/gh_pr_review)
+- Standards/Spec split and the scope-creep check adapted from
+  [mattpocock/skills](https://github.com/mattpocock/skills) `code-review` (MIT).
 
 ## Related
 

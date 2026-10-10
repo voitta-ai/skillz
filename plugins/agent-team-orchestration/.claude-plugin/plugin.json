@@ -1,7 +1,7 @@
 {
   "name": "agent-team-orchestration",
   "description": "Run a team of agents over a repo's open issues: an architect plans the parallel set, then per-issue squads (dev + adversarial reviewer + SDET + productivity engineer), each individually watchable.",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "author": {
     "name": "voitta-ai"
   },

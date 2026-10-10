@@ -1,6 +1,6 @@
 {
   "name": "review-pr-loop",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "Reviewer-side PR iteration loop. Re-reads issue + prior threads each round, reviews only the new diff or latest author response.",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",
