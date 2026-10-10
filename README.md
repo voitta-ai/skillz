@@ -15,7 +15,6 @@ environments and older Codex versions.
 - [Install — Claude Code plugin (recommended)](#install--claude-code-plugin-recommended)
 - [Install — Codex plugin (recommended)](#install--codex-plugin-recommended)
 - [Install — script (legacy / fallback)](#install--script-legacy--fallback)
-- [Migrating from `debedb/skillz`](#migrating-from-debedbskillz)
 - [Catalog manifest](#catalog-manifest)
 - [Contributing](#contributing)
   - [Which branch to target](#which-branch-to-target)
@@ -670,55 +669,6 @@ git clone https://github.com/voitta-ai/skillz.git /tmp/skillz
 
 Backward compatibility: invoking `install.sh` with no selection
 flags installs the `pr-loop` collection, matching the prior default.
-
-## Migrating from `debedb/skillz`
-
-This repo previously lived at
-[`debedb/skillz`](https://github.com/debedb/skillz). It has moved
-to [`voitta-ai/skillz`](https://github.com/voitta-ai/skillz).
-GitHub redirects the old URL indefinitely (until the
-`debedb/skillz` name is reused), so existing installs continue to
-work without changes. The notes below cover the few cases where a
-manual switch is worth doing.
-
-**Script install (`install.sh`).** Re-run the curl one-liner
-against the new raw URL — it overwrites in place, same skill paths,
-no orphan files:
-
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/voitta-ai/skillz/master/install.sh)
-```
-
-The old `debedb` URL still resolves via the GitHub redirect, so
-nothing breaks if you keep using it; the new URL is just the
-canonical one going forward.
-
-**Claude Code plugin.** The redirect also covers `/plugin
-marketplace add` / `/plugin update`, so existing installs keep
-updating from the renamed repo automatically. To switch the
-marketplace entry to the new owner explicitly:
-
-```text
-/plugin uninstall skillz@skillz
-/plugin marketplace remove skillz
-/plugin marketplace add voitta-ai/skillz
-/plugin install skillz@skillz
-```
-
-**Codex plugin.** Same pattern — the marketplace source URL
-redirects, so existing installs keep working. To switch the
-configured marketplace entry to the new owner explicitly:
-
-```bash
-codex plugin marketplace remove skillz
-codex plugin marketplace add voitta-ai/skillz
-```
-
-Then reopen `/plugins`, select the `skillz` marketplace, and
-reinstall or update the same plugin entry you were already using.
-
-This section will be removed once the rename has aged enough that
-nobody is hitting the old URL anymore — see #22.
 
 ## Catalog manifest
 
