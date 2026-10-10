@@ -1,6 +1,6 @@
 {
   "name": "pr-loop",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Paired PR-loop skills: work-on-pr (author) + review-pr-loop (reviewer).",
   "author": "voitta-ai",
   "homepage": "https://github.com/voitta-ai/skillz",
