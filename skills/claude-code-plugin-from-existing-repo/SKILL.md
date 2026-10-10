@@ -9,13 +9,13 @@ description: |
   manual copy-into-project install, (2) you want to add plugin install
   without breaking the manual install path, (3) confused about where
   marketplace.json vs plugin.json live, (4) confused about which env var
-  the plugin's hooks should reference, (5) the installed plugin shows
-  "failed to load" with `Duplicate hooks file detected` after you declared
-  a `hooks` pointer in plugin.json. Covers coexistence of manual and
-  plugin install via a shared source directory.
+  the plugin's hooks should reference, (5) an older Claude Code build shows
+  the plugin as "failed to load" with `Duplicate hooks file detected` after
+  you declared a `hooks` pointer in plugin.json. Covers coexistence of
+  manual and plugin install via a shared source directory.
 author: Claude Code
-version: 1.2.0
-date: 2026-05-10
+version: 1.3.0
+date: 2026-10-09
 ---
 
 # Convert an existing slash-commands+hooks repo into a Claude Code plugin
@@ -127,8 +127,11 @@ registration here BUT swap the env var:
   inside the user's project copy of `.claude/`.
 - Plugin install (`<source>/hooks/hooks.json`): hook command references
   `${CLAUDE_PLUGIN_ROOT}/hooks/...` because the hook script lives inside
-  the plugin's source directory (Claude Code clones the marketplace
-  somewhere and sets this env var to that path).
+  the plugin's installed copy. That is the versioned cache directory
+  `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/`, so it moves
+  on every update. Anything a hook must keep across updates (caches,
+  installed deps, generated files) goes in `${CLAUDE_PLUGIN_DATA}`
+  (`~/.claude/plugins/data/<id>/`), never under the plugin root.
 
 Hook **scripts themselves** typically read `CLAUDE_PROJECT_DIR` to find files
 in the user's project root (e.g. `GOAL.md`) — that still works under plugin
@@ -136,28 +139,26 @@ install because Claude Code sets it for both install modes.
 
 ### Do NOT also declare `hooks` in plugin.json when the file is at the auto-load path
 
-`<source>/hooks/hooks.json` is discovered automatically. Declaring it a second
-time in `plugin.json`:
+`<source>/hooks/hooks.json` is discovered automatically, so a
+`"hooks": "./hooks/hooks.json"` line in `plugin.json` is redundant. Reserve
+that field for a hooks file at a NON-default path.
 
-```json
-"hooks": "./hooks/hooks.json"
-```
-
-makes the loader resolve the same file twice, and the whole plugin fails to
-load — `claude plugin list` shows it as failed, with:
-
-```
-Duplicate hooks file detected: ./hooks/hooks.json resolves to already-loaded file
-```
-
-The failure is easy to misread as a marketplace or update problem because it
-surfaces after an install/update, but it is the manifest: delete the `hooks`
-line from `plugin.json`. Reserve that field for a hooks file at a
-NON-default path; when the file already sits at `<source>/hooks/hooks.json`,
-the pointer is not merely redundant, it is fatal.
+On 2.1.296 the redundant pointer is harmless: the loader logs that the
+manifest "names the standard hooks/hooks.json, which loads on its own;
+loaded once" and continues. Older builds (observed 2026-05) failed the whole
+plugin with `Duplicate hooks file detected: ./hooks/hooks.json resolves to
+already-loaded file`, which reads like a marketplace or update problem
+because it surfaces after an install/update. If you see that on an older
+build, delete the `hooks` line. The same message survives in 2.1.296 for one
+case only: a `manifest.hooks` array that lists the same non-default file
+twice.
 
 ## Verification
 
+0. `claude plugin validate <source>` checks the plugin and marketplace
+   manifests before you push (`--strict` also fails on warnings).
+   `claude plugin init <name>` scaffolds a fresh plugin if you are starting
+   from nothing rather than converting a repo.
 1. From a fresh Claude Code session in any directory:
    ```
    /plugin marketplace add OWNER/REPO

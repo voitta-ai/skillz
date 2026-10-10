@@ -8,13 +8,14 @@ description: |
   packages (tree-sitter, openai, requests, ...), (2) `/plugin install`
   succeeds but the hook silently no-ops on fresh systems with
   ImportError, (3) users hit `externally-managed-environment` (PEP 668)
-  errors on recent Debian / Homebrew Python. Covers marker-file
-  caching, content-hash invalidation on requirements bumps, the
-  `--user` then `--break-system-packages` fallback chain, and the
-  never-break-session invariant.
+  errors on recent Debian / Homebrew Python. Covers installing into the
+  plugin's own `${CLAUDE_PLUGIN_DATA}` directory (no `--user`, no
+  `--break-system-packages`), marker-file caching, content-hash
+  invalidation on requirements bumps, and the never-break-session
+  invariant.
 author: Claude Code
-version: 1.1.0
-date: 2026-05-11
+version: 1.2.0
+date: 2026-10-09
 ---
 
 # Claude Code Plugin: Bootstrap Python Deps in Hook Script
@@ -52,7 +53,16 @@ deps itself on first run, then cache.
 ## Solution
 
 Wrap the Python entry point in a bash script that bootstraps deps on
-first run with a content-hash-keyed marker file.
+first run into the plugin's data directory, with a content-hash-keyed
+marker file.
+
+Claude Code exports `CLAUDE_PLUGIN_DATA` (`~/.claude/plugins/data/<id>/`)
+to hook processes. It survives plugin updates, unlike
+`${CLAUDE_PLUGIN_ROOT}`, which is the versioned cache directory, and it is
+removed on uninstall. Codex exports the same directory as `PLUGIN_DATA`
+and also sets `CLAUDE_PLUGIN_DATA` as an alias. `pip install --target`
+into it touches neither the system nor the user site, so PEP 668 never
+applies and no `--break-system-packages` is needed.
 
 ```bash
 #!/bin/bash
@@ -62,11 +72,15 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 REQS="$PLUGIN_ROOT/requirements.txt"
+# Fallback only for running the wrapper by hand outside a host.
+DATA_DIR="${CLAUDE_PLUGIN_DATA:-${PLUGIN_DATA:-$HOME/.cache/myplugin}}"
+SITE="$DATA_DIR/site-packages"
+export PYTHONPATH="$SITE${PYTHONPATH:+:$PYTHONPATH}"
 
 bootstrap_deps() {
     # Marker keyed to requirements.txt content. A dep bump invalidates
     # the marker and re-bootstraps automatically.
-    local cache_dir="$HOME/.cache/myplugin"
+    local cache_dir="$DATA_DIR"
     local sha
     if command -v shasum >/dev/null 2>&1; then
         sha="$(shasum -a 256 "$REQS" 2>/dev/null | awk '{print substr($1,1,12)}')"
@@ -91,16 +105,11 @@ bootstrap_deps() {
         return 0
     fi
 
-    # Try `--user` first (works on most setups). Fall back to
-    # `--break-system-packages` for PEP 668 environments (recent
-    # Debian, Homebrew Python on macOS).
-    if python3 -m pip install --quiet --user --disable-pip-version-check \
-            -r "$REQS" >/dev/null 2>&1; then
-        touch "$marker"
-        return 0
-    fi
-    if python3 -m pip install --quiet --user --disable-pip-version-check \
-            --break-system-packages -r "$REQS" >/dev/null 2>&1; then
+    # Install into the plugin's own directory. --target skips pip's
+    # externally-managed check, so this works on PEP 668 Pythons
+    # (recent Debian, Homebrew) without --break-system-packages.
+    if python3 -m pip install --quiet --disable-pip-version-check \
+            --upgrade --target "$SITE" -r "$REQS" >/dev/null 2>&1; then
         touch "$marker"
         return 0
     fi
@@ -123,35 +132,40 @@ ImportError (after logging to a known location so the user can diagnose):
 try:
     import mydep1, mydep2
 except ImportError as e:
-    _log("import-error", str(e))  # write to ~/.cache/myplugin/log
+    _log("import-error", str(e))  # write to $CLAUDE_PLUGIN_DATA/log
     sys.exit(0)  # never break the session
 ```
 
 ## Verification
 
-1. Remove the marker: `rm -f ~/.cache/myplugin/deps-installed-*`.
-2. Uninstall deps from the host Python:
-   `python3 -m pip uninstall -y mydep1 mydep2`.
+1. Remove the marker and the installed deps:
+   `rm -rf ~/.claude/plugins/data/<id>/deps-installed-* ~/.claude/plugins/data/<id>/site-packages`.
+2. Make sure the host Python does not already have them
+   (`python3 -c "import mydep1"` fails).
 3. Fire the hook (manually pipe a payload to the wrapper):
-   `echo '{}' | hooks/pre-tool-use.sh`.
+   `echo '{}' | CLAUDE_PLUGIN_DATA=~/.claude/plugins/data/<id> hooks/pre-tool-use.sh`.
 4. Expect: deps install (~1-3s), marker appears, hook emits its normal
    output. Second invocation: instant (marker hot path).
 
 ## Notes
 
-- **Don't use `pip install` without `--user`** unless you're confident
-  the user runs a venv. System-wide installs require sudo on most
-  hosts and will fail.
+- **Don't install into the system or user site.** System-wide needs
+  sudo, and `--user` / `--break-system-packages` writes into a Python
+  the user owns and may break it. `--target "$CLAUDE_PLUGIN_DATA/..."`
+  keeps the deps private to the plugin and gone on uninstall.
 - **Don't shell out to `pip install` without the marker.** Every hook
   fire would take 1-3s probing/installing.
 - **The marker MUST be content-keyed**, not just present/absent.
   Otherwise a requirements bump goes unnoticed and users keep running
   the old code.
-- **Plugin updates can overwrite the wrapper script**, so put the
-  marker under `$HOME/.cache/<plugin>/`, never under the plugin dir.
+- **Never put the marker or deps under the plugin dir.**
+  `${CLAUDE_PLUGIN_ROOT}` is a per-version cache directory, so every
+  update starts from an empty one. `${CLAUDE_PLUGIN_DATA}` is the
+  directory the host keeps across updates.
 - **Document the force-refresh path** in your README:
-  `rm ~/.cache/myplugin/deps-installed-*` for users who switch venvs
-  or manually uninstall.
+  `rm -rf ~/.claude/plugins/data/<id>/deps-installed-*` for users who
+  switch Python versions. `<id>` is the plugin identifier with every
+  character other than a letter, digit, `_` or `-` replaced by `-`.
 - **Test the failure path.** Run the wrapper with `python3` aliased to
   something that ImportErrors and verify the hook exits 0 cleanly
   without breaking Claude Code's flow.

@@ -1,7 +1,7 @@
 {
   "name": "claude-code-plugin-python-bootstrap",
   "description": "Bootstrap Python deps from a Claude Code plugin hook so /plugin install is one-click on systems lacking them (PEP 668-safe).",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "voitta-ai"
   },

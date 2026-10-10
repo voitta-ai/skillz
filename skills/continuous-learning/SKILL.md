@@ -3,8 +3,8 @@ name: continuous-learning
 description: |
   Run the end-of-task retrospective that Codex's `Stop` and `UserPromptSubmit` hooks demand, and decide what the session actually produced. Most turns end with `No reusable learning.` Of the rest, most are **memory** — a single cause->fix, an API gotcha, a config detail — and must NOT become a `SKILL.md`; only a repeatable procedure does. Use when a `Stop` hook fires at end-of-task, when a debugging-heavy session ends, or when the user asks "what did we learn?". Covers the four gates (discovery cost, recurrence, verifiable trigger, verified result), the skill-vs-memory classification, the install-location choice, and the `No reusable learning.` escape hatch. For an explicitly invoked retrospective, and for the wiring that promotes a skill into the `voitta-ai/skillz` catalog, see `claudeception` — this skill defers to it rather than restating it.
 author: Codex
-version: 0.2.0
-date: 2026-05-15
+version: 0.3.0
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/continuous-learning/SKILL.md
 ---
@@ -99,6 +99,11 @@ A learning that passes the four questions above is worth
   is **memory, not a skill.** Do not write a `SKILL.md`. Save it
   as a memory file using the host's memory conventions (one fact
   per file, `name` / `description` frontmatter) and stop.
+  On Codex with native memories on (`[features] memories = true`,
+  off by default), Codex keeps its own memories under
+  `~/.codex/memories/`. The docs call those files generated state
+  and say not to edit them by hand, so do not write the fact
+  there; keep it wherever your other memory files live.
 
 **Most session learnings are memory.** A catalog that admits every
 verified gotcha as a skill stops being searchable, which is the
@@ -114,8 +119,9 @@ them, not a host difference.
 
 Before creating a new skill:
 
-- List installed skills (e.g. inspect `~/.codex/skills/` and any
-  repo-local skill directories).
+- List installed skills (e.g. inspect `~/.agents/skills/`,
+  `~/.codex/skills/` and any repo-local `.agents/skills/`
+  directories).
 - If a related skill already exists, append a short section or a
   worked example rather than spawning a sibling skill.
 - Only create a new skill if no existing one fits and the new
@@ -128,7 +134,10 @@ search and waters down each skill's trigger criteria. Updating wins.
 
 - **Cross-project learnings** (tooling quirks, language-level
   patterns, host-level behavior): user-global.
-  - Codex: `~/.codex/skills/<name>/SKILL.md`
+  - Codex: `$HOME/.agents/skills/<name>/SKILL.md` (the documented
+    user scope). `$CODEX_HOME/skills/` (`~/.codex/skills/`) is no
+    longer in the docs' scope table, but Codex 0.160.1 still uses
+    it: its bundled skill installer writes there.
   - Claude Code: `~/.claude/skills/<name>/SKILL.md`
 - **Repo-specific learnings** (build system quirks, internal
   conventions, project-only workflow): repo-local skill directory.
