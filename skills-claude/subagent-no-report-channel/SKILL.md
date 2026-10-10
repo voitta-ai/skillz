@@ -1,21 +1,24 @@
 ---
 name: subagent-no-report-channel
 description: |
-  Recover the work of a spawned subagent that finished but never reported, and
-  tell that case apart from a genuinely wedged agent. Use when: (1) subagents go
-  idle repeatedly with no findings delivered, (2) `ListAgents` shows them alive
-  but nothing ever arrives in your inbox, (3) an agent's own final text says the
-  send tool was unavailable or disabled, (4) you spawned a restricted agent type
-  (a wrapper that dispatches to a background job runtime) and it reports that
-  polling status/result is outside its role, (5) you are about to kill and respawn
-  agents because they "hung". Root cause: an agent type's declared toolset may not
-  include a messaging tool, so a correct, completed agent has no channel to deliver
-  its result through. The work usually still exists -- in the agent's transcript,
-  or in the background job runtime's state directory -- and is recoverable without
-  re-running anything.
+  Recover the result of a spawned agent whose report never reached you, and
+  tell that case apart from a genuinely wedged agent. The host now delivers
+  most reports itself (a local subagent's final text comes back as its result
+  or a background completion notification; in auto mode, Claude Code 2.1.271+,
+  `SubagentHandback`), so this covers what is left. Use when: (1) you spawned a
+  wrapper agent that dispatches to a background job runtime (for example
+  `codex:codex-rescue`) and its report says only that the job was handed off,
+  or that polling status/result is outside its role; (2) outside auto mode, or
+  for a fork, the returned report is thin or empty because the agent spent its
+  last turn on a failed send; (3) agents look alive but nothing ever arrives
+  and you are about to kill and respawn them because they "hung". The work
+  usually still exists - in the job runtime's state directory or in the
+  agent's transcript - and is recoverable without re-running anything; the
+  transcript's `tool_use` without a matching `tool_result` is the only real
+  wedge signal.
 author: Claude Code
-version: 1.0.0
-date: 2026-08-24
+version: 1.1.0
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/subagent-no-report-channel/SKILL.md
 ---
@@ -27,27 +30,38 @@ source_file: skills/subagent-no-report-channel/SKILL.md
 
 # subagent-no-report-channel
 
-## Problem
+## What the host now covers
 
-You spawn several subagents, brief each to `SendMessage` its results back, and
-then receive nothing. They emit idle notifications. `ListAgents` shows them
-alive. Minutes pass. The obvious reading is that they are wedged, and the
-obvious response -- kill and respawn -- **throws away completed work**.
+A local subagent's final report reaches the caller without any messaging
+brief: a foreground subagent's as its result, a background one's as a
+completion notification in a later turn
+(https://code.claude.com/docs/en/sub-agents). In auto mode, on Claude Code
+2.1.271+, subagents other than forks also get `SubagentHandback`, which
+delivers the report explicitly; a hook on `SubagentHandback` reads it as
+`tool_input.message` (https://code.claude.com/docs/en/hooks). So do not brief
+an Agent-tool subagent to `SendMessage` its result back; ask for it in its
+final response.
 
-Two distinct causes produce identical silence:
+## What is left
 
-1. **No messaging tool in the agent type's toolset.** An agent definition
-   declares its tools. If a messaging tool is not among them, the agent
-   physically cannot report. It will try, get "No such tool available" or
-   "disabled for this session", and (correctly) stop rather than retry blindly.
-2. **A forward-only wrapper agent.** Some agent types exist to dispatch work to
+Silence, or a report with nothing in it, still happens in three cases:
+
+1. **A forward-only wrapper agent.** Some agent types exist to dispatch work to
    a separate background job runtime and are explicitly scoped **not** to poll
    status or fetch results. Such an agent will hand off the job, report that
-   fetching the outcome is outside its role, and end its turn. That is the agent
-   behaving as designed, not failing.
+   fetching the outcome is outside its role, and end its turn. Its delivered
+   report is the hand-off, not the result. That is the agent behaving as
+   designed, not failing.
+2. **No `SubagentHandback` (not auto mode, or a fork).** The report is whatever
+   the agent's final text happened to be. An agent that tried to send its
+   result with a tool it does not have ("No such tool available", "disabled
+   for this session") and then stopped may end on a one-line apology, with the
+   substance earlier in its transcript.
+3. **A genuinely blocked agent** - the only case where respawning is right, and
+   the one the oracle below separates from the other two.
 
-In both cases the work is done or in flight, and the result is sitting somewhere
-you have not looked.
+In the first two the work is done or in flight, and the result is sitting
+somewhere you have not looked.
 
 ## The oracle: transcript, not idle signals
 
@@ -97,14 +111,15 @@ Read it as:
 
 | dangling | tool count | meaning |
 |---|---|---|
-| > 0 | any | genuinely blocked mid-call -- the only real wedge |
+| > 0 | any | blocked mid-call -- first look for its permission prompt in your main or lead session, where background-subagent and teammate prompts surface; if none, the only real wedge |
 | 0 | high | finished the work; look for stranded output |
 | 0 | very low (1-3) | ended early; read its final text for the reason |
 
-## Recovery 1 -- the result is in the agent's final text
+## Recovery 1 -- the result is in the agent's transcript
 
-An agent that cannot send will very often put its entire result in its final
-response instead, especially if briefed to. Extract the last assistant text:
+When the delivered report is thin, the substance is often in an earlier
+assistant block. Extract the last assistant text (adjust the index to walk
+back):
 
 ```bash
 python3 - <<'PY'
@@ -178,11 +193,12 @@ happen**, and saying so was part of reporting the result honestly.
 
 ## Prevention
 
-- **Check the agent type's declared tools before briefing it to report.** If the
-  definition lists only an execution tool, no messaging brief will ever work.
-- **Always give a fallback instruction**, regardless: *"If the send fails, do not
+- **For a wrapper agent, note the task id it prints** - it is the key for
+  recovery 2 - and fetch the result yourself rather than waiting on the
+  wrapper.
+- **Outside auto mode, give a fallback instruction**: *"If a send fails, do not
   retry blindly -- put your complete result in your final response text and
-  stop."* This costs one sentence and converts a total loss into recovery 1.
+  stop."* This costs one sentence and makes the delivered report the result.
 - **Instruct against fabrication explicitly.** Every agent in the source run
   refused to invent findings it did not have and said plainly where it stopped.
   That is what made the silence diagnosable instead of misleading.

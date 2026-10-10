@@ -18,8 +18,8 @@ description: |
   of a ten-message exchange with no agent calling `xs log`. Ships `scripts/xs`
   (log, tail, recent, status, prune) and `scripts/xs-hook`.
 author: Claude Code
-version: 1.5.0
-date: 2026-09-11
+version: 1.5.1
+date: 2026-10-09
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-traffic-log/SKILL.md
 ---
@@ -213,8 +213,12 @@ for this to fail.
 
 ### What it still does not catch
 
-- **Receipt.** `PostToolUse` fires on the sender. `recv` remains unhooked, so
-  the log records what was sent, not what landed.
+- **Receipt.** `PostToolUse` fires on the sender, so the log records what was
+  sent, not what landed. Receipt is now hookable: Claude Code runs
+  `UserPromptSubmit` on a message another session sends to your main
+  conversation, and on a background subagent reporting back
+  (https://code.claude.com/docs/en/hooks#userpromptsubmit). `xs-hook` does not
+  wire it yet, so `recv` is still logged only by hand.
 - **Expiry.** Nothing fires when an idle subscription expires, so a wait that
   ended in *unknown* stays outstanding. Log `expired` by hand, or accept that
   `status` over-reports.
@@ -287,7 +291,8 @@ anyone's discipline. Without the hook, gaps mean what they always meant.
 - **Unhooked, there is no guarantee.** Without `scripts/xs-hook`, nothing
   observes `SendMessage`: an agent that does not call `xs log` leaves no trace
   and the log silently under-reports rather than erroring. Installed, the send
-  side is instrumented; receipt and expiry still are not.
+  side is instrumented; receipt (hookable, not wired) and expiry still are
+  not.
 - **Identity is best-effort.** Two sessions can pick the same name. `ws`
   disambiguates after the fact.
 - **Not a security boundary.** Mode 0600 keeps it to your user; topics are

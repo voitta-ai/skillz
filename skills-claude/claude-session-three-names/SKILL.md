@@ -1,24 +1,25 @@
 ---
 name: claude-session-three-names
 description: |
-  Give a Claude Code (or Codex) session one name in all three places a human
-  or a peer might look: the peer-address name that ListAgents and SendMessage
-  use (Claude Code's session display name), the Remote Control session name,
-  and the cmux tab title. Nothing keeps them in sync by default, so a peer
-  told to "ask the ctox session" cannot find it while the tab and the Remote
-  Control list both say "ctox". Use when: (1) ListAgents shows a session under
-  a folder-derived name like "hq-3c" or "git-2b" while its tab or Remote
-  Control entry has a meaningful name; (2) a peer reports "no session named X"
+  Give a Claude Code (or Codex) session launched in cmux one name in all three
+  places a human or a peer might look: the peer-address name that ListAgents
+  and SendMessage use (Claude Code's session display name), the Remote Control
+  session name, and the cmux tab title. Claude Code now carries a `-n` or
+  `/rename` name to the terminal tab title and to Remote Control itself; what
+  it cannot fix is a session cmux launched or restored without `-n`, which
+  gets a folder-derived name like "hq-3c" while the tab says something else.
+  Use when: (1) ListAgents shows a session under a folder-derived name while
+  its cmux tab has a meaningful name; (2) a peer reports "no session named X"
   although you can see X on screen; (3) you rename a session and a peer's next
   SendMessage fails with "No agent named ... is reachable"; (4) you want every
   session opened in cmux to be named once, with a prompt only when the name
   collides; (5) you need to know which live session sits in which cmux tab.
   Ships scripts/cc and scripts/cx (launch wrappers that set all three from one
-  value), scripts/cc-names (who / pick / sync, and the Stop-hook that pushes a
-  mid-session /rename to the tab), and scripts/cc-who.
+  value), scripts/cc-names (who / pick / sync, and the Stop-hook that
+  re-asserts the tab title), and scripts/cc-who.
 author: Claude Code
-version: 1.0.0
-date: 2026-09-14
+version: 1.1.0
+date: 2026-10-09
 source: two sessions on one machine (a ctox session and a cmux session) reconciling names after a peer routed around an unfindable session; mechanism built and verified in the cmux session
 source_file: skills/claude-session-three-names/SKILL.md
 ---
@@ -32,16 +33,24 @@ source_file: skills/claude-session-three-names/SKILL.md
 A human names things by what is on screen: the cmux tab title, or the Remote
 Control session name in the Claude app. Peer sessions address each other by a
 third string, the session's display name, which defaults to the working
-directory's basename plus a short hash (`hq-3c`, `git-2b`). None of the three
-updates the others. The result is a peer that is told "ask the ctox session",
-lists agents, finds no "ctox", and routes the question somewhere else, while
-the session it wanted was in plain view the whole time.
+directory's basename plus a short hash (`hq-3c`, `git-2b`).
+
+Claude Code now links them once a session has a name: `-n` or `/rename` sets
+the terminal tab title (`terminalTitleFromRename`, default `true`), Remote
+Control titles the session from that name, and a rename from claude.ai or the
+app is applied in the CLI (https://code.claude.com/docs/en/sessions,
+https://code.claude.com/docs/en/remote-control). The gap is the session that
+never got a name: cmux's own launcher and session restore start `claude`
+without `-n`, so the peer address stays folder-derived while a human has named
+the tab. The result is a peer that is told "ask the ctox session", lists
+agents, finds no "ctox", and routes the question somewhere else, while the
+session it wanted was in plain view the whole time.
 
 | Name | Where it shows | Set by |
 |---|---|---|
 | Peer address | `ListAgents` rows, `SendMessage` `to` | `claude -n <name>` at launch, `/rename <name>` in-session; default `<cwd-basename>-<hash>` |
-| Remote Control name | Remote Control session list in the Claude app | `claude --remote-control <name>` at launch, `/remote-control <name>` in-session |
-| cmux tab title | cmux sidebar and tab bar | `cmux tab-action --action rename --surface <ref> --title <name>`, or the human |
+| Remote Control name | Remote Control session list in the Claude app | `--name`, `--remote-control <name>` or `/remote-control <name>`; else the `/rename` title |
+| cmux tab title | cmux sidebar and tab bar | the session name via `-n` / `/rename`; `cmux tab-action --action rename --surface <ref> --title <name>`, or the human |
 
 ## Where the peer-address name actually lives
 
@@ -108,12 +117,14 @@ prompt appears only when that name is already taken. If you want a plain
 `alias claude='cc'` (interactive shells only; cmux's own agent launcher and
 `cmux claude-teams` do not read aliases).
 
-### 2. Push a mid-session `/rename` to the tab (Stop hook)
+### 2. Re-assert the tab title after each turn (Stop hook)
 
-`/rename` is a user slash command: nothing outside the session can trigger
-it, and the model cannot invoke it. So the tab cannot drive the session, but
-the session can drive the tab. `cc-names sync --hook` reads the Claude Code
-hook JSON on stdin, finds the session by `session_id` in the registry, and,
+Claude Code already puts a `/rename` on the terminal tab title. The hook is
+for what can override it, cmux's own `cmux hooks claude auto-name` Stop hook.
+`/rename` is a user slash command: nothing outside the session can trigger it,
+and the model cannot invoke it. So the tab cannot drive the session, but the
+session can drive the tab. `cc-names sync --hook` reads the Claude Code hook
+JSON on stdin, finds the session by `session_id` in the registry, and,
 if `nameSource` is `user`, renames the caller's cmux surface (resolved with
 `cmux identify`, which works from a hook subprocess) to the session name. In
 `~/.claude/settings.json`:
@@ -130,10 +141,6 @@ Idempotent and cheap (one `cmux identify`, one `cmux tab-action`). It also
 re-asserts the title after every turn, which is what stops cmux's own
 `cmux hooks claude auto-name` Stop hook from retitling a named session's tab.
 It never touches tabs of sessions whose name is still `derived`.
-
-Remote Control has no equivalent: `/remote-control <name>` is also a user
-command, and the registry does not record the Remote Control name. Set it at
-launch or accept that it can drift after a `/rename`.
 
 ### 3. See the state at any time
 

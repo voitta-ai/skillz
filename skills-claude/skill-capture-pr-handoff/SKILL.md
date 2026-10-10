@@ -18,8 +18,10 @@ description: |
   side does registry, versions, validators, PR. Falls back to the full
   claudeception wiring when no such peer exists.
 author: Claude Code
-version: 1.3.0
-date: 2026-10-07
+version: 1.3.1
+date: 2026-10-09
+source: https://github.com/voitta-ai/skillz
+source_file: skills/skill-capture-pr-handoff/SKILL.md
 ---
 
 # Skill capture -> PR handoff
