@@ -774,6 +774,23 @@ gh pr create --base master --title "Merge next into master: ..."
 
 One bundle bump for the whole batch, one release. Recent examples: #228, #205.
 
+### Landing: one session merges
+
+When several sessions produce skillz changes at once, master moves under every
+rebase. Bundle numbers collide, and registry files conflict on every PR. So
+capture sessions only push branches (or leave commits in a worktree), and **one
+landing session** merges them, one at a time:
+
+```bash
+scripts/land-pr.sh <worktree> "<PR title> (bundle X.Y.Z)" <pr-body-file>
+```
+
+It rebases on master, sets the bundle to master's + 1 minor, validates, pushes,
+opens or updates the PR, waits for CI, squash-merges and removes the branch and
+worktree. It stops on any conflict outside the bundle version, and runs
+`merge-skill-registry.py` only when a registry file is itself conflicted (see
+the script header for why). Per-plugin bumps stay the author's job.
+
 ### Rules for every PR, either branch
 
 - **Edit `catalog.json`, both marketplaces and the README table IN PLACE.**
