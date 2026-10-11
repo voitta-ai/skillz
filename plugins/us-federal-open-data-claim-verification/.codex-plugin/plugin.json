@@ -1,0 +1,11 @@
+{
+  "name": "us-federal-open-data-claim-verification",
+  "version": "1.0.0",
+  "description": "Verify quantitative claims about US federal grants and revenue against government open-data APIs.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": ["claude", "codex", "skills", "federal", "open-data", "fact-checking", "usaspending", "nih-reporter", "treasury"],
+  "skills": "./skills/"
+}

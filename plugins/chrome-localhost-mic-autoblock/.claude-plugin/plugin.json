@@ -1,0 +1,12 @@
+{
+  "name": "chrome-localhost-mic-autoblock",
+  "description": "Fix a web app's mic failing in Chrome with a `not-allowed` error on localhost even though the OS granted Chrome mic access: Chrome auto-blocks the mic per-site, and the OS Privacy toggle / Chrome restart never clears it. Set the site to Allow.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

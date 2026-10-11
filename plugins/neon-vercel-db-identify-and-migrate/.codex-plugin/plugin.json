@@ -1,0 +1,11 @@
+{
+  "name": "neon-vercel-db-identify-and-migrate",
+  "version": "1.0.0",
+  "description": "Identify which Neon project backs a Vercel app and migrate/split it; pg_dump>=server; safe non-destructive cutover.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": ["claude", "codex", "skills", "neon", "vercel", "db", "identify"],
+  "skills": "./skills/"
+}

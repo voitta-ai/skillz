@@ -1,0 +1,12 @@
+{
+  "name": "git-default-branch-detection",
+  "description": "Detect a repo's real default branch; init.defaultBranch is not the answer.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

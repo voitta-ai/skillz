@@ -1,0 +1,12 @@
+{
+  "name": "cmux-session-restore-forensics",
+  "description": "Diagnose what cmux actually restored after a relaunch and recover panes it silently dropped.",
+  "version": "1.4.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

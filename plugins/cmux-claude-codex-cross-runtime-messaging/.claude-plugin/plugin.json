@@ -1,0 +1,12 @@
+{
+  "name": "cmux-claude-codex-cross-runtime-messaging",
+  "description": "Run a Claude Code agent and a Codex CLI agent as messaging peers in cmux panes, each named as a tab and both in the agent traffic log. Codex has no SendMessage, so the Claude -> Codex hop is codex queue --thread into the live Codex session first, with keystroke injection (cmux send + send-key Enter) as the fallback and for the Codex -> Claude hop, through a small helper that also logs to xs explicitly; each agent names its own tab first via cmux identify + tab-action rename. Covers the Codex TUI parking on a startup modal (read it with cmux read-screen, answer it), and where the lead, teammate and Codex transcripts live on disk afterwards. Verified 2026-08-27 with injection both ways: five rounds in 50 s, every message exactly once.",
+  "version": "1.1.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

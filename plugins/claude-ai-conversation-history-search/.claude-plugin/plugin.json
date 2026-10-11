@@ -1,0 +1,12 @@
+{
+  "name": "claude-ai-conversation-history-search",
+  "description": "Search your own past claude.ai conversations for something you said or were told. Use when: (1) you need to find or disprove a claim about what was said in an earlier Claude chat, (2) you want to grep your whole Claude history, (3) someone references \"that chat we had\" and you need the receipts, (4) you tried grepping ~/Library/Application Support/Claude and found nothing, (5) a claude.ai export arrived as a manifest JSON instead of a data zip, or (6) curl on an export URL returns HTTP 403 with a Cloudflare \"Just a moment...\" page. Covers the export request flow, the multi-file manifest with one-time URLs, and searching conversations.json.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

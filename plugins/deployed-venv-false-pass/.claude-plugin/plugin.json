@@ -1,0 +1,12 @@
+{
+  "name": "deployed-venv-false-pass",
+  "version": "1.0.0",
+  "description": "Verify what a DEPLOYED Python process actually imports, when a service runs from its own venv while you develop in a source checkout. Use when: (1) you merged a change and want to confirm the running service has it, (2) a probe like python -c 'import pkg; print(hasattr(pkg, \"new_thing\"))' says True but the service behaves as if the change is absent, (3) a config naming a new option fails at runtime with 'needs <old option>' or an unexpected TypeError, (4) you are about to ship a config change that depends on freshly merged code, (5) pip install reported success but behaviour did not change. The trap: sys.path[0] is the cwd for -c and -m, and the script's own directory for a script, so a probe run from inside the source tree imports the checkout and reports every merged change as present, whatever interpreter you named. Absolute interpreter paths and PYTHONPATH do not help. Covers probing from a neutral cwd and reading __file__, asserting on code with inspect rather than on a version string, refreshing with --force-reinstall --no-deps and re-verifying, and deploying code before the config that depends on it.",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

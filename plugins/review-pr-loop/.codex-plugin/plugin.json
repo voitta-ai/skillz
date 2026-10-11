@@ -1,0 +1,18 @@
+{
+  "name": "review-pr-loop",
+  "version": "1.4.0",
+  "description": "Reviewer-side PR iteration loop. Re-reads issue + prior threads each round, reviews only the new diff or latest author response.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "github",
+    "pull-request",
+    "review"
+  ],
+  "skills": "./skills/"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "pr-amend-force-push-lost-to-racing-merge",
+  "description": "A review-fix amend + force-push that lands after the reviewer's squash-merge succeeds silently and never reaches the default branch: the merge snapshots the head GitHub had when the merge ran, the later force-push still updates the branch ref without any warning, and the default branch keeps the pre-review version. Use when: (1) you force-pushed to a PR branch while the PR was under active review or had auto-merge armed, (2) a merged PR's requested change is mysteriously absent from the default branch though your branch has it, (3) a stacked follow-up branch starts failing validation after a rebase on something the amendment fixed (e.g. terraform's `Error: Reference to undeclared resource`), (4) `git show origin/<default>:<file>` shows the pre-amendment shape of a file you know you fixed. Covers the post-push detection check, the tree-diff test that works despite squash-merge ancestry breakage, and the carry-the-fix-forward recovery.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

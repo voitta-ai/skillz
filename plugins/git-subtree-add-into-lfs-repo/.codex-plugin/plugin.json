@@ -1,0 +1,19 @@
+{
+  "name": "git-subtree-add-into-lfs-repo",
+  "version": "1.0.0",
+  "description": "Bring a repo into a monorepo with git subtree add when the destination routes some pattern through Git LFS and the source stored those files as plain blobs. Use when: (1) immediately after a subtree add, git status shows a binary file as modified that nobody touched; (2) git diff --stat shows it shrinking to about 130 bytes (Bin 8879291 -> 132 bytes), which is a pointer rather than a truncation; (3) git lfs ls-files says \"Encountered 1 file that should have been a pointer, but wasn't\"; (4) you are about to commit a renormalize to make the dirty tree go away; (5) you need the fix to preserve author, date and message. Root cause: the subtree copies the source tree verbatim including the raw blob, while the destination's inherited LFS clean filter pointer-izes the working copy, so index and working file can never agree. Covers migrating the source clone with git lfs migrate import before redoing the add from a local path, why a renormalize commit leaves the raw blob in history forever, verifying the object is present rather than merely referenced, and the already-pushed case where you must stop and ask.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "git",
+    "git-lfs",
+    "subtree",
+    "monorepo"
+  ],
+  "skills": "./skills/"
+}

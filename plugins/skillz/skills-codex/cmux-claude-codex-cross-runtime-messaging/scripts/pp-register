@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# pp-register <self-name> : records this pane's surface ref and renames the tab.
+set -u
+me="$1"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+ref="$(cmux identify --no-caller 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["focused"]["surface_ref"])' 2>/dev/null)"
+# --no-caller gives the focused surface, which is wrong for a background pane; prefer the caller if available
+cref="$(cmux identify 2>/dev/null | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("caller",{}).get("surface_ref",""))' 2>/dev/null)"
+[ -n "$cref" ] && ref="$cref"
+echo "$ref" > "$DIR/addr/$me"
+cmux tab-action --action rename --surface "$ref" --title "$me" >/dev/null 2>&1
+echo "$me registered at $ref"

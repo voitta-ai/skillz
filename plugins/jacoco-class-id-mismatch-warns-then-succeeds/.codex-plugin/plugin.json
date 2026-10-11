@@ -1,0 +1,19 @@
+{
+  "name": "jacoco-class-id-mismatch-warns-then-succeeds",
+  "version": "1.0.0",
+  "description": "JaCoCo class-id mismatch warns then succeeds; changed classes read zero.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "java",
+    "jacoco",
+    "coverage",
+    "testing"
+  ],
+  "skills": "./skills/"
+}

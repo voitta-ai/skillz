@@ -1,0 +1,12 @@
+{
+  "name": "codex-continuous-learning",
+  "version": "0.3.0",
+  "description": "Codex-native continuous-learning bundle: a skill that runs the end-of-task retrospective plus UserPromptSubmit + Stop hooks that drive it.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": ["codex", "skills", "hooks", "retrospective", "continuous-learning"],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}

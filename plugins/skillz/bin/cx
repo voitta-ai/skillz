@@ -1,0 +1,45 @@
+#!/bin/bash
+# cx: launch Codex CLI in a cmux tab named after the session.
+#
+#   cx [NAME] [codex args...]
+#
+# Codex has no display-name flag and no peer address book, so for a Codex
+# session the cmux tab title is the name peers and humans use. This resolves
+# NAME the same way as `cc` (argument > human-set tab title > folder), renames
+# the tab, exports CX_NAME for the agent's own use (xs log, notify), then
+# execs codex.
+#
+# Environment: CC_PROMPT as in `cc`; CX_CODEX=/path/to/codex.
+set -u
+
+name=""
+if [ $# -gt 0 ] && [ "${1#-}" = "$1" ]; then
+  name="$1"
+  shift
+fi
+
+here="$(cd "$(dirname "$0")" && pwd)"
+picker="$here/cc-names"
+command -v cc-names >/dev/null 2>&1 && picker="cc-names"
+
+picked="$("$picker" pick ${name:+"$name"})"
+rc=$?
+prompt="${CC_PROMPT:-collide}"
+if [ "$prompt" = "always" ] || { [ "$prompt" = "collide" ] && [ $rc -eq 3 ]; }; then
+  if [ $rc -eq 3 ]; then
+    echo "cx: '$picked' is already a live session or tab name" >&2
+  fi
+  printf 'session name [%s]: ' "$picked" >&2
+  read -r answer
+  [ -n "$answer" ] && picked="$answer"
+fi
+name="$picked"
+
+surface="$(cmux identify 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["caller"]["surface_ref"])' 2>/dev/null)"
+if [ -n "$surface" ]; then
+  cmux tab-action --action rename --surface "$surface" --title "$name" >/dev/null 2>&1 \
+    || echo "cx: tab rename failed for $surface" >&2
+fi
+
+export CX_NAME="$name"
+exec "${CX_CODEX:-codex}" "$@"

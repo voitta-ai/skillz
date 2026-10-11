@@ -1,0 +1,12 @@
+{
+  "name": "claude-code-plugin-update-flow",
+  "description": "Get an installed Claude Code plugin to run new code: the install cache is keyed on the resolved version, so bump it (or omit it to track the commit SHA), then /reload-plugins; verify against the cache, not the clone.",
+  "version": "1.4.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

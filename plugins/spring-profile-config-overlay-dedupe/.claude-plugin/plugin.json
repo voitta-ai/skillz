@@ -1,0 +1,12 @@
+{
+  "name": "spring-profile-config-overlay-dedupe",
+  "description": "Strip Spring/Grails profile configs down to real overrides and prove the effective config did not change. Covers flatten-and-diff verification and when a duplicate should deliberately stay.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "cloudwatch-metric-filter-dimensions-default-value-exclusive",
+  "description": "Catch the CloudWatch Logs metric-filter constraint that terraform cannot: a metric transformation may carry dimensions OR a default_value, never both - and the AWS provider has no plan-time guard, so the mistake sails through validate and plan and detonates only at apply. Use when: (1) an apply (often a merge-to-main auto-apply in CI) fails with \"InvalidParameterException: Invalid metric transformation: dimensions and default value are mutually exclusive properties\", (2) you are reviewing an aws_cloudwatch_log_metric_filter whose metric_transformation sets both default_value and dimensions, (3) you are deciding which of the two to drop and several environments publish the same metric name into one account+region. Core facts: the provider (verified on hashicorp/aws 6.56.0) declares no ConflictsWith between the arguments; the constraint can be settled empirically in seconds with `aws logs put-metric-filter` on a scratch log group; keep the dimension and drop default_value when the dimension is what separates environments - dropping the dimension instead blends their series into one.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

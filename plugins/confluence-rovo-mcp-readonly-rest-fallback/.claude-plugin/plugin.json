@@ -1,0 +1,12 @@
+{
+  "name": "confluence-rovo-mcp-readonly-rest-fallback",
+  "description": "Create or update a Confluence Cloud page when the Atlassian Rovo connector is read-only - but check first that it still is, since the connector gets re-authorized and a...",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "playwright-closed-shadow-root-widget",
+  "version": "1.0.0",
+  "description": "Drive a widget in a closed shadow root with Playwright: force attachShadow open before boot, set React inputs via the native setter.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": ["claude", "codex", "skills", "playwright", "shadow-dom", "e2e"],
+  "skills": "./skills/"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "cloudwatch-per-host-stat-single-host-vs-fleet",
+  "description": "Decide whether a CloudWatch alarm on a per-host application metric (Micrometer, Dropwizard, StatsD) reflects a fleet-wide incident or ONE sick host, and stop misreading its magnitude. Use when: (1) a per-host gauge/timer alarm fires and the Average looks catastrophic (e.g. an \"average latency\" of 21,242 when baseline is 2), (2) you are about to call an incident fleet-wide based on a CloudWatch Average, (3) a latency/queue-depth/pool-saturation metric spikes but request throughput and error counts stay flat, (4) you need to know the UNIT of a metric and get-metric-data did not return one. Covers the unweighted-mean-across-hosts trap, the Maximum/Sum concentration ratio, and SampleCount as a host-census signal.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

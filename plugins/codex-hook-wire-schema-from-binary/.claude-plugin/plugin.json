@@ -1,0 +1,12 @@
+{
+  "name": "codex-hook-wire-schema-from-binary",
+  "description": "Read the Codex CLI hook contract out of the shipped native binary with strings rather than a live probe turn:",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

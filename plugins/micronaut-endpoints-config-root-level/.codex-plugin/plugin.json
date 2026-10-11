@@ -1,0 +1,12 @@
+{
+  "name": "micronaut-endpoints-config-root-level",
+  "description": "A Micronaut management endpoint 401s with no security library on the classpath, because endpoints.* is read from the YAML document root and a copy nested under micronaut: binds to nothing.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "multi-phase-feature-pr-worktrees",
+  "version": "1.1.0",
+  "description": "Run a multi-phase feature as stacked worktree PRs so each phase reviews independently.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "multi",
+    "phase",
+    "feature",
+    "pr"
+  ],
+  "skills": "./skills/"
+}

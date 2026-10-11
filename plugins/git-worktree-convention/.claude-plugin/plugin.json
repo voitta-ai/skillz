@@ -1,0 +1,12 @@
+{
+  "name": "git-worktree-convention",
+  "description": "Repo stays on its default branch; branch work lives in a sibling <repo>.worktrees/ dir. Drift detection and recovery.",
+  "version": "1.1.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

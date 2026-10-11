@@ -1,0 +1,19 @@
+{
+  "name": "slack-app-token-rotation",
+  "version": "1.0.0",
+  "description": "Actually rotate a leaked Slack bot or app-level token: reinstalling does NOT mint a new xoxb-, only destroying the OAuth grant does. Covers the channel-membership fallout, the incoming-webhook channel picker, and verification without printing tokens.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "slack",
+    "security",
+    "secrets",
+    "rotation"
+  ],
+  "skills": "./skills/"
+}

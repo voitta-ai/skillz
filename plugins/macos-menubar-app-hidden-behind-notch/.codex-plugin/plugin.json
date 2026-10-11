@@ -1,0 +1,15 @@
+{
+  "name": "macos-menubar-app-hidden-behind-notch",
+  "version": "1.0.0",
+  "description": "Diagnose and fix a macOS menu bar app (LSUIElement, status item only, no Dock icon) that runs fine but whose icon the user cannot see on a notched MacBook with a busy menu bar. Use when: (1) the user says \"I don't see the icon in the menu bar\" while the process is up, its ports listen and its log is clean, (2) the Mac has a notch and the menu bar is full of third-party icons, (3) you need to prove which status items macOS is not drawing (CGWindowListCopyWindowInfo, layer 25, kCGWindowIsOnscreen = false; on macOS 26 every status item is owned by \"Control Center\"), (4) osascript System Events fails with \"osascript is not allowed assistive access (-1719)\", (5) you are adding entry points that do not depend on menu bar space: a window on first launch and applicationShouldHandleReopen: hasVisibleWindows: (including adding it to a rumps app's delegate with objc.classAddMethods), (6) you need to test a reopen handler next to an already-installed copy of the same app.",
+  "author": "voitta-ai",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills"
+  ],
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

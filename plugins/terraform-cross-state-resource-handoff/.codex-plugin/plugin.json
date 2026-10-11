@@ -1,0 +1,19 @@
+{
+  "name": "terraform-cross-state-resource-handoff",
+  "version": "1.0.0",
+  "description": "Move live resources from one Terraform state to another without destroying or recreating them, using config-driven removed blocks with lifecycle destroy = false in the source repo and import blocks in the destination, instead of terraform state rm and terraform import CLI surgery. Use when: (1) a resource's only remaining consumer now lives in another repo and ownership should follow it, (2) the source resources sit inside a counted module you also want to delete, (3) dev and prod share one cloud account and one environment auto-applies on merge, (4) an attribute of the moved resource embeds a secret such as a webhook URL with a key that must not be committed to the destination, (5) a reviewer claims removed.from needs an index, or that an import to with an index on a count-gated resource breaks dev. Covers apply order, the double-ownership window, prevent_destroy, env-gated import for_each, plan output that prints the secret on import, and create-is-idempotent adoption hazards.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "terraform",
+    "state",
+    "import",
+    "migration"
+  ],
+  "skills": "./skills/"
+}

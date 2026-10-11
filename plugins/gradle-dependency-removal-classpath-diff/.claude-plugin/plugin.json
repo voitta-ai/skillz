@@ -1,0 +1,12 @@
+{
+  "name": "gradle-dependency-removal-classpath-diff",
+  "version": "1.0.0",
+  "description": "Prove that removing a Gradle dependency did not silently DOWNGRADE transitive modules, by diffing the resolved runtime classpath before and after. Use when: (1) you are deleting the last direct dependency on a library family and the `platform(...)` / BOM line looks newly unused, (2) a dependency-removal PR is green and you are about to merge it on that basis, (3) a library you did not touch is suddenly resolving to an older version, (4) you need to know WHICH dependency pulls a transitive you thought you had removed, (5) you removed a provider or client and want to know whether its classes left the classpath at all. The failure this prevents is silent: no compile step, test or build gate notices that about twenty modules resolved down a minor version, because a downgrade is a successful resolution. Ships a normalizer that handles the `requested -> resolved` conflict form, which is the step a hand-rolled diff gets wrong.",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

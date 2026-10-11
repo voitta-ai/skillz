@@ -1,0 +1,15 @@
+{
+  "name": "ec2-user-data-died-health-ok",
+  "version": "1.0.0",
+  "description": "Diagnose an EC2 instance that boots clean and serves nothing, where every AWS-visible health field reads ok because the instance really is healthy and it is cloud-init that died. Use when: (1) an instance is `running` with `SystemStatus: ok` and `InstanceStatus: ok`, SSH answers, but the ports your user_data was supposed to open are closed, (2) software the bootstrap installs is simply absent and nothing in the console suggests why, (3) you are running any `dnf`/`apt` operation inside user_data on a 512 MB instance (`t4g.nano`, `t3.nano`, `t2.nano`), (4) a bootstrap under `set -e` stopped partway and you cannot tell where, (5) you edited user_data in Terraform and the plan says \"will be updated in-place, 0 to destroy\" - that plan is a no-op. Two traps: instance status answers \"is the VM alive\", never \"did cloud-init finish\", so a green check is not evidence the bootstrap ran; and `user_data` is read only on first boot, so changing it in place changes an API field while the running machine stays exactly as broken.",
+  "author": "voitta-ai",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills"
+  ],
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

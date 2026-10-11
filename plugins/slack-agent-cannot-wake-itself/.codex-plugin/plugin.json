@@ -1,0 +1,17 @@
+{
+  "name": "slack-agent-cannot-wake-itself",
+  "version": "1.0.0",
+  "description": "A Slack agent cannot wake itself: check whose token the posting tool holds, and post as the human instead of via the agent's own bot or webhook.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "slack",
+    "agents"
+  ],
+  "skills": "./skills/"
+}

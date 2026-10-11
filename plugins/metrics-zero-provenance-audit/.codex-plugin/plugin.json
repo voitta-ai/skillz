@@ -1,0 +1,11 @@
+{
+  "name": "metrics-zero-provenance-audit",
+  "version": "1.0.0",
+  "description": "Audit a multi-source metrics client before believing its zeros: a 0 usually means the source never populates the field, not that the user did not do it.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": ["claude", "codex", "skills", "metrics", "telemetry", "open-source-contribution"],
+  "skills": "./skills/"
+}

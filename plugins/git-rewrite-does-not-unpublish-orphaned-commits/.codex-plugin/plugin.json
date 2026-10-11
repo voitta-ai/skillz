@@ -1,0 +1,19 @@
+{
+  "name": "git-rewrite-does-not-unpublish-orphaned-commits",
+  "version": "1.0.0",
+  "description": "Force-push does not unpublish; orphaned commits stay served by SHA.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "git",
+    "github",
+    "history",
+    "security"
+  ],
+  "skills": "./skills/"
+}

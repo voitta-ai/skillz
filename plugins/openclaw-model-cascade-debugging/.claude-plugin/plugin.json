@@ -1,0 +1,12 @@
+{
+  "name": "openclaw-model-cascade-debugging",
+  "description": "Diagnose OpenClaw model-cascade failures (gateway process up but every run FailoverErrors because all providers are down), build a free OpenRouter fallback basket to survive codex cooldowns, and verify with one-shot `openclaw agent`.",
+  "version": "1.2.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "claude-json-mcp-migration-slice",
+  "description": "Identify the exact ~/.claude.json slice that carries MCP config for cross-machine migration vs session bookkeeping.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

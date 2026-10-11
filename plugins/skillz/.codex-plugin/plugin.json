@@ -1,0 +1,16 @@
+{
+  "name": "skillz",
+  "version": "1.204.0",
+  "description": "Skillz bundle: every skill in the catalog except those whose own plugin ships hooks (see catalog.json).",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "bundle"
+  ],
+  "skills": "./skills-codex/"
+}

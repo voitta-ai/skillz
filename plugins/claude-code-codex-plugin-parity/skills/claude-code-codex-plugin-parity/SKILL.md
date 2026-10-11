@@ -1,0 +1,195 @@
+---
+name: claude-code-codex-plugin-parity
+description: |
+  Port a Claude Code plugin to the OpenAI Codex CLI (or vice versa), and
+  understand where the two plugin systems are identical vs where they diverge.
+  Use when: (1) you have a Claude Code plugin (.claude-plugin/plugin.json +
+  marketplace.json + hooks/hooks.json) and want it to also work under Codex
+  CLI, (2) you are writing a .codex-plugin/plugin.json and wonder if you can
+  reuse the existing hooks.json, (3) a ported plugin installs under Codex but
+  its hooks misbehave or do nothing, (4) you need to confirm which plugin-root
+  env vars a hook sees under Codex, (5) you need to know whether "submit to the
+  official marketplace" has a Codex equivalent, (6) a Codex plugin install
+  reports success but lands zero skills. Covers the manifest/marketplace
+  parity, the version-pin release discipline shared by both, the plugin-root
+  env-var compatibility aliases, hook trust review, the symlink divergence,
+  and the runtime-protocol caveat.
+author: Claude Code
+version: 1.3.1
+date: 2026-10-10
+---
+
+# Claude Code <-> Codex CLI plugin parity
+
+## Problem
+
+Codex CLI (plugins added ~v0.117) ships a plugin system that looks almost
+identical to Claude Code's - close enough that you assume a Claude Code plugin
+drops into Codex unchanged. The manifest and the hook *registration* shape do
+port directly, and Codex even sets compatibility env-var aliases so a
+`${CLAUDE_PLUGIN_ROOT}` hook path still resolves. What can still bite is the
+hook *runtime protocol* (the stdin payload and the stdout/exit decision
+contract), Codex's hook trust gate, and symlinked skill dirs that Codex's
+installer drops. This skill is the map of what is shared vs what is not, so
+a port is a 20-minute job, not a day of guessing.
+
+## Context / Trigger Conditions
+
+- Porting a Claude Code plugin to Codex CLI or vice versa.
+- Writing a `.codex-plugin/plugin.json` alongside an existing
+  `.claude-plugin/plugin.json`.
+- A hook works under Claude Code but does nothing under Codex.
+- A ported hook misbehaves under Codex and you suspect an env-var or
+  hook-protocol difference.
+- Deciding how to distribute / release a plugin for both runtimes.
+
+## What is IDENTICAL (copy almost verbatim)
+
+| Concern | Claude Code | Codex CLI |
+|---|---|---|
+| Manifest path | `.claude-plugin/plugin.json` | `.codex-plugin/plugin.json` |
+| Manifest fields | `name`, `version`, `description`, `author`, `homepage`, `repository`, `license`, `keywords` + component pointers | **same fields** |
+| Component pointers | (varies) | `skills: "./skills/"`, `hooks: "./hooks/hooks.json"`, `mcpServers: "./.mcp.json"`, `apps: "./.app.json"` |
+| Marketplace file | `.claude-plugin/marketplace.json` | `.agents/plugins/marketplace.json` (personal: `~/.agents/plugins/marketplace.json`); Codex also reads `.claude-plugin/marketplace.json` as a "legacy-compatible marketplace", so one file can serve both |
+| Hook registration shape | `hooks.json` with `PreToolUse` + `"matcher": "Bash"` + `{"type":"command","command":...}` | **same shape, same event names** (`PreToolUse`, `PostToolUse`, `SessionStart`, `Stop`, `UserPromptSubmit`, ...) |
+| Version pinning | pins on the `version` string | **same** |
+| Install cache | marketplace clone | `~/.codex/plugins/cache/$MARKETPLACE/$PLUGIN/$VERSION/` |
+
+### Shared version-pin release discipline
+
+Both runtimes **pin on the `version` string in plugin.json**: pushing new
+commits without bumping `version` leaves existing installs on the cached
+copy. Omit `version` entirely and the runtime falls back to the commit /
+short SHA (Codex curated-cache entries use short SHAs; local installs use
+`$VERSION = local`). So the same "bump version + tag" release step works for
+both - a release script should bump **both** manifests in lockstep when a
+repo distributes to both ecosystems.
+
+## What DIFFERS (the actual port work)
+
+1. **Plugin-root env var (now a compatibility alias, not a trap).** Codex's
+   native variable is **`PLUGIN_ROOT`** ("a Codex-specific extension that
+   points to the installed plugin root", per the Codex hooks doc), but Codex
+   **also sets `CLAUDE_PLUGIN_ROOT` "for compatibility with existing plugin
+   hooks"** (and likewise exposes `PLUGIN_DATA` with a `CLAUDE_PLUGIN_DATA`
+   alias). So a `hooks.json` that references `${CLAUDE_PLUGIN_ROOT}` **does
+   resolve under Codex** - you do NOT need to fork a separate Codex hooks file
+   just for the env var, and the same `hooks.json` can be aliased across both
+   runtimes. Prefer the native `${PLUGIN_ROOT}` in new Codex-only hooks, but a
+   ported Claude hook keeps working via the alias.
+
+2. **Hook runtime protocol is the real divergence to check.** Matching
+   *registration* shape (same event names, same `matcher`, same
+   `type: command`) does NOT by itself guarantee *behavioral* parity. Codex
+   documents its own hook I/O contract: stdin carries `session_id`,
+   `transcript_path`, `cwd`, `hook_event_name`, `model`, `permission_mode`
+   plus event-specific fields (`tool_name` / `tool_input` for `PreToolUse`);
+   on stdout, exit 0 + JSON applies decisions (`continue`, `systemMessage`,
+   and event-specific fields like `PreToolUse`'s `permissionDecision` /
+   `updatedInput`), exit 0 + plain text is added as context
+   (`SessionStart`, `UserPromptSubmit`), and **exit 2 signals block/deny with
+   the stderr message recorded as the reason**. This is close to Claude Code's
+   contract but verify the exact fields your hook emits against the Codex
+   hooks doc before declaring parity.
+
+3. **Plugin hooks are skipped until the user trusts them.** "Installing or
+   enabling a plugin doesn't automatically trust its hooks"; Codex treats
+   plugin-bundled hooks as non-managed and skips them until the user
+   reviews and trusts the current hook definition. A ported hook that
+   "does nothing" under Codex may simply be untrusted - check that before
+   suspecting the protocol.
+
+4. **Symlinked skill dirs do not survive a Codex install.** Codex copies
+   only the plugin subtree into `~/.codex/plugins/cache/...`, so a
+   `skills/` entry that is a symlink pointing outside the plugin root
+   dangles and the install lands zero skills, with no error (observed on
+   Codex 0.160.1, skillz#176). Claude Code's installer dereferences the same
+   links, so the layout works there and the breakage is invisible unless you
+   count `SKILL.md` files in the Codex cache. Ship real files (or links that
+   stay inside the plugin root) to anything Codex installs. If the source
+   layout needs the links, publish a materialized copy to a branch from CI and
+   have Codex users add `owner/repo@branch` (`codex plugin marketplace add`
+   accepts a ref). Put that branch's manifest at `.agents/plugins/marketplace.json`:
+   a root that only has `.codex-plugin/marketplace.json` is rejected with
+   "marketplace root does not contain a supported manifest" (Codex 0.160.1).
+
+5. **Both hosts now have an official directory.** Anthropic has a
+   self-serve directory portal at claude.ai/directory/manage (see
+   `claude-code-plugin-publish-anthropic-marketplace`). OpenAI publishes
+   public plugins to a universal directory shared by ChatGPT and Codex,
+   through its plugin submission portal (including a guide for submitting
+   an existing Claude Code plugin). Repo- or user-scoped marketplaces still
+   work alongside it: `codex plugin marketplace add <owner/repo>`, then
+   `codex plugin add PLUGIN@MARKETPLACE`.
+
+## Solution (port checklist, CC -> Codex)
+
+1. Add `.codex-plugin/plugin.json` mirroring `.claude-plugin/plugin.json`
+   (same name/version/description/author/homepage/repository/license;
+   add `keywords` for discovery).
+2. You CAN point the Codex `hooks` pointer at the same `hooks.json`: Codex's
+   `CLAUDE_PLUGIN_ROOT` compatibility alias means a `${CLAUDE_PLUGIN_ROOT}`
+   command path resolves. Use `${PLUGIN_ROOT}` only when you want the native
+   Codex name in a Codex-specific hooks file.
+3. Verify the hook's stdin/stdout/exit contract under an actual Codex run
+   before declaring parity (see the documented contract above). Trust the
+   plugin's hooks first, or Codex skips them.
+4. Keep both manifests' `version` in lockstep; bump both per release.
+5. Make sure no shipped skill dir is a symlink that leaves the plugin root.
+6. Distribute via the existing `.claude-plugin/marketplace.json` (Codex
+   reads it) or a `.agents/plugins/marketplace.json`, added with
+   `codex plugin marketplace add <owner/repo>`; submit to OpenAI's portal
+   if you want a public directory listing.
+
+## Verification
+
+- `codex plugin marketplace add <owner/repo>` then `codex plugin marketplace
+  list` shows the marketplace; `codex plugin add PLUGIN@MARKETPLACE` (or the
+  `/plugins` browser) installs it, and `codex plugin list` shows its
+  `name` / `version` / enabled state.
+- Count `SKILL.md` files under the printed install root; zero means the
+  symlink divergence above.
+- Trigger the hooked event and confirm the hook command actually runs - echo
+  `$PLUGIN_ROOT` (and `$CLAUDE_PLUGIN_ROOT`, which should match) from the hook
+  to confirm both are populated under Codex.
+
+## Notes
+
+- Codex plugin CLI (0.160.1): `codex plugin marketplace add|list|upgrade|remove`
+  manages marketplaces; `codex plugin add|list|remove` installs, lists and
+  uninstalls plugins; `/plugins` inside Codex is the interactive browser.
+  Plugins can bundle skills, MCP servers, apps, and hooks.
+- Cross-pollination already exists: OpenAI ships `codex@openai-codex` as a
+  *Claude Code* plugin (the rescue bridge), so the two marketplaces reference
+  each other.
+- Worked example: a plugin's repo added `scripts/release.sh` in one PR
+  (version bump + tag for the shared pin-on-version model) and a metadata-only
+  `.codex-plugin/plugin.json` scaffold in a follow-up PR, leaving the `hooks`
+  pointer out pending only hook runtime-protocol verification. No env-var
+  rewrite is needed first: the `CLAUDE_PLUGIN_ROOT` compatibility alias means
+  the existing `hooks.json` resolves under Codex, so switching to
+  `${PLUGIN_ROOT}` is an optional native-style change, not a prerequisite.
+
+## References
+
+- Package your plugin (manifest, marketplace, legacy-compatible `.claude-plugin/marketplace.json`, hook trust): https://developers.openai.com/plugins/build/plugins
+- Upload and submit your plugin (directory submission portal): https://developers.openai.com/plugins/deploy/submission
+- Submit your Claude Code plugin to OpenAI: https://developers.openai.com/plugins/guides/submit-claude-plugin
+- Codex hooks (PLUGIN_ROOT + CLAUDE_PLUGIN_ROOT compat alias; hook I/O contract; plugin hook trust): https://developers.openai.com/codex/hooks
+- Codex changelog (plugin feature history): https://developers.openai.com/codex/changelog
+- Codex install drops symlinked skill dirs: https://github.com/voitta-ai/skillz/issues/176
+- Claude Code plugin marketplaces (version resolution / SHA pinning): https://code.claude.com/docs/en/plugin-marketplaces
+
+## Related
+
+- `claude-code-plugin-from-existing-repo` — producing the Claude Code plugin
+  this skill ports.
+- `claude-code-plugin-python-bootstrap` — the hook-side concern that carries
+  across both hosts unchanged, unlike the manifests.
+- `claude-code-plugin-update-flow` — the Claude Code half of "why does the
+  install still run old code". Codex pins on its own manifest's version
+  independently, which is why the two must be bumped together.
+- `claude-code-plugin-release-automation` — automating that paired bump so the
+  two manifests cannot drift.
+- `agent-host-skill-loading` — the third case: a host with neither plugin
+  system, reading `SKILL.md` files directly.

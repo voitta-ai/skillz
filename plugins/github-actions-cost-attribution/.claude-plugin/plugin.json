@@ -1,0 +1,12 @@
+{
+  "name": "github-actions-cost-attribution",
+  "version": "1.0.0",
+  "description": "Reconstruct GitHub Actions spend per repo, workflow, event, branch, triggering actor, job and step from run and job timestamps when you cannot see org billing, then rank concrete CI savings with measured numbers. Use when: (1) someone reports Actions usage skyrocketed or a spending budget was raised or hit and you need to say where the minutes went, (2) the billing endpoints 404 because you are an org member, not an admin, (3) a run's /timing endpoint returns billable.total_ms 0 (a deprecated field that answers 0 when it means 'I cannot'), (4) jobs fail in about four seconds with no steps and an annotation saying an Actions budget is preventing further use, (5) you are evaluating CI savings proposals and want measured savings rather than guesses. Ships gha_cost.py, which lists runs per UTC day to stay under the 1000-result search cap, fetches jobs with filter=all, recomputes billed minutes by rounding each job up to a whole minute at per-SKU list rates, and reports by day, workflow, actor, job and sub-minute job.",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

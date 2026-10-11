@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# pp-send <self-name> <peer-name> <text>
+# Logs the message to the xs traffic log as <self-name>, appends it to the
+# shared transcript, then types it into the peer's cmux surface and presses Enter.
+set -u
+me="$1"; peer="$2"; shift 2; text="$*"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+peer_surface="$(cat "$DIR/addr/$peer")"
+kind=Q; ev=send
+case "$text" in pong*) kind=RE; ev=answered;; esac
+XS_NAME="$me" "${XS_BIN:-xs}" log "$ev" --to "$peer" --kind "$kind" --topic "$text" >/dev/null 2>&1 || true
+printf '%s  %s -> %s (%s): %s\n' "$(date +%H:%M:%S)" "$me" "$peer" "$peer_surface" "$text" >> "$DIR/transcript.log"
+cmux send --surface "$peer_surface" "$text" && cmux send-key --surface "$peer_surface" Enter

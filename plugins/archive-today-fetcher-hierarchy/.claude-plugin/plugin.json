@@ -1,0 +1,12 @@
+{
+  "name": "archive-today-fetcher-hierarchy",
+  "description": "Reach archive.today when automation is refused, cite it reproducibly, and send a truthful user agent.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

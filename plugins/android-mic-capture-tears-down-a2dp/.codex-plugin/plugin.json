@@ -1,0 +1,19 @@
+{
+  "name": "android-mic-capture-tears-down-a2dp",
+  "version": "1.0.0",
+  "description": "Find and fix an Android app whose microphone use tears down Bluetooth A2DP in a car: read the profile timeline from dumpsys bluetooth_manager, name the app from appops, and pin capture to the built-in microphone with setCommunicationDevice.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "android",
+    "bluetooth",
+    "a2dp",
+    "audio"
+  ],
+  "skills": "./skills/"
+}

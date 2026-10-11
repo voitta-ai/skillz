@@ -1,0 +1,11 @@
+{
+  "name": "verbatim-social-post-retrieval",
+  "version": "1.0.0",
+  "description": "Retrieve verbatim Truth Social and X posts, including deleted ones, for fact-checking.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": ["claude", "codex", "skills", "fact-checking", "twitter", "truth-social", "archive", "osint"],
+  "skills": "./skills/"
+}

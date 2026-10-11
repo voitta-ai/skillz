@@ -1,0 +1,22 @@
+{
+  "name": "github-oidc-immutable-subject-claim",
+  "version": "1.0.0",
+  "description": "Diagnose a GitHub Actions job that fails to assume an AWS role by OIDC with \"Not authorized to perform sts:AssumeRoleWithWebIdentity\" even though the trust policy allows the whole org and every sibling repo works: GitHub is migrating the OIDC subject claim to the immutable form repo:ORG@ORG_ID/REPO@REPO_ID, which a repo:ORG/* StringLike cannot match. Covers reading the real sub claim without printing the token, the sub_claim_prefix API that finds it with no CI round trip, and the forward-compatible trust-policy patch.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "github-actions",
+    "oidc",
+    "aws",
+    "iam",
+    "sts",
+    "trust-policy",
+    "ci"
+  ],
+  "skills": "./skills/"
+}

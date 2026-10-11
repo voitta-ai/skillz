@@ -1,0 +1,19 @@
+{
+  "name": "git-pr-merge-unblock",
+  "version": "1.2.0",
+  "description": "Work out why a pull request will not merge and who can actually unblock it, on github.com or self-hosted GitHub Enterprise.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "git",
+    "github",
+    "pull-requests",
+    "codeowners"
+  ],
+  "skills": "./skills/"
+}

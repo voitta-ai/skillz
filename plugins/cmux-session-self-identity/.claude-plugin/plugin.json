@@ -1,0 +1,12 @@
+{
+  "name": "cmux-session-self-identity",
+  "description": "Determine which cmux workspace, tab and surface a session is actually running in, and map other live sessions to theirs. Never answer from CMUX_* env vars: the tab and workspace variables can carry the same id (so tab identity is not in the environment at all), and on a resumed session they are a stale launch-time snapshot that can name a workspace the session has left. Uses the bundled CLI -- identify for the caller's own refs (read caller, not focused), tree --all --id-format both to resolve refs to names, top --all --processes to map pids to surfaces. Matters because a session that cannot name its own tab cannot tell a human which tab to address. Also covers the case the first version missed: the CLI only answers processes descended from the app, so a spawned subagent gets a broken-pipe/access-denied refusal -- the normal case, not a fault -- and must fall back to the app's live state file, using the environment ids as lookup keys rather than as answers.",
+  "version": "1.2.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

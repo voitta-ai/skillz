@@ -1,0 +1,11 @@
+{
+  "name": "claude-code-plugin-python-bootstrap",
+  "version": "1.2.0",
+  "description": "Bootstrap Python deps from a Claude Code plugin hook so /plugin install is one-click on systems lacking them (PEP 668-safe).",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": ["claude", "codex", "skills", "claude", "code", "plugin", "python"],
+  "skills": "./skills/"
+}

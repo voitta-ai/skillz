@@ -1,0 +1,12 @@
+{
+  "name": "alb-controller-custom-sg-narrowing-inert",
+  "description": "Recognize and fix the trap where supplying a custom security group to an AWS Load Balancer Controller ingress (annotation alb.ingress.kubernetes.io/security-groups) delivers NO security narrowing, because the controller's shared backend SG stays attached and security groups are additive. Use when: (1) a \"narrow the ALB's security groups\" change applied clean but the ALB still carries a controller-managed SG (tag elbv2.k8s.aws/resource=backend-sg) with all-protocol 0.0.0.0/0 egress, (2) you are reviewing a diff that adds a custom SG to an ingress while alb.ingress.kubernetes.io/manage-backend-security-group-rules is \"true\", (3) after doing the narrowing properly, new backends go \"unhealthy: Target.Timeout\" because the health-check port was never opened, (4) a terraform apply that flips the annotation and adds replacement node-SG rules could race and close the front door mid-apply. Core facts: effective SG posture is the UNION of attached SGs - adding a narrow SG beside a broad one changes nothing; the real fix is to stop the controller attaching/managing the backend SG and author the node-side rules yourself, with explicit depends_on ordering; measure the live SGs before and after, never trust the diff.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

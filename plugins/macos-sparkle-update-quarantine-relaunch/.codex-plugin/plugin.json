@@ -1,0 +1,19 @@
+{
+  "name": "macos-sparkle-update-quarantine-relaunch",
+  "version": "1.0.0",
+  "description": "Fix macOS Sparkle updater error 4005 / 'Failed to create installation cache directory' that persists after stripping quarantine:",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "macos",
+    "sparkle",
+    "updates",
+    "quarantine"
+  ],
+  "skills": "./skills/"
+}

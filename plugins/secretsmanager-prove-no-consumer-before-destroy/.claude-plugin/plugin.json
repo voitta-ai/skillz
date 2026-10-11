@@ -1,0 +1,12 @@
+{
+  "name": "secretsmanager-prove-no-consumer-before-destroy",
+  "description": "Prove nothing consumes an AWS Secrets Manager secret before a terraform plan destroys it: query CloudTrail per resource, classify GetSecretValue (a real consumer) against DescribeSecret/GetResourcePolicy (your own CLI and posture scanners), subtract your own terraform refresh, and check reversibility separately -- because a populated LastAccessedDate is not evidence of use.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

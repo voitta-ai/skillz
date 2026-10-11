@@ -1,0 +1,255 @@
+#!/usr/bin/env python3
+"""xs-hook - turn Claude Code's PostToolUse hook into xs log lines.
+
+Reads one hook payload as JSON on stdin and appends the corresponding traffic
+event by shelling out to `xs log`. Wire it to `SendMessage` and the log stops
+depending on an agent remembering to write to it.
+
+Why this closes the gap rather than narrowing it: Claude Code fires the
+session's configured tool hooks for subagent tool calls too, and the payload
+carries `agent_id` / `agent_type` identifying which subagent made the call. So
+one hook in one settings file covers the main conversation and every teammate
+it spawns, including background agents that own no surface of their own.
+
+Contract this deliberately keeps:
+
+  Never fail the tool call. Every error path exits 0 and stays quiet. A hook
+  that breaks messaging to protect its own log has the priorities backwards -
+  a missing line is a gap, a blocked SendMessage is an outage.
+
+Install (settings.json):
+
+  "PostToolUse": [
+    {"matcher": "SendMessage",
+     "hooks": [{"type": "command", "command": "~/.local/bin/xs-hook"}]}
+  ]
+"""
+
+import json
+import os
+import re
+import subprocess
+import sys
+
+# The envelope grammar from cmux-cross-session-visibility:
+#   <kind> <arrow><peer>: <topic>
+# Parsed rather than required: a summary that does not match is still logged,
+# just without a kind. Refusing to log an unlabelled message would punish the
+# log for an agent's formatting, which is the failure this hook exists to fix.
+ENVELOPE = re.compile(r"^\s*(Q|WO|FYI|RE)\b\s*(?:->|<-)?\s*([^:]*?)\s*:\s*(.*)$")
+
+# `to` may carry the disambiguating suffix ListAgents prints. The log keys on
+# names, so strip it rather than fragmenting one peer across two identities.
+REF_SUFFIX = re.compile(r"\s*\[[0-9a-f]{4,}\]\s*$")
+
+TOPIC_DISPLAY_CAP = 200
+
+
+def find_xs():
+    """Prefer the copy shipped beside this hook over whatever PATH resolves.
+
+    A hook subprocess does not necessarily inherit the interactive shell's
+    PATH, so relying on `xs` being on it is the most likely way for this to
+    silently do nothing."""
+    override = os.environ.get("XS_BIN")
+    if override and os.path.exists(override):
+        return override
+    sibling = os.path.join(os.path.dirname(os.path.realpath(__file__)), "xs")
+    if os.path.exists(sibling):
+        return sibling
+    retval = "xs"
+    return retval
+
+
+def _sessions_dir():
+    retval = os.environ.get("CLAUDE_SESSIONS_DIR") or os.path.expanduser("~/.claude/sessions")
+    return retval
+
+
+def _roster():
+    """Live-session records from Claude Code's own registry: one JSON file per
+    session under ~/.claude/sessions/, carrying `name`, `sessionId` and
+    `messagingSocketPath`. This is the same source ListAgents names come from,
+    so resolving against it keeps the log keyed on the names a human sees.
+    Read-only, best-effort: a missing dir or a torn file reads as no entry."""
+    out = []
+    try:
+        entries = os.listdir(_sessions_dir())
+    except OSError:
+        return out
+    for entry in entries:
+        if not entry.endswith(".json"):
+            continue
+        try:
+            with open(os.path.join(_sessions_dir(), entry)) as f:
+                rec = json.load(f)
+        except (OSError, ValueError):
+            continue
+        if isinstance(rec, dict):
+            out.append(rec)
+    retval = out
+    return retval
+
+
+def resolve_peer(to):
+    """A `to` that is already a name passes through. A socket address -- the
+    shape a session gets when it replies by copying the incoming message's
+    `from="uds:/tmp/cc-socks/<pid>.sock"` attribute -- is looked up in the
+    roster, so the log says `-> hq-50` instead of `-> uds:/tmp/...sock`. An
+    address the roster cannot resolve is kept as-is: a wrong name is worse
+    than an ugly one."""
+    peer = to
+    if peer.startswith("uds:"):
+        sock = peer[len("uds:"):]
+        for rec in _roster():
+            if rec.get("messagingSocketPath") == sock and rec.get("name"):
+                retval = rec["name"]
+                return retval
+    retval = peer
+    return retval
+
+
+def read_payload():
+    try:
+        raw = sys.stdin.read()
+    except Exception:
+        return None
+    if not raw.strip():
+        return None
+    try:
+        retval = json.loads(raw)
+    except ValueError:
+        return None
+    return retval
+
+
+def sender_name(payload):
+    """Identity, in decreasing confidence.
+
+    Inside a teammate the payload carries `agent_id` ("<name>@<team>") and
+    `agent_type`. Prefer the name: on the first real team run two teammates of
+    the same type (pinger, ponger) both logged as `general-purpose`, and a log
+    where every line reads "general-purpose -> pinger" cannot tell who spoke.
+    Fall back to the type when there is no name, which still groups a role.
+
+    A plain session -- no team, no subagent -- has none of those, and used to
+    fall through to xs's env-based guess, which in cmux lands on `ws:<uuid>`:
+    a workspace id, not a speaker. The payload always carries `session_id`,
+    and Claude Code's own session registry maps it to the session's ListAgents
+    name, so look there before giving up. $XS_NAME still overrides all."""
+    explicit = os.environ.get("XS_NAME")
+    if explicit:
+        return explicit
+    agent_id = payload.get("agent_id") or ""
+    if "@" in agent_id:
+        name = agent_id.split("@", 1)[0].strip()
+        if name:
+            return name
+    agent_type = payload.get("agent_type") or ""
+    if agent_type:
+        retval = agent_type
+        return retval
+    session_id = payload.get("session_id") or ""
+    if session_id:
+        for rec in _roster():
+            if rec.get("sessionId") == session_id and rec.get("name"):
+                retval = rec["name"]
+                return retval
+    retval = ""
+    return retval
+
+
+def parse_summary(tool_input):
+    """Return (kind, topic) from the envelope, falling back to plain text."""
+    summary = (tool_input.get("summary") or "").strip()
+    if not summary:
+        message = tool_input.get("message")
+        if isinstance(message, str):
+            summary = message.strip().splitlines()[0] if message.strip() else ""
+    match = ENVELOPE.match(summary)
+    if match:
+        retval = (match.group(1), match.group(3).strip() or summary)
+        return retval
+    retval = ("", summary)
+    return retval
+
+
+def classify(tool_input, kind):
+    """Map one SendMessage onto an event type.
+
+    `xs status` is a fold that treats every `send` as outstanding until an
+    `answered` or `expired` clears it, so the mapping is really a decision
+    about what counts as a wait:
+
+      RE  -> `answered`. A reverse `send` does not clear the forward ask, so
+             logging a reply as a plain send would leave every question
+             outstanding forever and make status useless within one run.
+      FYI -> `note`. The envelope defines FYI as status with no answer
+             expected. Recording it as a send would park a wait that nobody
+             is having and that nothing will ever clear.
+      no message, notify_when_idle -> `note`. A pure idle subscription asks
+             nothing either.
+      otherwise -> `send`, including unlabelled traffic. The hook cannot tell
+             an unlabelled question from an unlabelled aside, and guessing
+             `note` would silently drop real waits - the exact failure this
+             hook exists to remove. So unlabelled messages sit in `status`
+             until answered, and that noise is the feedback that an agent is
+             skipping the envelope."""
+    message = tool_input.get("message")
+    empty = message is None or (isinstance(message, str) and not message.strip())
+    if empty and tool_input.get("notify_when_idle"):
+        retval = "note"
+        return retval
+    if kind == "RE":
+        retval = "answered"
+        return retval
+    if kind == "FYI":
+        retval = "note"
+        return retval
+    retval = "send"
+    return retval
+
+
+def main():
+    payload = read_payload()
+    if not payload:
+        return 0
+    if payload.get("hook_event_name") != "PostToolUse":
+        return 0
+    if payload.get("tool_name") != "SendMessage":
+        return 0
+
+    tool_input = payload.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return 0
+
+    peer = REF_SUFFIX.sub("", (tool_input.get("to") or "").strip())
+    if not peer:
+        return 0
+    peer = resolve_peer(peer)
+
+    kind, topic = parse_summary(tool_input)
+    event = classify(tool_input, kind)
+    if event == "note" and not topic:
+        topic = "subscribed to %s going idle" % peer
+
+    argv = [find_xs(), "log", event, "--to", peer]
+    sender = sender_name(payload)
+    if sender:
+        argv += ["--from", sender]
+    if kind:
+        argv += ["--kind", kind]
+    if topic:
+        argv += ["--topic", topic[:TOPIC_DISPLAY_CAP]]
+
+    try:
+        subprocess.run(argv, stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL, timeout=5, check=False)
+    except Exception:
+        # Deliberately swallowed - see the contract in the module docstring.
+        pass
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

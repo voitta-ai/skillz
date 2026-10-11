@@ -1,0 +1,11 @@
+{
+  "name": "pre-open-source-credential-audit",
+  "version": "1.0.0",
+  "description": "Audit a git repo for leaked secrets before making it public: scan tracked files AND full history, avoid the git grep -E \\b false-negative, catch tracked editor-backup files, and decide rewrite+rotate vs. accept an inert identifier.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": ["claude", "codex", "skills", "git", "security", "secrets", "credentials", "open-source", "audit"],
+  "skills": "./skills/"
+}

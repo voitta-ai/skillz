@@ -1,0 +1,18 @@
+{
+  "name": "session-transcript-mining",
+  "version": "1.0.0",
+  "description": "Sweep every Claude Code session transcript on a machine for skill-worthy knowledge: root-caused bugs, non-obvious gotchas, painfully derived procedures - and for HOMELESS artifacts (skills written to ~/.claude/skills but never committed, skill edits stranded in worktrees, harvest PRs left open). Use when: (1) asked to \"mine sessions\", \"harvest what we learned\", or \"sweep transcripts for skills\", (2) daily/per-session harvesting has been running and you need the periodic catch-up pass that finds what it missed, (3) a skills repo looks behind what you know was learned recently, (4) you need to reconstruct what a lost or crashed session discovered. Method verified at scale: 50+ sessions condensed and mined by 8 parallel subagent miners in one sweep, yielding 22 shipped skill PRs.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "session",
+    "transcript",
+    "mining"
+  ],
+  "skills": "./skills/"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "personal-skills-shadow-bundle-audit",
+  "description": "Audit and clean up personal `~/.claude/skills/` copies that duplicate or shadow skills a plugin bundle also ships, so sessions stop silently running stale versions. Use when: (1) a skill you know was updated upstream behaves like an old version (e.g. it ran at 4.0.0 while the installed bundle ships 4.1.0), (2) you are asked \"can I just delete the local copy?\" of a skill that also exists in a plugin, (3) `~/.claude/skills/` has accumulated copies of skills that later moved into a plugin bundle, (4) a skill appears in the session's skill list bare (no `plugin:` prefix) and you need to know which file on disk that actually is, (5) after installing or updating a bundle plugin you want to retire the loose per-skill installs it replaced. Key trap: `~/.claude/plugins/marketplaces/<mkt>/` is the fetched marketplace source, NOT loaded \u2014 only plugins present under `~/.claude/plugins/cache/` serve skills, and a bundle can turn out not installed at all, leaving the personal copies as the sole (stale) provider. Covers the audit commands (version drift table, two-way content diff against the cache copy), the delete / keep decision tree (byte-identical, version-behind with superseded wording, genuine unpushed fork), and the tar backup before any rm.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

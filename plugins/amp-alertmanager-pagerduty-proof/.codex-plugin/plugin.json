@@ -1,0 +1,15 @@
+{
+  "name": "amp-alertmanager-pagerduty-proof",
+  "version": "1.0.0",
+  "description": "Prove that an Amazon Managed Prometheus alert manager reaches PagerDuty (Events API v2) directly, with no SNS in between, and tear the proof down afterwards. Use when: (1) you are wiring AMP alerting to PagerDuty and the AWS docs you found say the AMP alert manager supports SNS only - two pages still do, while PagerDuty support launched 2025-08-29; (2) you need to show paging works BEFORE any real rule exists, so there is nothing to wait for and nothing to break; (3) an alert manager definition or rules namespace sits in CREATING and you do not know whether that is normal; (4) a POST to the alert manager returned 2xx and you are about to call that proof; (5) you deleted the rule and the PagerDuty incident did not resolve; (6) the routing key must never enter an agent transcript. Covers the KMS + Secrets Manager grant pair that aps.amazonaws.com needs, the SigV4 POST that fires an alert without a rule, measured timings for every step, and a cleanup that does not leave a customer KMS key behind.",
+  "author": "voitta-ai",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills"
+  ],
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

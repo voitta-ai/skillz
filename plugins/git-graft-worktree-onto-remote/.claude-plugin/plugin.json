@@ -1,0 +1,12 @@
+{
+  "name": "git-graft-worktree-onto-remote",
+  "description": "Graft a local worktree's commits onto a remote branch without re-cloning.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

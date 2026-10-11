@@ -1,0 +1,18 @@
+{
+  "name": "permission-gate-allow-list-not-decisive",
+  "version": "1.2.0",
+  "description": "Diagnose WHICH permission gate refused a command when two are active, and why a standing allow rule did not stop it: PreToolUse hooks run before allow rules, auto mode drops broad shell rules (all of them with the opt-in autoMode.classifyAllShell), and a server-side gate can hide behind a client-side one",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "permissions",
+    "auto-mode",
+    "hooks"
+  ],
+  "skills": "./skills/"
+}

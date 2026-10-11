@@ -1,0 +1,12 @@
+{
+  "name": "rxjava-dofinally-terminal-then-finally-test-race",
+  "description": "An RxJava test that asserts a side effect of `doFinally` (a released semaphore permit, a decremented in-flight gauge, a closed resource) immediately after `TestObserver.await()` / `blockingGet()` is racy BY CONSTRUCTION: the operator delivers the terminal event to the downstream observer FIRST and runs the finally action AFTER, so the awaiting thread can observe the pre-release state. Use when: (1) CI fails with something like \"permits should be returned once the held requests complete ==> expected: <0.0> but was: <1.0>\" while the same test passes locally and in other parameterizations, (2) deciding whether such a failure is a REAL resource leak or a test-harness race, (3) writing tests around `doFinally`-based cleanup and choosing between asserting immediately and polling, (4) tempted to claim \"fixed locally, 5/5 green\" for a race your machine never reproduced. Covers the RxJava source proof, the leak-vs-race differentiation signals, the polling-assert fix, and the control experiment that tells you whether local runs mean anything.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

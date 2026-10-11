@@ -1,0 +1,12 @@
+{
+  "name": "litellm-custom-provider-dispatch-order",
+  "description": "A LiteLLM CustomLLM provider that is registered correctly and still never runs:",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

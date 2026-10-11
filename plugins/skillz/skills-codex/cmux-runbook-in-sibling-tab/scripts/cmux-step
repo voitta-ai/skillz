@@ -1,0 +1,253 @@
+#!/usr/bin/env bash
+# cmux-step - drive a runbook one step at a time in a sibling cmux terminal tab.
+#
+#   cmux-step open  <dir> [title]     open a terminal tab in the caller's pane, cwd <dir>
+#   cmux-step run   <n> <command...>  type `bash .../step-<n>.sh`, press Enter, wait, exit with its code
+#   cmux-step stage <n> <command...>  type the same line WITHOUT Enter; the human presses it
+#   cmux-step wait  <n> [seconds]     wait for step <n>'s receipt (after stage); exit with its code
+#   cmux-step show  [lines]           print the tab's last <lines> screen lines (default 60)
+#   cmux-step close                   close the tab
+#
+# Each step is written to a file; only `bash <file>` crosses the keystroke
+# channel (`cmux send` turns \n \r \t into key events, so command text must
+# never travel that way). The step file writes its exit code to a receipt and
+# signals `cmux wait-for`, so the driver blocks without polling and never has
+# to scrape the screen. Ctrl-C in the tab yields rc 130 with a receipt.
+#
+# The script never calls `cmux send-key`. Pressing Enter on a staged line is
+# the human's act, not the agent's.
+#
+# Env: CMUX (cmux binary), CMUX_STEP_DIR (runbook dir; else the last one
+# opened from this surface), CMUX_STEP_TIMEOUT (default 540 s).
+set -u
+
+CMUX="${CMUX:-}"
+if [ -z "$CMUX" ]; then
+    if command -v cmux >/dev/null 2>&1; then
+        CMUX=cmux
+    elif [ -n "${CMUX_BUNDLED_CLI_PATH:-}" ] && [ -x "$CMUX_BUNDLED_CLI_PATH" ]; then
+        CMUX="$CMUX_BUNDLED_CLI_PATH"
+    else
+        CMUX=/Applications/cmux.app/Contents/Resources/bin/cmux
+    fi
+fi
+TIMEOUT="${CMUX_STEP_TIMEOUT:-540}"
+POINTER_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/cmux-step/by-caller"
+POINTER="$POINTER_DIR/${CMUX_SURFACE_ID:-default}"
+
+die() {
+    echo "cmux-step: $*" >&2
+    exit 2
+}
+
+usage() {
+    sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//' >&2
+    exit 2
+}
+
+shortpath() {
+    case "$1" in
+        "$HOME"/*) printf '~%s' "${1#"$HOME"}" ;;
+        *) printf '%s' "$1" ;;
+    esac
+}
+
+# --- state: <dir>/.cmux-step/{tab,step-N.sh,step-N.rc,step-N.tok,last} ----
+
+runbook_dir() {
+    local d=""
+    if [ -n "${CMUX_STEP_DIR:-}" ]; then
+        d="$CMUX_STEP_DIR"
+    elif [ -f "$POINTER" ]; then
+        d="$(cat "$POINTER")"
+    elif [ -f "$PWD/.cmux-step/tab" ]; then
+        d="$PWD"
+    fi
+    [ -n "$d" ] || die "no runbook tab open from this surface; run: cmux-step open <dir> [title]"
+    [ -f "$d/.cmux-step/tab" ] || die "no tab recorded under $d/.cmux-step; run: cmux-step open $d"
+    printf '%s' "$d"
+}
+
+# Resolve the tab ref. Refs stay valid while the cmux app runs; after a
+# relaunch they are reassigned, so fall back to the title.
+resolve_tab() {
+    local sd="$1" ref title tree
+    ref="$(sed -n '1p' "$sd/tab")"
+    title="$(sed -n '2p' "$sd/tab")"
+    tree="$("$CMUX" tree --all 2>/dev/null)" || die "cmux tree failed - not inside cmux, or not a cmux descendant (see skill cmux-session-self-identity)"
+    if printf '%s\n' "$tree" | grep -q "surface $ref "; then
+        printf '%s' "$ref"
+        return 0
+    fi
+    ref="$(printf '%s\n' "$tree" | grep -F "\"$title\"" | grep -o 'surface:[0-9]*' | head -1)"
+    if [ -n "$ref" ]; then
+        printf '%s\n%s\n%s\n' "$ref" "$title" "$(sed -n '3p' "$sd/tab")" > "$sd/tab"
+        echo "cmux-step: tab ref changed; now $ref (matched by title \"$title\")" >&2
+        printf '%s' "$ref"
+        return 0
+    fi
+    die "tab \"$title\" ($ref) is gone; run: cmux-step open $(sed -n '3p' "$sd/tab")"
+}
+
+# Structural gate: never send step N+1 while step N has no receipt. Text
+# typed into a busy terminal goes to the running program's stdin, or queues
+# and runs unreviewed after it.
+require_previous_receipt() {
+    local sd="$1" last
+    [ -f "$sd/last" ] || return 0
+    last="$(cat "$sd/last")"
+    [ -f "$sd/step-$last.rc" ] && return 0
+    if [ -f "$sd/step-$last.staged" ]; then
+        die "step $last is staged and has not been pressed yet; wait for it (cmux-step wait $last) or ask the human"
+    fi
+    die "step $last has no receipt yet (still running?); wait for it: cmux-step wait $last"
+}
+
+write_step() {
+    local sd="$1" n="$2" cmd="$3" f rc tok
+    f="$sd/step-$n.sh"
+    rc="$sd/step-$n.rc"
+    # Unique per invocation: cmux wait-for signals are retained, so a stale
+    # signal from an earlier run of the same step must not satisfy a new wait.
+    tok="cmux-step-$n-$$-$RANDOM"
+    rm -f "$rc" "$sd/step-$n.staged"
+    {
+        printf '#!/bin/bash\n'
+        printf '# cmux-step %s  (generated %s)\n' "$n" "$(date '+%Y-%m-%dT%H:%M:%S')"
+        printf '_cmux_step_rc() { echo "$1" > %q; %q wait-for -S %q >/dev/null 2>&1; }\n' "$rc" "$CMUX" "$tok"
+        printf '%s\n' "trap '_cmux_step_rc 130; exit 130' INT"
+        printf '%s\n' "trap '_cmux_step_rc 143; exit 143' TERM"
+        printf '%s\n' "$cmd"
+        printf '%s\n' 'rc=$?'
+        printf '%s\n' '_cmux_step_rc "$rc"'
+        printf '%s\n' 'exit "$rc"'
+    } > "$f"
+    printf '%s\n' "$tok" > "$sd/step-$n.tok"
+    printf '%s\n' "$n" > "$sd/last"
+}
+
+# The line typed at the prompt: `bash <file>  # <n>: <first line of cmd>`.
+# The comment is display only, so backslashes are stripped (cmux send would
+# turn \n \t \r into key events) and it is cut to one line.
+prompt_line() {
+    local sd="$1" n="$2" cmd="$3" display
+    display="$(printf '%s\n' "$cmd" | head -1 | tr -d '\\' | cut -c1-80)"
+    printf 'bash %s  # %s: %s' "$(shortpath "$sd/step-$n.sh")" "$n" "$display"
+}
+
+wait_receipt() {
+    local sd="$1" n="$2" secs="$3" rc tok code
+    rc="$sd/step-$n.rc"
+    [ -f "$sd/step-$n.tok" ] || die "no step $n recorded"
+    tok="$(cat "$sd/step-$n.tok")"
+    if [ ! -f "$rc" ]; then
+        "$CMUX" wait-for "$tok" --timeout "$secs" >/dev/null 2>&1 || true
+    fi
+    if [ -f "$rc" ]; then
+        code="$(cat "$rc")"
+        rm -f "$sd/step-$n.staged"
+        echo "step $n: rc=$code"
+        exit "$code"
+    fi
+    echo "step $n: no receipt after ${secs}s - still running, staged and not yet pressed, or killed before the trap ran. Look: cmux-step show; wait again: cmux-step wait $n" >&2
+    exit 124
+}
+
+# --- verbs ------------------------------------------------------------------
+
+cmd_open() {
+    local dir="$1" title="${2:-}" sd id ws pane out ref
+    [ -d "$dir" ] || die "not a directory: $dir"
+    dir="$(cd "$dir" && pwd)"
+    [ -n "$title" ] || title="$(basename "$dir")-run"
+    sd="$dir/.cmux-step"
+    if [ -f "$sd/tab" ]; then
+        if ref="$(resolve_tab "$sd" 2>/dev/null)"; then
+            mkdir -p "$POINTER_DIR"
+            printf '%s\n' "$dir" > "$POINTER"
+            echo "already open: $ref \"$(sed -n '2p' "$sd/tab")\" cwd=$dir"
+            return 0
+        fi
+    fi
+    id="$("$CMUX" identify 2>/dev/null)" || die "cmux identify refused - run from the main session inside cmux; a subagent or a non-cmux shell cannot open a sibling tab (skill cmux-session-self-identity)"
+    ws="$(printf '%s' "$id" | python3 -c 'import json,sys; print(json.load(sys.stdin)["caller"]["workspace_ref"])')"
+    pane="$(printf '%s' "$id" | python3 -c 'import json,sys; print(json.load(sys.stdin)["caller"]["pane_ref"])')"
+    [ -n "$ws" ] && [ -n "$pane" ] || die "could not read caller workspace/pane from cmux identify"
+    out="$("$CMUX" new-surface --type terminal --working-directory "$dir" --pane "$pane" --workspace "$ws" --focus false 2>&1)" || die "new-surface failed: $out"
+    ref="$(printf '%s\n' "$out" | awk '/^OK /{print $2}')"
+    case "$ref" in
+        surface:[0-9]*) ;;
+        *) die "could not parse the new surface ref from: $out" ;;
+    esac
+    "$CMUX" tab-action --action rename --tab "$ref" --title "$title" >/dev/null 2>&1 || echo "cmux-step: rename failed (tab keeps its auto title)" >&2
+    mkdir -p "$sd" "$POINTER_DIR"
+    printf '*\n' > "$sd/.gitignore"
+    printf '%s\n%s\n%s\n' "$ref" "$title" "$dir" > "$sd/tab"
+    rm -f "$sd/last"
+    printf '%s\n' "$dir" > "$POINTER"
+    echo "opened $ref \"$title\" cwd=$dir"
+}
+
+cmd_send() {
+    local mode="$1" n="$2" cmd="$3" dir sd ref line
+    case "$n" in
+        ''|*[!0-9A-Za-z_-]*) die "step id must be [0-9A-Za-z_-]: '$n'" ;;
+    esac
+    [ -n "$cmd" ] || die "empty command for step $n"
+    dir="$(runbook_dir)"
+    sd="$dir/.cmux-step"
+    ref="$(resolve_tab "$sd")"
+    require_previous_receipt "$sd"
+    write_step "$sd" "$n" "$cmd"
+    line="$(prompt_line "$sd" "$n" "$cmd")"
+    # ponytail: fixed settle so text typed right after a receipt lands on a
+    # redrawn prompt (after Ctrl-C the shell is still reinitialising readline);
+    # query cmux's shell state instead if a build ever exposes it.
+    sleep "${CMUX_STEP_SETTLE:-0.3}"
+    if [ "$mode" = run ]; then
+        "$CMUX" send --surface "$ref" "$line\\n" >/dev/null || die "cmux send failed"
+        wait_receipt "$sd" "$n" "$TIMEOUT"
+    fi
+    "$CMUX" send --surface "$ref" "$line" >/dev/null || die "cmux send failed"
+    : > "$sd/step-$n.staged"
+    "$CMUX" tab-action --action mark-unread --tab "$ref" >/dev/null 2>&1 || true
+    echo "staged step $n in tab \"$(sed -n '2p' "$sd/tab")\" ($ref): the human presses Enter there (Ctrl-U discards). Then: cmux-step wait $n"
+}
+
+cmd_wait() {
+    local n="$1" secs="${2:-$TIMEOUT}" dir sd
+    dir="$(runbook_dir)"
+    sd="$dir/.cmux-step"
+    wait_receipt "$sd" "$n" "$secs"
+}
+
+cmd_show() {
+    local lines="${1:-60}" dir sd ref
+    dir="$(runbook_dir)"
+    sd="$dir/.cmux-step"
+    ref="$(resolve_tab "$sd")"
+    "$CMUX" read-screen --surface "$ref" --lines "$lines"
+}
+
+cmd_close() {
+    local dir sd ref
+    dir="$(runbook_dir)"
+    sd="$dir/.cmux-step"
+    ref="$(resolve_tab "$sd")"
+    "$CMUX" close-surface --surface "$ref" >/dev/null || die "close-surface failed"
+    rm -f "$sd/tab" "$POINTER"
+    echo "closed $ref"
+}
+
+[ $# -ge 1 ] || usage
+verb="$1"
+shift
+case "$verb" in
+    open)  [ $# -ge 1 ] || usage; cmd_open "$@" ;;
+    run)   [ $# -ge 2 ] || usage; n="$1"; shift; cmd_send run "$n" "$*" ;;
+    stage) [ $# -ge 2 ] || usage; n="$1"; shift; cmd_send stage "$n" "$*" ;;
+    wait)  [ $# -ge 1 ] || usage; cmd_wait "$@" ;;
+    show)  cmd_show "$@" ;;
+    close) cmd_close ;;
+    *)     usage ;;
+esac

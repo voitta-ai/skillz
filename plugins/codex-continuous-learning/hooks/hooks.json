@@ -1,0 +1,30 @@
+{
+  "$schema": "https://github.com/voitta-ai/skillz/blob/master/plugins/codex-continuous-learning/hooks/hooks.schema.json",
+  "version": 1,
+  "description": "Codex hook wiring for the continuous-learning skill. UserPromptSubmit injects a one-line reminder; Stop forces a brief retrospective before exit.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "name": "continuous-learning-prompt-reminder",
+        "command": ["python3", "${PLUGIN_DIR}/hooks/continuous_learning_prompt.py"],
+        "description": "Inject a short reminder that reusable, verified learnings should be captured before ending the task.",
+        "timeout_ms": 2000,
+        "on_error": "ignore"
+      }
+    ],
+    "Stop": [
+      {
+        "name": "continuous-learning-stop-retrospective",
+        "command": ["python3", "${PLUGIN_DIR}/hooks/continuous_learning_stop.py"],
+        "description": "Require a brief retrospective: invoke continuous-learning or emit `No reusable learning.` to exit.",
+        "timeout_ms": 5000,
+        "on_error": "ignore"
+      }
+    ]
+  },
+  "notes": [
+    "PLUGIN_DIR is set by the Codex plugin loader to the absolute path of this plugin bundle.",
+    "Both hooks fail open (on_error=ignore): a hook crash must never break the user's session.",
+    "PostToolUse gating is intentionally NOT included in v1. See SKILL.md > Notes for the planned refinement."
+  ]
+}

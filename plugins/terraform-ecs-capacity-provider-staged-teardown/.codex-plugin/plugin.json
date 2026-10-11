@@ -1,0 +1,21 @@
+{
+  "name": "terraform-ecs-capacity-provider-staged-teardown",
+  "version": "1.2.0",
+  "description": "Tear down an ECS-on-EC2 capacity-provider stack when a single terraform apply deadlocks with ResourceInUseException: destroy order is the reverse of the dependency graph, so compute tears down before the workload; split into two sequential untargeted applies, workload first, infra second.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "terraform",
+    "aws",
+    "ecs",
+    "capacity-provider",
+    "teardown",
+    "stacked-prs"
+  ],
+  "skills": "./skills/"
+}

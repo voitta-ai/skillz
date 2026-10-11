@@ -1,0 +1,19 @@
+{
+  "name": "aws-http-server-on-lambda-web-adapter",
+  "version": "1.0.0",
+  "description": "Host an unmodified HTTP server (incl.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "aws",
+    "lambda",
+    "web-adapter",
+    "scale-to-zero"
+  ],
+  "skills": "./skills/"
+}

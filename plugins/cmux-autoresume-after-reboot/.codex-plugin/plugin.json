@@ -1,0 +1,18 @@
+{
+  "name": "cmux-autoresume-after-reboot",
+  "version": "1.0.0",
+  "description": "Diagnose why cmux does not resume agent sessions after a macOS reboot even though terminal.autoResumeAgentSessions is enabled.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "cmux",
+    "macos",
+    "session-restore"
+  ],
+  "skills": "./skills/"
+}

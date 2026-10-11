@@ -1,0 +1,12 @@
+{
+  "name": "android-adb-device-verification",
+  "description": "Verify an Android change on a device or emulator when the project has no test suite. Covers the build-install-drive-read loop, verifying the release build rather than only debug because R8 breaks reflection-driven code, tapping by element label instead of remembered coordinates, reading app-private state back with run-as, and mocking location. Its core discipline is calibration: a check that cannot observe anything reports the same thing as a check that observed nothing, so an unplugged cable, a stale uiautomator dump, a single-quoted attribute, or a pattern that can never match all read as a passing assertion. Ships scripts/adb-ui.sh with text, has, tap, tap-nth and type.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

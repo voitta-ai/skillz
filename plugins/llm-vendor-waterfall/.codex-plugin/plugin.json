@@ -1,0 +1,21 @@
+{
+  "name": "llm-vendor-waterfall",
+  "version": "1.1.0",
+  "description": "Serve one LLM call from an ordered list of vendors so a rate limit, a dead key, or an out-of-credits account fails over instead of failing the request. Covers the ordered-config to LiteLLM Router mapping, which Router knobs earn their keep (cooldown_time, allowed_fails, context_window_fallbacks, per-deployment budgets) and which to leave alone, the invisible dead fallback that reads as random flakiness, what must not be waterfalled, and how to prove failover actually happens.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "llm",
+    "litellm",
+    "router",
+    "failover",
+    "rate-limit",
+    "agents"
+  ],
+  "skills": "./skills/"
+}

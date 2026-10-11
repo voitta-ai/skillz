@@ -1,0 +1,11 @@
+{
+  "name": "continuous-learning",
+  "version": "1.2.0",
+  "description": "Codex skill only (no hooks). End-of-task retrospective: extract reusable, verified learnings. For the hook-driven bundle, use codex-continuous-learning.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": ["codex", "skills", "retrospective", "continuous-learning"],
+  "skills": "./skills/"
+}

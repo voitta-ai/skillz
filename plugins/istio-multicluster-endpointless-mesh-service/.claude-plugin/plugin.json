@@ -1,0 +1,12 @@
+{
+  "name": "istio-multicluster-endpointless-mesh-service",
+  "description": "Istio multi-cluster endpoint-less away-Service: use a decoy selector (not an omitted one) so an EndpointSlice anchor exists for the mesh to merge remote endpoints into; for cross-region write-routing / home-away Service topologies.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

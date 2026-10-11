@@ -1,0 +1,12 @@
+{
+  "name": "actions-log-secret-scrub",
+  "version": "1.0.0",
+  "description": "Remove a secret that a CI job printed into GitHub Actions logs, and verify the removal without being fooled by three tool-level false cleans. Use when: (1) a `terraform plan` in CI printed a secret because a NON-sensitive attribute embeds one - a subscription endpoint carrying a routing key, a connection string, a webhook URL - and the config only holds a placeholder; (2) every push to the default branch reprints it, so the leak is growing; (3) you need to delete a run's logs and `gh api -X DELETE .../logs` returns 500; (4) a grep over `gh api .../jobs/<id>/logs` reports zero hits and you are about to call that clean; (5) a post-delete check still shows the secret and you cannot tell whether the deletion failed. The three false cleans are the point: `gh api` prints NOTHING for a log containing terminal escape sequences unless told otherwise, `gh api | grep` hides gh's own failure behind the pipe's exit status, and `gh run view --log` leaves a zip of the whole log on disk that a later check reads instead of the API.",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

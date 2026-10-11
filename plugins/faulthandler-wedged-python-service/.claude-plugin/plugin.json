@@ -1,0 +1,12 @@
+{
+  "name": "faulthandler-wedged-python-service",
+  "version": "1.0.0",
+  "description": "Diagnose and recover a long-running Python service (a Slack Socket Mode bot, a queue worker, any daemon) that stops doing work while the PROCESS stays alive, so the supervisor's health check sees it as healthy and never restarts it. Use when: (1) a daemon goes silent with no new log lines and no events handled, but ps shows it running at about 0% CPU in state S; (2) a KeepAlive, launchd or systemd supervisor never restarts it because the process did not exit; (3) you need to know WHERE it is stuck without attaching a debugger; (4) you registered faulthandler on SIGUSR1 and kill -USR1 silently KILLS the process instead of dumping; (5) a wedge that was not an issue a few days ago is now frequent. Covers the faulthandler SIGUSR1 thread dump, the chain=False gotcha, reading the dump to tell a half-open socket from an idle worker from a deadlock, an out-of-process heartbeat as the recovery net and its blind spot, and the host-pressure angle behind a sudden rise in frequency.",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

@@ -1,0 +1,18 @@
+{
+  "name": "credential-audit-rerun",
+  "version": "1.0.0",
+  "description": "Resume a credential audit whose sweep manifest has gone stale: expired paths, the three meanings of an unreadable span, the rule that could-not-read never becomes safe-to-delete, and the surfaces the audit itself creates.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "security",
+    "credentials",
+    "audit"
+  ],
+  "skills": "./skills/"
+}

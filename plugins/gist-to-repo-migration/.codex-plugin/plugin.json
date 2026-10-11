@@ -1,0 +1,19 @@
+{
+  "name": "gist-to-repo-migration",
+  "version": "1.2.1",
+  "description": "Migrate a gist's full revision history into a real git repo, preserving commits.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "gist",
+    "to",
+    "repo",
+    "migration"
+  ],
+  "skills": "./skills/"
+}

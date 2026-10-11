@@ -1,0 +1,12 @@
+{
+  "name": "git-simulate-sequential-merges",
+  "description": "Determine which merges in a queue of N branches actually conflict, and preview the fully-merged file content, using merge-tree --write-tree chained through commit-tree - no...",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}
