@@ -15,8 +15,8 @@ description: |
   env-var compatibility aliases, hook trust review, the symlink divergence,
   and the runtime-protocol caveat.
 author: Claude Code
-version: 1.3.0
-date: 2026-10-09
+version: 1.3.1
+date: 2026-10-10
 ---
 
 # Claude Code <-> Codex CLI plugin parity
@@ -106,7 +106,12 @@ repo distributes to both ecosystems.
    Codex 0.160.1, skillz#176). Claude Code's installer dereferences the same
    links, so the layout works there and the breakage is invisible unless you
    count `SKILL.md` files in the Codex cache. Ship real files (or links that
-   stay inside the plugin root) to anything Codex installs.
+   stay inside the plugin root) to anything Codex installs. If the source
+   layout needs the links, publish a materialized copy to a branch from CI and
+   have Codex users add `owner/repo@branch` (`codex plugin marketplace add`
+   accepts a ref). Put that branch's manifest at `.agents/plugins/marketplace.json`:
+   a root that only has `.codex-plugin/marketplace.json` is rejected with
+   "marketplace root does not contain a supported manifest" (Codex 0.160.1).
 
 5. **Both hosts now have an official directory.** Anthropic has a
    self-serve directory portal at claude.ai/directory/manage (see

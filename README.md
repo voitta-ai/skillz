@@ -585,10 +585,24 @@ rm -rf ~/.claude/skills/work-on-pr ~/.claude/skills/review-pr-loop
 
 Requires Codex CLI **0.117.0** or newer. Check with `codex --version`.
 
-From any shell, add this repo as a Codex marketplace:
+From any shell, add the repo's `codex` branch as a Codex marketplace:
 
 ```bash
-codex plugin marketplace add voitta-ai/skillz
+codex plugin marketplace add voitta-ai/skillz@codex
+```
+
+Use the `codex` branch, not the default branch. On `master` the bundle and the
+single-skill plugins are trees of symlinks into `skills/`, and Codex drops
+symlinked skill directories on install, so a plugin installed from `master`
+reports success with zero skills (#176). CI rebuilds the `codex` branch from
+`master` on every push (`scripts/build-codex-branch.py`) with every symlink
+replaced by the real files, and writes the marketplace where Codex looks for
+it (`.agents/plugins/marketplace.json`). If you added `voitta-ai/skillz` before,
+remove it and add the branch instead:
+
+```bash
+codex plugin marketplace remove skillz
+codex plugin marketplace add voitta-ai/skillz@codex
 ```
 
 Then open Codex's plugin browser and install whichever plugin entry
@@ -610,14 +624,15 @@ plus two Codex-only entries:
 - `continuous-learning` — single skill, no hooks
 - `codex-continuous-learning` — skill + UserPromptSubmit/Stop hooks
 
-From a local checkout, point Codex at the repo root instead:
+From a local checkout, build the materialized tree and point Codex at it,
+since the checkout itself has the same symlinks:
 
 ```bash
-codex plugin marketplace add /absolute/path/to/skillz
+python3 scripts/build-codex-branch.py /tmp/skillz-codex
+codex plugin marketplace add /tmp/skillz-codex
 ```
 
-If you add a local checkout, keep that checkout up to date yourself
-with `git pull` in the clone.
+Rebuild it yourself after a `git pull` in the clone.
 
 Remove old direct-copy installs after switching:
 
