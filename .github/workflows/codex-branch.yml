@@ -1,0 +1,58 @@
+name: codex-branch
+
+# Publishes the Codex marketplace, with every symlink dereferenced, to the
+# `codex` branch. Codex drops symlinked skill directories on plugin install, so
+# a plugin installed from master lands zero skills (#176); see
+# scripts/build-codex-branch.py. Users add `voitta-ai/skillz@codex`.
+#
+# Commits are appended, never force-pushed, so a marketplace snapshot Codex has
+# already fetched stays reachable.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: codex-branch
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Codex marketplace
+        run: python3 scripts/build-codex-branch.py "$RUNNER_TEMP/codex"
+
+      - name: Commit to the codex branch
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          version=$(jq -r .version plugins/skillz/.codex-plugin/plugin.json)
+
+          work="$RUNNER_TEMP/codex-branch"
+          if git ls-remote --exit-code --heads origin codex >/dev/null; then
+            git fetch --no-tags origin codex
+            git worktree add --detach "$work" FETCH_HEAD
+          else
+            git worktree add --orphan -b codex "$work"
+          fi
+
+          # Replace the tree wholesale so removed skills disappear too.
+          find "$work" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a "$RUNNER_TEMP/codex/." "$work/"
+
+          git -C "$work" add -A
+          if git -C "$work" diff --cached --quiet; then
+            echo "codex branch already matches skillz $version"
+            exit 0
+          fi
+          git -C "$work" commit -q -m "skillz $version from ${SOURCE_SHA}"
+          git -C "$work" push origin HEAD:refs/heads/codex
