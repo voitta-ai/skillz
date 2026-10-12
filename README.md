@@ -318,6 +318,8 @@ environments and older Codex versions.
 | [`rare-error-onset-replicaset-attribution` plugin](./plugins/rare-error-onset-replicaset-attribution/) | plugin | Claude, Codex | Single-skill plugin: rare-error-onset-replicaset-attribution |
 | [followups](./skills/followups/SKILL.md) | skill | Claude | Dated follow-ups on this machine, checked every 3 hours by one session's CronCreate loop: item format, single-owner lock with heartbeat takeover, re-arm before the 7-day expiry, SessionStart hook |
 | [`followups` plugin](./plugins/followups/) | plugin | Claude | Single-skill plugin: followups |
+| [zone-topology-spread-cannot-move-packed-pods](./skills/zone-topology-spread-cannot-move-packed-pods/SKILL.md) | skill | Claude, Codex | A ScheduleAnyway zone spread cannot move pods that already fit - the scheduler only scores feasible nodes, so nothing is Pending and the autoscaler is never asked; plus what DoNotSchedule + minDomains costs in an AZ outage. |
+| [`zone-topology-spread-cannot-move-packed-pods` plugin](./plugins/zone-topology-spread-cannot-move-packed-pods/) | plugin | Claude, Codex | Single-skill plugin: zone-topology-spread-cannot-move-packed-pods |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
