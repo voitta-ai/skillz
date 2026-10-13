@@ -17,13 +17,17 @@ description: |
   cron job before CronCreate's 7-day expiry, handling due items read-only, and
   the optional SessionStart hook.
 author: Claude Code
-version: 1.0.0
-date: 2026-10-09
+version: 1.0.1
+date: 2026-10-13
 source: https://github.com/voitta-ai/skillz
 source_file: skills/followups/SKILL.md
 ---
 
 # followups: dated checks, one loop per machine
+
+> **Canonical source.** This skill lives in the repo at
+> https://github.com/voitta-ai/skillz (file: `skills/followups/SKILL.md`).
+> Updates go through the repo's worktree + PR workflow.
 
 ## Problem
 
@@ -31,12 +35,13 @@ Findings often come with a date: a silence that ends, a bake period, a sprint
 rollover, a link that expires. The date is written into a handoff, a memory
 file or a PR comment, and nothing looks at it again when the day comes.
 
-Claude Code can schedule prompts, but only inside one session. `CronCreate`
-jobs live in memory and die with the session, they fire only while that
-session's REPL is idle, and recurring jobs are deleted after 7 days
-(`durable` has no effect). A follow-up two weeks out outlives any one job, and
-several sessions each arming their own job would check everything several
-times.
+Claude Code can schedule prompts, but only inside one session. A
+`CronCreate` job fires only while its session's REPL is idle and stops when
+the session's process exits. A recurring job is deleted after 7 days
+(`durable` has no effect). CronCreate says the job dies with the session,
+but resuming the session (`claude --resume`) brings it back under the same
+id. A follow-up two weeks out outlives any one job, and several sessions
+each arming their own job would check everything several times.
 
 ## Context / Trigger Conditions
 
@@ -169,6 +174,13 @@ have reported the value and left the item open for a human.
   ticks late, since cron fires only when its REPL is idle; after 7 hours
   without a tick, another session may take over, and the old owner stands
   down at its next tick.
+- A resumed session gets its `[followups tick]` job back, but it runs in a
+  new process with a new `CLAUDE_PID`, so the lock treats it as a different
+  session. If a live session took the loop over in the meantime, its first
+  tick prints NOT OWNER. If the loop has no live owner, the tick adopts it
+  and asks for REARM. After a resume, run `CronList` before you assume no job
+  is armed. Observed once, three days after the job was created. Whether the
+  7-day expiry restarts on resume was not checked.
 - `claim` and `tick` need `CLAUDE_PID`, which Claude Code sets in its Bash
   tool environment, and `jq`. Notifications need `osascript`; elsewhere
   `done` only prints.
