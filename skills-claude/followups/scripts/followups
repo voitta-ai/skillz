@@ -1,0 +1,162 @@
+#!/bin/bash
+# followups - per-machine list of dated follow-ups, checked by one Claude Code
+# session's recurring cron job. Procedure: the skill's SKILL.md.
+#
+#   followups add < item.json         add an item (JSON object on stdin)
+#   followups list                    loop owner, then open items by check time
+#   followups claim [session-name]    take the loop for this session; prints how to arm it
+#   followups tick                    owner only: heartbeat, expire, print due items
+#   followups done <id> <result>      close an item
+#   followups snooze <id> <check_at>  move an item's next check
+#   followups hook                    SessionStart hook: one line when items have no live loop
+set -uo pipefail
+D="${FOLLOWUPS_DIR:-$HOME/.followups}"
+LOCK="$D/loop.lock"
+STALE_H=7   # owner counts as gone after this many hours without a tick (ticks are 3h apart)
+REARM_D=6   # CronCreate deletes recurring jobs after 7 days
+CRON="17 */3 * * *"
+PROMPT='[followups tick] Run `~/.followups/bin/followups tick` and act on what it prints, as skill followups says: NOT OWNER - CronDelete this [followups tick] job; REARM - re-arm it; DUE - handle each item. Otherwise reply with its last line only.'
+mkdir -p "$D/open" "$D/done" "$D/expired"
+
+die() { echo "followups: $*" >&2; exit 2; }
+now() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+items() { compgen -G "$D/open/*.json" >/dev/null; }
+# Process start time: with the pid it identifies a process, so a reused pid does not pass as the owner.
+pstart() { ps -o lstart= -p "$1" 2>/dev/null | awk '{$1=$1; print}'; }
+need_pid() { [ -n "${CLAUDE_PID:-}" ] || die "CLAUDE_PID is unset: run this from a Claude Code session's Bash tool"; }
+notify() {
+  command -v osascript >/dev/null || return 0
+  osascript -e 'on run a' -e 'display notification (item 2 of a) with title (item 1 of a)' -e 'end run' "$1" "$2" >/dev/null 2>&1 || true
+}
+
+# Describes the loop owner; returns 0 only for a live owner that ticked recently.
+owner() {
+  [ -f "$LOCK" ] || { echo "no loop owner"; return 1; }
+  local pid name age
+  pid=$(jq -r .pid "$LOCK" 2>/dev/null) || { echo "unreadable $LOCK"; return 1; }
+  name=$(jq -r .session_name "$LOCK")
+  age=$(jq -r '(now - (.last_tick|fromdateiso8601)) / 3600 | floor' "$LOCK")
+  [ "$(pstart "$pid")" = "$(jq -r .pid_start "$LOCK")" ] || { echo "owner $name (pid $pid) has exited"; return 1; }
+  [ "$age" -lt "$STALE_H" ] || { echo "owner $name (pid $pid) last ticked ${age}h ago"; return 1; }
+  echo "owner $name (pid $pid), last tick ${age}h ago"
+}
+
+mine() {
+  [ -f "$LOCK" ] && [ "$(jq -r .pid "$LOCK" 2>/dev/null)" = "${CLAUDE_PID:-}" ] \
+    && [ "$(jq -r .pid_start "$LOCK")" = "$(pstart "${CLAUDE_PID:-0}")" ]
+}
+
+# Takes the lock for this process unless a live owner holds it. ln makes creation atomic.
+take_lock() {   # $1 session name, $2 armed_at
+  local why tmp="$LOCK.$$" rc
+  if why=$(owner); then echo "loop already owned: $why"; return 1; fi
+  if [ -f "$LOCK" ]; then echo "taking over: $why"; rm -f "$LOCK"; fi
+  jq -n --arg pid "$CLAUDE_PID" --arg ps "$(pstart "$CLAUDE_PID")" --arg sid "${CLAUDE_CODE_SESSION_ID:-}" \
+        --arg name "$1" --arg t "$(now)" --arg armed "$2" \
+     '{pid: $pid, pid_start: $ps, session_id: $sid, session_name: $name,
+       claimed_at: $t, armed_at: $armed, last_tick: $t}' > "$tmp"
+  ln "$tmp" "$LOCK" 2>/dev/null; rc=$?; rm -f "$tmp"
+  [ $rc -eq 0 ] || { echo "loop already owned: another session claimed it first"; return 1; }
+}
+
+cmd_claim() {
+  need_pid
+  local name="${1:-${CLAUDE_CODE_SESSION_ID:-session}}"
+  if mine; then   # the owner claims again after re-arming its job
+    jq --arg t "$(now)" --arg n "$name" '.armed_at = $t | .last_tick = $t | .session_name = $n' "$LOCK" > "$LOCK.$$" \
+      && mv -f "$LOCK.$$" "$LOCK"
+    echo "re-armed: $(owner)"; return 0
+  fi
+  take_lock "$name" "$(now)" || return 1
+  echo "claimed: $(owner)"
+  echo "Arm it now with CronCreate (recurring: true), then run one tick:"
+  echo "  cron:   $CRON"
+  echo "  prompt: $PROMPT"
+}
+
+cmd_tick() {
+  need_pid
+  if ! mine; then
+    # A ticking session adopts an ownerless or stale loop. Its job's age is unknown,
+    # so armed_at 0 makes this same tick ask for a re-arm.
+    take_lock "${CLAUDE_CODE_SESSION_ID:-session}" "1970-01-01T00:00:00Z" >/dev/null \
+      || { echo "NOT OWNER: $(owner). CronDelete this session's [followups tick] job and stop."; return 3; }
+  fi
+  jq --arg t "$(now)" '.last_tick = $t' "$LOCK" > "$LOCK.$$" && mv -f "$LOCK.$$" "$LOCK"
+  local f n=0 expired=""
+  for f in "$D"/open/*.json; do
+    [ -e "$f" ] || continue
+    if jq -e '(.expires_at|fromdateiso8601) <= now' "$f" >/dev/null; then
+      mv "$f" "$D/expired/" && expired="$expired $(basename "$f" .json)"
+    elif jq -e '(.check_at|fromdateiso8601) <= now' "$f" >/dev/null; then
+      n=$((n + 1)); echo "DUE:"; jq . "$f"
+    fi
+  done
+  if jq -e --argjson d "$REARM_D" '(now - (.armed_at|fromdateiso8601)) > $d * 86400' "$LOCK" >/dev/null; then
+    echo "REARM: CronDelete this session's [followups tick] job, CronCreate it again (cron \"$CRON\", same prompt), then run: followups claim"
+  fi
+  [ -z "$expired" ] || expired=", expired unchecked:$expired"
+  if [ $n -gt 0 ]; then echo "followups: $n due$expired"; else echo "followups: nothing due$expired; next: $(next_check)"; fi
+}
+
+next_check() {
+  if items; then jq -rs 'min_by(.check_at) | "\(.id) at \(.check_at)"' "$D"/open/*.json; else echo "none"; fi
+}
+
+cmd_add() {
+  local j id f
+  j=$(jq -ce --arg sid "${CLAUDE_CODE_SESSION_ID:-}" '
+      if (.id | type) != "string" or (.id | test("^[a-z0-9][a-z0-9._-]*$") | not) then error("id must be a lowercase slug")
+      elif ([.title, .check] | map(type == "string" and length > 0) | all | not) then error("title and check are required")
+      elif (.expires_at | fromdateiso8601) <= (.check_at | fromdateiso8601) then error("expires_at must be after check_at")
+      else .source //= $sid | .created_at = (now | todateiso8601) end') \
+    || die "add: expected one JSON object on stdin with id, title, check, check_at, expires_at (UTC, like 2026-10-22T16:30:00Z)"
+  id=$(jq -r .id <<<"$j"); f="$D/open/$id.json"
+  [ ! -e "$f" ] || die "add: $f exists; edit it, or use another id"
+  jq . <<<"$j" > "$f.$$" && mv "$f.$$" "$f"
+  echo "added $f: check $(jq -r .check_at "$f"), expires $(jq -r .expires_at "$f")"
+  owner >/dev/null || echo "followups: the loop is not running on this machine; run the skill's Start procedure"
+}
+
+cmd_list() {
+  echo "loop: $(owner)"
+  items || { echo "no open items"; return 0; }
+  jq -rs 'sort_by(.check_at)[] | "\(.check_at)  \(.id)  \(.title)  [expires \(.expires_at)]"' "$D"/open/*.json
+}
+
+cmd_done() {
+  [ $# -eq 2 ] || die "usage: followups done <id> <result>"
+  local f="$D/open/$1.json"
+  [ -f "$f" ] || die "done: no open item $1"
+  jq --arg r "$2" --arg t "$(now)" '.result = $r | .done_at = $t' "$f" > "$D/done/$1.json" && rm -f "$f"
+  echo "done: $1"
+  notify "followups: $1" "$2"
+}
+
+cmd_snooze() {
+  [ $# -eq 2 ] || die "usage: followups snooze <id> <check_at>"
+  local f="$D/open/$1.json"
+  [ -f "$f" ] || die "snooze: no open item $1"
+  jq -e --arg t "$2" '($t | fromdateiso8601) < (.expires_at | fromdateiso8601)' "$f" >/dev/null 2>&1 \
+    || die "snooze: $2 must look like 2026-10-22T16:30:00Z and fall before expires_at"
+  jq --arg t "$2" '.check_at = $t' "$f" > "$f.$$" && mv -f "$f.$$" "$f"
+  echo "snoozed: $1 to $2"
+}
+
+cmd_hook() {   # silent unless open items exist and no live session owns the loop
+  items || return 0
+  local why
+  why=$(owner) && return 0
+  echo "followups: $(ls "$D"/open/*.json | wc -l | tr -d ' ') open item(s) on this machine, and the loop is not running ($why). In your first turn, invoke skill followups and run its Start procedure."
+}
+
+case "${1:-}" in
+  add) cmd_add ;;
+  list) cmd_list ;;
+  claim) shift; cmd_claim "$@" ;;
+  tick) cmd_tick ;;
+  done) shift; cmd_done "$@" ;;
+  snooze) shift; cmd_snooze "$@" ;;
+  hook) cmd_hook ;;
+  *) sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+esac
