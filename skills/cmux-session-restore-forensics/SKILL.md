@@ -9,7 +9,9 @@ description: |
   (5) you want to resurrect a Claude Code session whose tab is gone but whose
   session id still exists, (6) a tab resumed another tab's conversation, or two
   tabs (two ListAgents rows with one name) run the same session, (7) a second
-  cmux window full of duplicate tabs appeared and it looks like "two instances".
+  cmux window full of duplicate tabs appeared and it looks like "two instances",
+  (8) both session files already show the broken layout because cmux
+  relaunched twice in a row.
   Covers the on-disk session/closed-history JSON, the Core Data epoch gotcha in
   their timestamps, diffing two snapshots by session UUID, the agent journal,
   ~/.cmuxterm/events.jsonl (whose session ids are base64-encoded) and the
@@ -17,8 +19,8 @@ description: |
   through `cmux new-workspace`, and rewriting crossed bindings offline with
   cmux quit.
 author: Claude Code
-version: 1.4.0
-date: 2026-10-06
+version: 1.5.0
+date: 2026-10-12
 source: https://github.com/voitta-ai/skillz
 source_file: skills/cmux-session-restore-forensics/SKILL.md
 ---
@@ -59,6 +61,8 @@ faithfully, so it looks like restore is broken when the saved state is.
   `claude --resume <same-uuid>` processes.
 - A second cmux window with the same workspaces appeared, and "two cmux
   instances" is the working theory.
+- cmux was killed and relaunched more than once, and `-previous.json` holds the
+  same short layout as the live file.
 
 ## The state files
 
@@ -170,6 +174,68 @@ The pane comes back in a *new* workspace, and Claude Code's folder trust is
 scoped to the original one. Every rescued agent tab therefore stops at
 "Quick safety check: is this a project you created or one you trust?" and waits
 for a keypress. That is expected, not a failure — walk the tabs and confirm each.
+
+## Both snapshots already overwritten
+
+`-previous.json` holds only the state from before the *latest* launch. If cmux
+crashes and relaunches twice in a row (a crash-restart, then a second restart a
+minute later), both session files show the broken layout. On 0.64.22, after two
+relaunches two minutes apart, both files held 6 to 7 panels, while 18 Claude
+sessions had been live before the crash. `closed-item-history` did not help
+either: it had only the one workspace closed during the mess. The layout is
+gone, but the sessions are still on disk, and three sources together rebuild
+the list.
+
+**1. The hook store gives you the pane map.** `~/.cmuxterm/claude-hook-sessions.json`
+keeps a record for each session in `sessions`, with `sessionId`, `workspaceId`,
+`surfaceId`, `cwd`, `transcriptPath`, `launchCommand.arguments` (keep extra
+flags such as `--chrome` when you relaunch), `agentLifecycle` and `updatedAt`.
+Unlike `closedAt`, `updatedAt` is **Unix** epoch. Grouping records by
+`workspaceId` shows which tabs shared a workspace. This file was not rewritten
+by the restart.
+
+**2. Transcripts give you the tab names.** The last `"customTitle"` in
+`~/.claude/projects/<dir>/<uuid>.jsonl` is the session's name, often
+`<workspace>:<tab>`. List the transcripts touched since a day or two before the
+crash:
+
+```bash
+cd ~/.claude/projects
+find . -maxdepth 2 -name '*.jsonl' -mtime -2 | while read -r f; do
+  t=$(grep -o '"customTitle":"[^"]*"' "$f" | tail -1)
+  echo "$(stat -f '%Sm' -t '%m-%d %H:%M' "$f") ${t:-untitled} $f $(grep -o '"cwd":"[^"]*"' "$f" | tail -1)"
+done | sort -r
+```
+
+The live set shows up as a tight cluster of mtimes in the crash minute: the
+dying cmux and the relaunch both touch every transcript they had open. Untitled
+sessions are in the cluster too, so match them to tabs by `cwd`. Some sessions
+in the cluster were last used days ago and were only reopened by an earlier
+restore, so read each one's last user-prompt timestamp before deciding it was
+in active use.
+
+**3. Discard the noise.** Drop sessions that are already running
+(`ps -axo command | grep -o -- '--resume [0-9a-f-]*'`) and the session you are
+in now. If one name appears on two sessions, the more recent one is usually
+the tab, and the older one is an earlier conversation with the same name.
+
+**Relaunch inside the existing workspaces** rather than creating one workspace
+per session, so the grouping comes back:
+
+```bash
+CMUX="${CMUX_BUNDLED_CLI_PATH:-/Applications/cmux.app/Contents/Resources/bin/cmux}"
+s=$("$CMUX" new-surface --type terminal --workspace workspace:<n> --focus false | grep -o 'surface:[0-9]*' | head -1)
+"$CMUX" rename-tab --workspace workspace:<n> --surface "$s" "<tab>"
+"$CMUX" send --workspace workspace:<n> --surface "$s" "cd '<cwd>' && claude --chrome --resume <uuid>"$'\n'
+```
+
+`send` types text into the pane, so end it with a newline. Run the `cd` in the
+transcript's *project* directory (decode the `~/.claude/projects/<dir>` name),
+not in the last `cwd` the session recorded. `--resume` looks the id up under
+the current directory's project, and a session can record a `cwd` outside it.
+Tabs relaunched this way in their original folders did not show the trust
+prompt from Step 3. Afterwards each `--resume <uuid>` should appear exactly
+once in `ps`.
 
 ## Crossed or duplicated bindings
 
@@ -333,7 +399,7 @@ next launch, each session started exactly once.
 - Do not diff the two session files by hand. The interesting difference is
   almost never visible at the workspace level; it lives in per-panel bindings.
 - `-previous.json` is overwritten by the *next* launch, even one killed seconds
-  later. If a restore looks wrong, copy the state files aside before doing
+  later (see "Both snapshots already overwritten"). If a restore looks wrong, copy the state files aside before doing
   anything else — including before relaunching again to "see if it fixes
   itself". One 0.64.25 launch from an edited live file left `-previous.json`
   untouched (unexplained), so do not assume it holds the last launch's input.
