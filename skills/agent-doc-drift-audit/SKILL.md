@@ -155,6 +155,20 @@ stating them.
 4. **If the doc moves,** commit the pure move first, with only path-reference
    updates. Put the content fixes in a second commit, so reviewers can read
    the content diff and open PRs can rebase onto the rename.
+   - **Only a true rename carries open PRs along.** Moving `.claude/CLAUDE.md`
+     to a root `AGENTS.md` deletes the old path. When open PRs that edit it
+     rebase, git's rename detection carries their hunks to the new file, with
+     conflicts only on adjacent lines. Moving a root `CLAUDE.md` is different:
+     the path survives as the `@AGENTS.md` import stub. Rename detection only
+     pairs a deleted path with an added one, so git sees a rewritten
+     `CLAUDE.md` plus a new `AGENTS.md`. Every open PR that edits `CLAUDE.md`
+     must then re-apply its hunks to `AGENTS.md` by hand. Say so in the PR body
+     and name those PRs.
+   - **Doc-contract tests can whitelist their inputs by file name.** In one
+     audited repo, a test required every tracked root `.md` to be a declared
+     test input in the build file. The move needed a one-line build change,
+     and a filtered run of the doc-contract tests stayed green while the full
+     suite failed. Run the full suite once after a move.
 5. **Docs only.** Report stale code comments, security findings and CI
    defects separately instead of fixing them in the doc PR.
 6. **Repos another team owns:** fix contradictions only, keep their structure
