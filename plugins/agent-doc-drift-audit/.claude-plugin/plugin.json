@@ -1,0 +1,12 @@
+{
+  "name": "agent-doc-drift-audit",
+  "version": "1.0.0",
+  "description": "Audit agent-facing repo docs (CLAUDE.md, AGENTS.md, .claude/, REPO_MAP, README, runbooks) across one or many repos for claims that contradict the code, then land the fixes as per-repo PRs. Use when: (1) asked to evaluate or clean up CLAUDE.md / AGENTS.md across repos, or to design an org-level convention doc, (2) an agent acted on a doc claim that turned out false (a folded module, a retired fleet, a renamed test), (3) a migration finished and its status text was never re-derived. Ships scripts/check-doc-paths.py, a stdlib checker for stale paths, broken links and committed plugin stubs.",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}
