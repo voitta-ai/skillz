@@ -18,8 +18,8 @@ description: |
   side does registry, versions, validators, PR. Falls back to the full
   claudeception wiring when no such peer exists.
 author: Claude Code
-version: 1.3.1
-date: 2026-10-09
+version: 1.4.0
+date: 2026-10-12
 source: https://github.com/voitta-ai/skillz
 source_file: skills/skill-capture-pr-handoff/SKILL.md
 ---
@@ -54,7 +54,9 @@ registry.
    the skill ships helpers. Do not touch catalog.json, marketplace.json,
    README, or anything under `plugins/`. Those belong to the landing side.
 3. Validate what content alone can prove: frontmatter carries
-   `name:`/`description:`/`version:`, `bash -n` any scripts, and run
+   `name:`/`description:`/`version:` plus `source:`/`source_file:`, the body
+   has the `> **Canonical source.**` blockquote under the title (both are
+   claudeception wiring step 1), `bash -n` any scripts, and run
    `scripts/check-sensitive-terms.sh skills/<name>/` - the capture session
    is the one holding client context, so the leak screen runs BEFORE the
    content leaves it.
@@ -99,8 +101,16 @@ registry.
    broadcasting, because two landers recreate the exact registry collision
    this contract avoids.
 6. SendMessage the target: branch name, skill name, one line on what it
-   is, what was validated, and what remains (registry + versions +
-   validators + PR). Then return to your real task - do not block on the
+   is, what was validated, every file shipped besides `SKILL.md` (the
+   landing side must list each one in the catalog entry's `files`, or
+   `validate-catalog.sh` fails), and what remains (registry + versions +
+   validators + PR). Do not choose a bundle version: the landing side
+   owns that number. The bundle version is a counter shared by every open
+   PR, so a number picked at capture time is stale or already claimed by
+   the time anyone lands it. Worse, if another PR holds the same number,
+   the landing side's rebase resolves cleanly and silently drops the bump
+   (git sees an identical edit on both sides), and nothing reports it.
+   Then return to your real task - do not block on the
    landing, do not poll.
 
 **Landing side** (the skills-repo session):
