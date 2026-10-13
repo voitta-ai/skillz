@@ -320,6 +320,8 @@ environments and older Codex versions.
 | [`followups` plugin](./plugins/followups/) | plugin | Claude | Single-skill plugin: followups |
 | [zone-topology-spread-cannot-move-packed-pods](./skills/zone-topology-spread-cannot-move-packed-pods/SKILL.md) | skill | Claude, Codex | A ScheduleAnyway zone spread cannot move pods that already fit - the scheduler only scores feasible nodes, so nothing is Pending and the autoscaler is never asked; plus what DoNotSchedule + minDomains costs in an AZ outage. |
 | [`zone-topology-spread-cannot-move-packed-pods` plugin](./plugins/zone-topology-spread-cannot-move-packed-pods/) | plugin | Claude, Codex | Single-skill plugin: zone-topology-spread-cannot-move-packed-pods |
+| [agent-doc-drift-audit](./skills/agent-doc-drift-audit/SKILL.md) | skill | Claude, Codex | Audit agent-facing repo docs (CLAUDE.md, AGENTS.md, .claude/, REPO_MAP, README, runbooks) across one or many repos for claims that contradict the code, then land the fixes as per-repo PRs. Use when: (1) asked to evaluate or clean up CLAUDE.md / AGENTS.md across repos, or to design an org-level convention doc, (2) an agent acted on a doc claim that turned out false (a folded module, a retired fleet, a renamed test), (3) a migration finished and its status text was never re-derived. Ships scripts/check-doc-paths.py, a stdlib checker for stale paths, broken links and committed plugin stubs. |
+| [`agent-doc-drift-audit` plugin](./plugins/agent-doc-drift-audit/) | plugin | Claude, Codex | Single-skill plugin: agent-doc-drift-audit |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries

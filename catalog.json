@@ -1348,6 +1348,18 @@
         "codex"
       ],
       "summary": "A `ScheduleAnyway` zone topology spread does NOT spread pods that fit on existing nodes, because kube-scheduler only scores FEASIBLE nodes: if every untainted matching node is in one zone, every pod lands there and the node autoscaler is never consulted, since nothing is Pending. Use when: (1) a Deployment carrying a `topology.kubernetes.io/zone` spread is entirely in one AZ and you are about to call it a scheduler bug, (2) you are reviewing or writing a zone spread for a workload whose pods are small relative to a node, (3) you are considering `DoNotSchedule` + `minDomains` to force the spread and need to know what it costs during an AZ outage, (4) pods stay Pending for the whole duration of a zone failure and you need to know whether that is the spread, (5) a rolling update lands both new pods in one zone in a two-zone region, (6) someone calls a zone spread \"AZ resilience\" before checking the workload's dependencies. Covers why ScheduleAnyway is inert for packed pods, the two traps in `DoNotSchedule` + `minDomains` (`nodeTaintsPolicy` counting tainted zones, and a lost zone still counting as a domain), `matchLabelKeys` during a rollout, and the dependency check that decides whether any of it buys resilience."
+    },
+    {
+      "name": "agent-doc-drift-audit",
+      "path": "skills/agent-doc-drift-audit/SKILL.md",
+      "files": [
+        "scripts/check-doc-paths.py"
+      ],
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Audit agent-facing repo docs (CLAUDE.md, AGENTS.md, .claude/, REPO_MAP, README, runbooks) across one or many repos for claims that contradict the code, then land the fixes as per-repo PRs. Use when: (1) asked to evaluate or clean up CLAUDE.md / AGENTS.md across repos, or to design an org-level convention doc, (2) an agent acted on a doc claim that turned out false (a folded module, a retired fleet, a renamed test), (3) a migration finished and its status text was never re-derived. Ships scripts/check-doc-paths.py, a stdlib checker for stale paths, broken links and committed plugin stubs."
     }
   ],
   "collections": [
@@ -1524,7 +1536,8 @@
         "sensitive-terms-wordlist-suggest",
         "rare-error-onset-replicaset-attribution",
         "followups",
-        "zone-topology-spread-cannot-move-packed-pods"
+        "zone-topology-spread-cannot-move-packed-pods",
+        "agent-doc-drift-audit"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3385,6 +3398,19 @@
         "zone-topology-spread-cannot-move-packed-pods"
       ],
       "summary": "Single-skill plugin: zone-topology-spread-cannot-move-packed-pods"
+    },
+    {
+      "name": "agent-doc-drift-audit",
+      "claude_manifest": "plugins/agent-doc-drift-audit/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/agent-doc-drift-audit/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "agent-doc-drift-audit"
+      ],
+      "summary": "Single-skill plugin: agent-doc-drift-audit."
     }
   ],
   "defaults": {
