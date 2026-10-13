@@ -19,12 +19,12 @@ source: https://github.com/voitta-ai/skillz
 source_file: skills/helm-chart-repo-migration-parity/SKILL.md
 ---
 
+# Helm chart repository migration: prove parity against what is deployed
+
 > **Canonical source.** This skill lives in the repo at
 > https://github.com/voitta-ai/skillz (file:
 > `skills/helm-chart-repo-migration-parity/SKILL.md`). Updates go through the
 > repo's worktree + PR workflow — open an issue, branch, PR.
-
-# Helm chart repository migration: prove parity against what is deployed
 
 ## Problem
 
