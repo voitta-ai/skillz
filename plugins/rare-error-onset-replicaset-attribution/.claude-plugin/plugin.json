@@ -1,0 +1,12 @@
+{
+  "name": "rare-error-onset-replicaset-attribution",
+  "version": "1.0.0",
+  "description": "Find which deploy change made a rare per-pod error start, or become more frequent, on Kubernetes: compute the error's rate per ReplicaSet against an exposure count (scrapes, requests), then diff the ReplicaSet pod templates. Use when: (1) a rare WARN or exception \"came up recently\" and the new image is the default suspect; (2) Prometheus `up=0` / failed scrapes must be split into pod startup/shutdown noise and steady-state failures; (3) you have a handful of events and must judge whether a before/after difference is real.",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}
