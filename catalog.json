@@ -1319,6 +1319,15 @@
         "codex"
       ],
       "summary": "The name gate only catches names already on the private wordlist, and the list lags reality: names that first appear during a session reach the public repo because nobody has listed them yet. scripts/suggest-terms.py scans the session's transcript (Claude Code or Codex JSONL), its commits and saved PR or issue bodies for capitalized and CamelCase names and hostnames, drops ordinary dictionary words (with plural and tense endings stripped), well-known public names and anything already on the list (whole-word, case-insensitive, so a short entry inside a longer word neither hides nor raises a candidate), and prints a ranked local report with where each appeared plus a printf command to append the ones the user accepts. It never writes the list, never echoes it, and the report must never be posted anywhere."
+    },
+    {
+      "name": "rare-error-onset-replicaset-attribution",
+      "path": "skills/rare-error-onset-replicaset-attribution/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Find which deploy change made a rare per-pod error start, or become more frequent, on Kubernetes: compute the error's rate per ReplicaSet against an exposure count (scrapes, requests), then diff the ReplicaSet pod templates. Use when: (1) a rare WARN or exception \"came up recently\" and the new image is the default suspect; (2) Prometheus `up=0` / failed scrapes must be split into pod startup/shutdown noise and steady-state failures; (3) you have a handful of events and must judge whether a before/after difference is real."
     }
   ],
   "collections": [
@@ -1492,7 +1501,8 @@
         "macos-loopback-speech-agent-testing",
         "playwright-closed-shadow-root-widget",
         "codex-subscription-as-llm-provider",
-        "sensitive-terms-wordlist-suggest"
+        "sensitive-terms-wordlist-suggest",
+        "rare-error-onset-replicaset-attribution"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3316,6 +3326,19 @@
         "sensitive-terms-wordlist-suggest"
       ],
       "summary": "Single-skill plugin: sensitive-terms-wordlist-suggest."
+    },
+    {
+      "name": "rare-error-onset-replicaset-attribution",
+      "claude_manifest": "plugins/rare-error-onset-replicaset-attribution/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/rare-error-onset-replicaset-attribution/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "rare-error-onset-replicaset-attribution"
+      ],
+      "summary": "Single-skill plugin: rare-error-onset-replicaset-attribution."
     }
   ],
   "defaults": {
