@@ -1339,6 +1339,15 @@
         "claude"
       ],
       "summary": "Per-machine list of dated follow-ups (check time, expiry, self-contained check text) that exactly one live Claude Code session checks every 3 hours with a recurring CronCreate job. scripts/followups keeps the items and a lock (pid plus process start time, heartbeat, takeover after 7 hours without a tick) so only one session runs the loop, prints due items on each tick, asks for a re-arm before CronCreate deletes the job at 7 days, and provides a SessionStart hook that tells a new session to start the loop when open items have no live owner."
+    },
+    {
+      "name": "zone-topology-spread-cannot-move-packed-pods",
+      "path": "skills/zone-topology-spread-cannot-move-packed-pods/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "A `ScheduleAnyway` zone topology spread does NOT spread pods that fit on existing nodes, because kube-scheduler only scores FEASIBLE nodes: if every untainted matching node is in one zone, every pod lands there and the node autoscaler is never consulted, since nothing is Pending. Use when: (1) a Deployment carrying a `topology.kubernetes.io/zone` spread is entirely in one AZ and you are about to call it a scheduler bug, (2) you are reviewing or writing a zone spread for a workload whose pods are small relative to a node, (3) you are considering `DoNotSchedule` + `minDomains` to force the spread and need to know what it costs during an AZ outage, (4) pods stay Pending for the whole duration of a zone failure and you need to know whether that is the spread, (5) a rolling update lands both new pods in one zone in a two-zone region, (6) someone calls a zone spread \"AZ resilience\" before checking the workload's dependencies. Covers why ScheduleAnyway is inert for packed pods, the two traps in `DoNotSchedule` + `minDomains` (`nodeTaintsPolicy` counting tainted zones, and a lost zone still counting as a domain), `matchLabelKeys` during a rollout, and the dependency check that decides whether any of it buys resilience."
     }
   ],
   "collections": [
@@ -1514,7 +1523,8 @@
         "codex-subscription-as-llm-provider",
         "sensitive-terms-wordlist-suggest",
         "rare-error-onset-replicaset-attribution",
-        "followups"
+        "followups",
+        "zone-topology-spread-cannot-move-packed-pods"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3362,6 +3372,19 @@
         "followups"
       ],
       "summary": "Single-skill plugin: followups."
+    },
+    {
+      "name": "zone-topology-spread-cannot-move-packed-pods",
+      "claude_manifest": "plugins/zone-topology-spread-cannot-move-packed-pods/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/zone-topology-spread-cannot-move-packed-pods/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "zone-topology-spread-cannot-move-packed-pods"
+      ],
+      "summary": "Single-skill plugin: zone-topology-spread-cannot-move-packed-pods"
     }
   ],
   "defaults": {
