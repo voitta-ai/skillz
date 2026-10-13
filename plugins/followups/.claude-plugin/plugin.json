@@ -1,0 +1,12 @@
+{
+  "name": "followups",
+  "description": "Per-machine dated follow-ups checked every 3 hours by one Claude Code session's CronCreate loop: item format, single-owner lock with heartbeat takeover, re-arm before the 7-day expiry, SessionStart hook.",
+  "version": "1.0.0",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

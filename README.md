@@ -316,6 +316,8 @@ environments and older Codex versions.
 | [`codex-subscription-as-llm-provider` plugin](./plugins/codex-subscription-as-llm-provider/) | plugin | Claude, Codex | Single-skill plugin: codex-subscription-as-llm-provider |
 | [rare-error-onset-replicaset-attribution](./skills/rare-error-onset-replicaset-attribution/SKILL.md) | skill | Claude, Codex | Find which deploy change made a rare per-pod error start, or become more frequent, on Kubernetes: compute the error's rate per ReplicaSet against an exposure count (scrapes, requests), then diff the ReplicaSet pod templates. Use when: (1) a rare WARN or exception "came up recently" and the new image is the default suspect; (2) Prometheus `up=0` / failed scrapes must be split into pod startup/shutdown noise and steady-state failures; (3) you have a handful of events and must judge whether a before/after difference is real. |
 | [`rare-error-onset-replicaset-attribution` plugin](./plugins/rare-error-onset-replicaset-attribution/) | plugin | Claude, Codex | Single-skill plugin: rare-error-onset-replicaset-attribution |
+| [followups](./skills/followups/SKILL.md) | skill | Claude | Dated follow-ups on this machine, checked every 3 hours by one session's CronCreate loop: item format, single-owner lock with heartbeat takeover, re-arm before the 7-day expiry, SessionStart hook |
+| [`followups` plugin](./plugins/followups/) | plugin | Claude | Single-skill plugin: followups |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries

@@ -710,6 +710,11 @@
       "name": "rare-error-onset-replicaset-attribution",
       "source": "./plugins/rare-error-onset-replicaset-attribution/",
       "description": "Find which deploy change made a rare per-pod error start, or become more frequent, on Kubernetes: compute the error's rate per ReplicaSet against an exposure count (scrapes, requests), then diff the ReplicaSet pod templates. Use when: (1) a rare WARN or exception \"came up recently\" and the new image is the default suspect; (2) Prometheus `up=0` / failed scrapes must be split into pod startup/shutdown noise and steady-state failures; (3) you have a handful of events and must judge whether a before/after difference is real."
+    },
+    {
+      "name": "followups",
+      "source": "./plugins/followups/",
+      "description": "Keep dated follow-ups on this machine (\"when the silence ends, confirm the alert recovered\") and have exactly one live Claude Code session check them every 3 hours with a recurring CronCreate job. Ships scripts/followups: items with a check time, an expiry and self-contained check text; a single-owner lock (pid plus process start time, heartbeat, takeover); re-arming before CronCreate's 7-day expiry; read-only handling of due items; and an optional SessionStart hook."
     }
   ]
 }
