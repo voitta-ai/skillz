@@ -8,7 +8,9 @@ description: |
   look too good, or an arm "fails" by reverting work it calls already merged;
   (3) the workspace is a `git worktree`, or a clone with remotes or other
   branches; (4) a task removes a file from the working tree and asks the agent
-  to rewrite it; (5) you need to decide whether past replay results are valid.
+  to rewrite it; (5) you need to decide whether past replay results are valid;
+  (6) a hidden-check eval scores defect fixtures against a clean control and
+  strict agents score perfectly.
   Covers why a worktree shares the future (object store, refs, `origin/*`,
   landing branches), why `git show HEAD:path` defeats deleting a file, a
   single-branch clone truncated at the parent as the fix, a transcript audit
@@ -165,6 +167,69 @@ Run it against the **source** repo, which still knows the future SHAs. Reading
 *older* commits is fine and expected; only non-ancestors count. Void and re-run
 any cell that hits, and say so wherever the old numbers were reported.
 
+## A hand-built control fixture produces a flattering score
+
+The same family of failure: the instrument, not the agent, produced the
+headline. It does not need git history.
+
+**Shape.** A hidden-check harness hands an agent a script plus fixtures: several
+defect fixtures, each with one planted defect the script should catch, and one
+clean control the script should accept. A run scores one point per defect
+fixture it refuses.
+
+**What happened.** Four runs scored a perfect 5/5, and those runs carried a
+headline comparison with a confidence interval excluding zero. Every one of
+those runs also refused the clean control (`clean_ok: false`). Their refusal
+messages named things that were not the planted defects: missing `ran_at` /
+`scored_at` timestamps, and `score_total` not equal to the sum of the
+subscores. The control had been typed by hand. It had no timestamps, and its
+subscores did not add up to its totals. The real pipeline always writes both
+timestamps and always computes the total as the sum. Every defect fixture was
+derived from that control, so it inherited the same flaws. The strict agents
+enforced the real pipeline's invariants, refused the accidental flaw in every
+fixture, and never reached a planted defect.
+
+**Why it is easy to miss.** The scorer cannot tell "refuses everything" apart
+from "enforces invariants the fixtures violate", and the second is arguably
+the correct behavior. Nothing errors. The output is a plausible number that
+flatters exactly the arms that are strictest.
+
+### Rules
+
+1. **A failed control voids its cell.** If a run refuses (or otherwise fails)
+   the clean control, its defect score for that cell is void, not 5/5 and not
+   0/5. Apply this gate per cell **before** aggregating, and report how many
+   cells were voided.
+2. **Build fixtures through the real writers.** Generate the control and every
+   defect fixture with the production code that writes those records, then
+   plant one defect. If that is impossible, validate each fixture against the
+   real schema and invariants (required fields, computed totals, timestamps)
+   and keep only fixtures whose sole violation is the planted one.
+3. **Prove the control passes the original script first.** Before any agent
+   runs, run the original, unmodified script on the control and assert that it
+   accepts it. A control the baseline rejects is a broken instrument.
+4. **Read the refusal reason, not only the exit code.** Save each fixture's
+   output (`.out` files) and check what each refusal cites. A refusal that
+   names something other than the planted defect is not a catch: score it as
+   a miss, or void the fixture if the cause is a fixture flaw.
+
+```python
+def cell_score(results, planted):
+    """results: {fixture: (refused, reason)}; planted: {fixture: defect keyword}."""
+    refused, reason = results["control"]
+    if refused:
+        retval = None                       # void: the control failed
+        return retval
+    retval = sum(
+        1 for f, kw in planted.items()
+        if results[f][0] and kw in results[f][1]   # refused for the planted reason
+    )
+    return retval
+```
+
+Exclude `None` cells from the aggregate and report the void count next to the
+result.
+
 ## Verification
 
 - `cat-file -e <merge>` fails in every cell workspace.
@@ -172,6 +237,8 @@ any cell that hits, and say so wherever the old numbers were reported.
 - Cells whose behaviour changed after isolation (an arm that "lost" now ties)
   are the ones the leak was driving; report the before/after rather than only
   the new number.
+- The original script accepts the clean control, every fixture violates only
+  its planted defect, and no aggregated cell has a failed control.
 
 ## Notes
 
