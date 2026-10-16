@@ -720,6 +720,11 @@
       "name": "agent-doc-drift-audit",
       "source": "./plugins/agent-doc-drift-audit/",
       "description": "Audit agent-facing repo docs (CLAUDE.md, AGENTS.md, .claude/, REPO_MAP, README, runbooks) across one or many repos for claims that contradict the code, then land the fixes as per-repo PRs. Use when: (1) asked to evaluate or clean up CLAUDE.md / AGENTS.md across repos, or to design an org-level convention doc, (2) an agent acted on a doc claim that turned out false (a folded module, a retired fleet, a renamed test), (3) a migration finished and its status text was never re-derived. Ships scripts/check-doc-paths.py, a stdlib checker for stale paths, broken links and committed plugin stubs."
+    },
+    {
+      "name": "helm-chart-repo-migration-parity",
+      "source": "./plugins/helm-chart-repo-migration-parity/",
+      "description": "Prove that a new Helm chart repository serves the same chart bytes your releases already run, even when the old repository is unreachable, and predict whether switching to it rolls any workload. Use when: (1) a vendor moves or blocks its chart host and installs or upgrades fail with `failed to fetch https://<old-host>/.../index.yaml : 403 Forbidden` (Istio left storage.googleapis.com for blob.istio.io in 2026, with \"scream test\" blackouts first); (2) a reviewer asks for checksum parity between the old and new repos while the old one is down; (3) you change only `helm_release.repository` (Terraform) or a `helm repo add` URL and need to know whether pods restart. Decodes the deployed release secret and byte-compares the stored chart with the new repo's tarball."
     }
   ]
 }
