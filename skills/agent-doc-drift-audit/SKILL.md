@@ -10,8 +10,8 @@ description: |
   and its status text was never re-derived. Ships scripts/check-doc-paths.py,
   a stdlib checker for stale paths, broken links and committed plugin stubs.
 author: Claude Code
-version: 1.0.0
-date: 2026-10-13
+version: 1.1.0
+date: 2026-10-16
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-doc-drift-audit/SKILL.md
 ---
