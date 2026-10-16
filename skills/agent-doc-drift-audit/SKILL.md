@@ -149,10 +149,10 @@ stating them.
    - a layout change. `AGENTS.md` as the canonical file plus a root
      `CLAUDE.md` holding `@AGENTS.md` lets Codex read it natively; use the
      import, not a symlink. Claude Code reads `AGENTS.md` on its own only from
-     v2.1.277, and only when no `CLAUDE.md` or CLAUDE.local.md is in the
-     working directory or above, so the stub stays load-bearing: say so in it.
-     Write CLAUDE.local.md there without backticks, or the path checker flags
-     the absent per-user file;
+     v2.1.277, and by default only when no `CLAUDE.md` or CLAUDE.local.md is
+     in the working directory or above, so the stub stays load-bearing: say so
+     in it. Write CLAUDE.local.md there without backticks, or the path checker
+     flags the absent per-user file;
    - whether style rules are team conventions or one person's;
    - whether an org-level doc is in scope.
 3. **Branch:** one worktree and branch per repo, from the fresh remote default branch.
@@ -173,9 +173,13 @@ stating them.
      test input in the build file. The move needed a one-line build change,
      and a filtered run of the doc-contract tests stayed green while the full
      suite failed. Run the full suite once after a move.
-   - **Skipping an open PR's hunk avoids nothing when your PR moves the file
-     it edits:** that PR gets a modify/delete conflict either way. Fix the
-     false lines instead of shipping them.
+   - **Skipping an open PR's hunk helps only after a light rename.** There,
+     rename detection carries that PR's edit to the new path, and leaving its
+     lines alone keeps its rebase clean. If you also trimmed the moved file,
+     git stops pairing the paths and the PR gets a modify/delete conflict
+     anyway. After a root `CLAUDE.md` move it gets a content conflict on the
+     stub. In those two cases skipping avoids nothing: fix the false lines
+     instead of shipping them.
 5. **Fix, then trim.** The always-loaded doc (root `CLAUDE.md`,
    `.claude/CLAUDE.md` and everything they `@`-import) is paid on every
    request, and a fix pass that only corrects and adds grows it. Measure
