@@ -175,11 +175,14 @@ stating them.
      suite failed. Run the full suite once after a move.
    - **Skipping an open PR's hunk helps only after a light rename.** There,
      rename detection carries that PR's edit to the new path, and leaving its
-     lines alone keeps its rebase clean. If you also trimmed the moved file,
-     git stops pairing the paths and the PR gets a modify/delete conflict
-     anyway. After a root `CLAUDE.md` move it gets a content conflict on the
-     stub. In those two cases skipping avoids nothing: fix the false lines
-     instead of shipping them.
+     lines alone keeps its rebase clean. In other cases skipping avoids
+     nothing, so fix the false lines instead of shipping them:
+     - If the moved file also changed a lot (trimmed, rewritten or grown),
+       git stops pairing the paths and the PR gets a modify/delete conflict.
+       By default git pairs them only at 50% similarity or more. Near that
+       threshold, edits next to the PR's hunk still conflict.
+     - After a root `CLAUDE.md` move, the PR gets a content conflict on the
+       stub.
 5. **Fix, then trim.** The always-loaded doc (root `CLAUDE.md`,
    `.claude/CLAUDE.md` and everything they `@`-import) is paid on every
    request, and a fix pass that only corrects and adds grows it. Measure
