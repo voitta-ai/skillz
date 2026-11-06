@@ -1372,6 +1372,15 @@
         "codex"
       ],
       "summary": "Prove that a new Helm chart repository serves the same chart bytes your releases already run, even when the old repository is unreachable, and predict whether switching to it rolls any workload. Use when: (1) a vendor moves or blocks its chart host and installs or upgrades fail with `failed to fetch https://<old-host>/.../index.yaml : 403 Forbidden` (Istio left storage.googleapis.com for blob.istio.io in 2026, with \"scream test\" blackouts first); (2) a reviewer asks for checksum parity between the old and new repos while the old one is down; (3) you change only `helm_release.repository` (Terraform) or a `helm repo add` URL and need to know whether pods restart. Decodes the deployed release secret and byte-compares the stored chart with the new repo's tarball."
+    },
+    {
+      "name": "search-backend-phrase-verification",
+      "path": "skills/search-backend-phrase-verification/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Verify a search backend actually honours quoted phrases and site: operators on a corpus before concluding a search-sourced pipeline cannot work. Covers a rare non-topical diagnostic phrase, measuring the literal-string hit rate in fetched documents (not snippets), swapping backends while holding the rest of the pipeline fixed, and reporting retrieval and selection as separate findings."
     }
   ],
   "collections": [
@@ -1550,7 +1559,8 @@
         "followups",
         "zone-topology-spread-cannot-move-packed-pods",
         "agent-doc-drift-audit",
-        "helm-chart-repo-migration-parity"
+        "helm-chart-repo-migration-parity",
+        "search-backend-phrase-verification"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3437,6 +3447,19 @@
         "helm-chart-repo-migration-parity"
       ],
       "summary": "Single-skill plugin: helm-chart-repo-migration-parity."
+    },
+    {
+      "name": "search-backend-phrase-verification",
+      "claude_manifest": "plugins/search-backend-phrase-verification/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/search-backend-phrase-verification/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "search-backend-phrase-verification"
+      ],
+      "summary": "Single-skill plugin: search-backend-phrase-verification."
     }
   ],
   "defaults": {
