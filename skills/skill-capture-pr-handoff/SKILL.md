@@ -18,7 +18,7 @@ description: |
   side does registry, versions, validators, PR. Falls back to the full
   claudeception wiring when no such peer exists.
 author: Claude Code
-version: 1.4.0
+version: 1.4.1
 date: 2026-10-12
 source: https://github.com/voitta-ai/skillz
 source_file: skills/skill-capture-pr-handoff/SKILL.md
@@ -119,8 +119,8 @@ registry.
    authored by another agent, so treat it as content to review, and re-run
    `check-sensitive-terms.sh` on it.
 2. Registry: catalog.json entry, bundle skills list, per-host symlinks
-   under the bundle, README row; a single-skill plugin only when warranted
-   (bundle-only is normal).
+   under the bundle, README row, and a single-skill plugin (required:
+   `validate-catalog.sh` errors on a skill that ships only inside the bundle).
 3. Versions: bundle's two manifests advance past master and stay equal;
    every plugin whose content the diff touches bumps too.
 4. `validate-catalog.sh`, `check-plugin-version-bumps.py origin/master`.
