@@ -400,6 +400,15 @@
       "summary": "Stacked PRs: merging the upstream PR with branch deletion AUTO-CLOSES the dependent PR instead of retargeting it, and gh pr reopen then fails because the base ref is gone; recover by recreating the ref, or prevent by retargeting downstream PRs first"
     },
     {
+      "name": "github-issue-migration-across-owners",
+      "path": "skills/github-issue-migration-across-owners/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Recreate GitHub issues across owners or private->public: renumbered refs, re-hosted private attachments."
+    },
+    {
       "name": "gist-to-repo-migration",
       "path": "skills/gist-to-repo-migration/SKILL.md",
       "hosts": [
@@ -1460,6 +1469,7 @@
         "confluence-rovo-mcp-readonly-rest-fallback",
         "credential-redactor-audit",
         "gh-pr-merge-delete-branch-closes-dependent-pr",
+        "github-issue-migration-across-owners",
         "gist-to-repo-migration",
         "git-default-branch-detection",
         "git-graft-worktree-onto-remote",
@@ -1962,6 +1972,19 @@
         "gh-pr-merge-delete-branch-closes-dependent-pr"
       ],
       "summary": "Single-skill plugin: gh-pr-merge-delete-branch-closes-dependent-pr."
+    },
+    {
+      "name": "github-issue-migration-across-owners",
+      "claude_manifest": "plugins/github-issue-migration-across-owners/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/github-issue-migration-across-owners/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "github-issue-migration-across-owners"
+      ],
+      "summary": "Single-skill plugin: github-issue-migration-across-owners."
     },
     {
       "name": "gist-to-repo-migration",
