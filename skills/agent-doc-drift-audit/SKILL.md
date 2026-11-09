@@ -10,8 +10,8 @@ description: |
   and its status text was never re-derived. Ships scripts/check-doc-paths.py,
   a stdlib checker for stale paths, broken links and committed plugin stubs.
 author: Claude Code
-version: 1.0.0
-date: 2026-10-13
+version: 1.1.0
+date: 2026-10-16
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-doc-drift-audit/SKILL.md
 ---
@@ -148,7 +148,11 @@ stating them.
    - the overlap policy;
    - a layout change. `AGENTS.md` as the canonical file plus a root
      `CLAUDE.md` holding `@AGENTS.md` lets Codex read it natively; use the
-     import, not a symlink;
+     import, not a symlink. Claude Code reads `AGENTS.md` on its own only from
+     v2.1.277, and by default only when no `CLAUDE.md` or CLAUDE.local.md is
+     in the working directory or above, so the stub stays load-bearing: say so
+     in it. Write CLAUDE.local.md there without backticks, or the path checker
+     flags the absent per-user file;
    - whether style rules are team conventions or one person's;
    - whether an org-level doc is in scope.
 3. **Branch:** one worktree and branch per repo, from the fresh remote default branch.
@@ -169,10 +173,44 @@ stating them.
      test input in the build file. The move needed a one-line build change,
      and a filtered run of the doc-contract tests stayed green while the full
      suite failed. Run the full suite once after a move.
-5. **Docs only.** Report stale code comments, security findings and CI
+   - **Skipping an open PR's hunk helps only after a light rename.** There,
+     rename detection carries that PR's edit to the new path, and leaving its
+     lines alone keeps its rebase clean. In other cases skipping avoids
+     nothing, so fix the false lines instead of shipping them:
+     - If the moved file also changed a lot (trimmed, rewritten or grown),
+       git stops pairing the paths and the PR gets a modify/delete conflict.
+       By default git pairs them only at 50% similarity or more. Near that
+       threshold, edits next to the PR's hunk still conflict.
+     - After a root `CLAUDE.md` move, the PR gets a content conflict on the
+       stub.
+5. **Fix, then trim.** The always-loaded doc (root `CLAUDE.md`,
+   `.claude/CLAUDE.md` and everything they `@`-import) is paid on every
+   request, and a fix pass that only corrects and adds grows it. Measure
+   those bytes before and after. Keep:
+   - guardrails against expensive, silent or misleading mistakes: which
+     branch, environment or state an apply runs from, prod gates, data loss,
+     secrets, image publishing, errors that point the wrong way;
+   - commands an agent cannot guess;
+   - non-obvious invariants;
+   - a pointer to the defining file for each volatile value, instead of the value.
+
+   Delete narrative that restates code (that is where the drift was), history,
+   rules the tooling enforces with a clear error, and style mandates nobody
+   measured. One audit went from 155 KB to 52 KB across 8 repos this way.
+   A recipe for a temporary local change ("REMOVE BEFORE COMMITTING") is not a
+   stale claim just because its code is not in the tree.
+6. **Docs only.** Report stale code comments, security findings and CI
    defects separately instead of fixing them in the doc PR.
-6. **Repos another team owns:** fix contradictions only, keep their structure
+7. **Repos another team owns:** fix contradictions only, keep their structure
    and voice, and run their doc ratchets and contract tests before pushing.
+8. **Independent review.** Have a model from another provider check every
+   claim in the final doc, read-only, with a done-when line and a required
+   "lines you did not cover" field. Hand it the deleted lines as a file and
+   ask which deletions drop an uncovered guardrail. Verify every negative
+   claim before acting: in one round about 11 "file not found" findings were
+   search failures in the reviewer's sandbox, and its "held" verdicts were
+   the reliable part. A code-review template run on a doc diff once returned
+   its plan as the only finding under a "needs-attention" verdict.
 
 ### 5. Make the drift mechanical
 
