@@ -92,6 +92,11 @@
       "description": "Deleting the branch on gh pr merge can auto-close a dependent PR stacked on it."
     },
     {
+      "name": "github-issue-migration-across-owners",
+      "source": "./plugins/github-issue-migration-across-owners/",
+      "description": "Recreate GitHub issues across owners or private->public: renumbered refs, re-hosted private attachments."
+    },
+    {
       "name": "gist-to-repo-migration",
       "source": "./plugins/gist-to-repo-migration/",
       "description": "Migrate a gist's full revision history into a real git repo, preserving commits."
