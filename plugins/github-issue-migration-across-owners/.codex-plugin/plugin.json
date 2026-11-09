@@ -1,0 +1,18 @@
+{
+  "name": "github-issue-migration-across-owners",
+  "version": "1.0.0",
+  "description": "Recreate GitHub issues across owners or private->public: renumbered refs, re-hosted private attachments.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "github",
+    "issues",
+    "migration"
+  ],
+  "skills": "./skills/"
+}

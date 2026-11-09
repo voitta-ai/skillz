@@ -58,6 +58,7 @@ environments and older Codex versions.
 | [git-worktree-convention](./skills/git-worktree-convention/SKILL.md) | skill | Claude, Codex | Repo on default branch, branch work in sibling `<repo>.worktrees/`; drift detection, ask-before-reorganizing, and recovery |
 | [git-graft-worktree-onto-remote](./skills/git-graft-worktree-onto-remote/SKILL.md) | skill | Claude, Codex | Graft a local worktree's commits onto a remote branch without re-cloning |
 | [multi-phase-feature-pr-worktrees](./skills/multi-phase-feature-pr-worktrees/SKILL.md) | skill | Claude, Codex | Run a multi-phase feature as stacked worktree PRs, each reviewed independently |
+| [github-issue-migration-across-owners](./skills/github-issue-migration-across-owners/SKILL.md) | skill | Claude, Codex | Recreate GitHub issues across owners or private->public, with private attachments re-hosted |
 | [gist-to-repo-migration](./skills/gist-to-repo-migration/SKILL.md) | skill | Claude, Codex | Migrate a gist's full revision history into a real git repo |
 | [neon-vercel-db-identify-and-migrate](./skills/neon-vercel-db-identify-and-migrate/SKILL.md) | skill | Claude, Codex | Identify which Neon project backs a Vercel app and migrate/split it; safe non-destructive cutover |
 | [claudeception](./skills/claudeception/SKILL.md) | skill | Claude | Continuous-learning meta-skill: procedures become catalog skills via PR; specifics go to memory (local or shared vault) |
@@ -91,6 +92,7 @@ environments and older Codex versions.
 | [`git-worktree-convention` plugin](./plugins/git-worktree-convention/) | plugin | Claude, Codex | Single-skill plugin: git-worktree-convention |
 | [`git-graft-worktree-onto-remote` plugin](./plugins/git-graft-worktree-onto-remote/) | plugin | Claude, Codex | Single-skill plugin: git-graft-worktree-onto-remote |
 | [`multi-phase-feature-pr-worktrees` plugin](./plugins/multi-phase-feature-pr-worktrees/) | plugin | Claude, Codex | Single-skill plugin: multi-phase-feature-pr-worktrees |
+| [`github-issue-migration-across-owners` plugin](./plugins/github-issue-migration-across-owners/) | plugin | Claude, Codex | Single-skill plugin: github-issue-migration-across-owners |
 | [`gist-to-repo-migration` plugin](./plugins/gist-to-repo-migration/) | plugin | Claude, Codex | Single-skill plugin: gist-to-repo-migration |
 | [`neon-vercel-db-identify-and-migrate` plugin](./plugins/neon-vercel-db-identify-and-migrate/) | plugin | Claude, Codex | Single-skill plugin: neon-vercel-db-identify-and-migrate |
 | [`claude-code-codex-plugin-parity` plugin](./plugins/claude-code-codex-plugin-parity/) | plugin | Claude, Codex | Single-skill plugin: claude-code-codex-plugin-parity |
