@@ -25,7 +25,8 @@
 # no terms after blank and # lines are dropped, an error instead of a note.
 # hooks/pre-push sets it; CI does not, since CI has no wordlist by design.
 #
-# Exit codes: 0 = clean, 1 = matches found, 2 = usage error, a
+# Exit codes: 0 = clean, 1 = matches found, 2 = usage error, a check that
+# could not run (unreadable path, bad pattern; reported, and wins over 1), a
 # SKILLZ_SENSITIVE_TERMS_FILE that was set but does not exist, or a missing or
 # empty wordlist while SKILLZ_SENSITIVE_TERMS_REQUIRED=1.
 #
@@ -65,26 +66,35 @@ check_pattern() {
   label="$1"
   regex="$2"
   shift 2
-  # grep -rEn over the paths; -I skips binaries. Suppress the "no match" exit.
-  matches=$(grep -rEnI "$regex" "$@" 2>/dev/null)
-  if [ -n "$matches" ]; then
+  # grep -rEn over the paths; -I skips binaries. The pattern goes in with -e:
+  # bare, one that starts with "-" (the private-key block) is read as an option,
+  # grep exits 2, and with stderr discarded that looked exactly like "no match",
+  # so that check never ran. Exit 1 is "no match"; anything above it is a check
+  # that did not run, and a gate fails closed on that.
+  matches=$(grep -rEnI -e "$regex" "$@" 2>/dev/null)
+  rc=$?
+  if [ "$rc" -gt 1 ]; then
+    echo "error: check [$label] did not run (grep exit $rc): unreadable path or bad pattern" >&2
+    status=2
+  elif [ -n "$matches" ]; then
     echo "SENSITIVE [$label]:" >&2
     echo "$matches" | sed 's/^/  /' >&2
-    status=1
+    [ "$status" -eq 0 ] && status=1
   fi
 }
 
 # 1) structural patterns
+structural=$(mktemp "${TMPDIR:-/tmp}/skillz_structural.XXXXXX") || exit 2
+trap 'rm -f "$structural"' EXIT
 echo "$STRUCTURAL" | while IFS='|' read -r label regex; do
   [ -z "$label" ] && continue
   echo "${label}|${regex}"
-done > /tmp/.skillz_structural.$$
+done > "$structural"
 # (piping into a while-subshell loses $status in bash 3.2; iterate via a temp file)
 while IFS='|' read -r label regex; do
   [ -z "$label" ] && continue
   check_pattern "$label" "$regex" "$@"
-done < /tmp/.skillz_structural.$$
-rm -f /tmp/.skillz_structural.$$
+done < "$structural"
 
 # 2) optional private wordlist (client/account names etc.)
 DEFAULT_TERMS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/skillz/sensitive-terms.txt"
@@ -115,7 +125,7 @@ if [ -f "$terms_file" ]; then
   if [ "$rc" -eq 1 ]; then
     echo "SENSITIVE [private-term]:" >&2
     echo "$matches" | sed 's/^/  /' >&2
-    status=1
+    [ "$status" -eq 0 ] && status=1
   elif [ "$rc" -ne 0 ]; then
     echo "error: name matcher failed (exit $rc)" >&2
     exit 2
