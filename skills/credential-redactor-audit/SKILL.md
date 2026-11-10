@@ -20,7 +20,7 @@ description: |
   pre-open-source-credential-audit; for hunting the copies a secret already
   scattered across local disk see agent-credential-leak-surfaces.
 author: Claude Code
-version: 1.1.0
+version: 1.1.1
 date: 2026-08-15
 ---
 
@@ -106,10 +106,12 @@ Given overlapping matches, the naive merge keeps a span only when
 beyond it* is then discarded entirely:
 
 ```
-ssh-add --password abc123def456ghi789-----BEGIN RSA PRIVATE KEY-----
+ssh-add --password abc123def456ghi789-----BEGIN <ALG> PRIVATE KEY-----
 BODYSECRETMATERIAL
------END RSA PRIVATE KEY-----
+-----END <ALG> PRIVATE KEY-----
 ```
+
+(`<ALG>` stands in for `RSA` so this repo's own key-shape gate passes.)
 
 The flag capture took `abc123def456ghi789-----BEGIN`; the private-key span
 started inside it and was dropped. Output:
