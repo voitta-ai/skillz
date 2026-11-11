@@ -22,7 +22,8 @@ source_file: skills/pagerduty-integration-key-rotation/SKILL.md
 
 > **Canonical source.** This skill lives in the repo at
 > https://github.com/voitta-ai/skillz (file:
-> `skills/pagerduty-integration-key-rotation/SKILL.md`).
+> `skills/pagerduty-integration-key-rotation/SKILL.md`). Updates go through the
+> repo's worktree + PR workflow.
 
 ## Problem
 
@@ -171,10 +172,10 @@ real ARN (not `PendingConfirmation`) and the new fingerprint.
 2. **Force one alarm.** Pick an alarm in OK whose `AlarmActions` and
    `OKActions` are exactly the PagerDuty topic, so nothing else fires
    (autoscaling, a Lambda). Set it with `aws cloudwatch set-alarm-state
-   --state-value ALARM --state-reason "<integration key rotation test, not a
-   real alarm>"`, and set it back to OK from a `trap ... EXIT`. Every other
-   subscriber of the topic, such as a chat relay, sees the test too, which is
-   why the reason has to say what it is.
+   --alarm-name <alarm> --state-value ALARM --state-reason "<integration key
+   rotation test, not a real alarm>"`, and set it back to OK from a
+   `trap ... EXIT`. Every other subscriber of the topic, such as a chat relay,
+   sees the test too, which is why the reason has to say what it is.
 3. **Check the integration, not just the incident.** The old integration
    still works, so an incident on the service proves nothing by itself. List
    the incidents on the service since the test started, and for each one read
