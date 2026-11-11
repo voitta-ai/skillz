@@ -1,0 +1,12 @@
+{
+  "name": "pagerduty-integration-key-rotation",
+  "version": "1.0.0",
+  "description": "Rotate a leaked PagerDuty integration key behind CloudWatch and SNS with no paging gap: add a second integration, move every subscription, prove delivery through the new integration id, then delete the old one.",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}
