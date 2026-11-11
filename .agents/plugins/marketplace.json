@@ -735,6 +735,11 @@
       "name": "search-backend-phrase-verification",
       "source": "./plugins/search-backend-phrase-verification/",
       "description": "Verify a search backend honours quoted phrases and operators before trusting a negative result: a rare non-topical diagnostic phrase, fetched-document hit rate, and re-measuring the downstream metric after swapping backends."
+    },
+    {
+      "name": "pagerduty-integration-key-rotation",
+      "source": "./plugins/pagerduty-integration-key-rotation/",
+      "description": "Rotate a leaked PagerDuty integration key behind CloudWatch and SNS with no paging gap: add a second integration, move every subscription, prove delivery through the new integration id, then delete the old one."
     }
   ]
 }
