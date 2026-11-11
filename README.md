@@ -328,6 +328,8 @@ environments and older Codex versions.
 | [`helm-chart-repo-migration-parity` plugin](./plugins/helm-chart-repo-migration-parity/) | plugin | Claude, Codex | Single-skill plugin: helm-chart-repo-migration-parity |
 | [search-backend-phrase-verification](./skills/search-backend-phrase-verification/SKILL.md) | skill | Claude, Codex | Verify a search backend actually honours quoted phrases and site: operators on a corpus before concluding a search-sourced pipeline cannot work. Covers a rare non-topical diagnostic phrase, measuring the literal-string hit rate in fetched documents (not snippets), swapping backends while holding the rest of the pipeline fixed, and reporting retrieval and selection as separate findings. |
 | [`search-backend-phrase-verification` plugin](./plugins/search-backend-phrase-verification/) | plugin | Claude, Codex | Single-skill plugin: search-backend-phrase-verification |
+| [pagerduty-integration-key-rotation](./skills/pagerduty-integration-key-rotation/SKILL.md) | skill | Claude, Codex | Rotate a leaked PagerDuty integration key behind CloudWatch and SNS with no paging gap: add a second integration, move every subscription, prove delivery through the new integration id, then delete the old one. |
+| [`pagerduty-integration-key-rotation` plugin](./plugins/pagerduty-integration-key-rotation/) | plugin | Claude, Codex | Single-skill plugin: pagerduty-integration-key-rotation |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries

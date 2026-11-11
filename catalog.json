@@ -1390,6 +1390,15 @@
         "codex"
       ],
       "summary": "Verify a search backend actually honours quoted phrases and site: operators on a corpus before concluding a search-sourced pipeline cannot work. Covers a rare non-topical diagnostic phrase, measuring the literal-string hit rate in fetched documents (not snippets), swapping backends while holding the rest of the pipeline fixed, and reporting retrieval and selection as separate findings."
+    },
+    {
+      "name": "pagerduty-integration-key-rotation",
+      "path": "skills/pagerduty-integration-key-rotation/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Rotate a leaked PagerDuty integration key that CloudWatch alarms reach through SNS, with no window of lost pages: add a second integration instead of regenerating, move every SNS subscription to it through Secrets Manager with create_before_destroy, prove delivery through the new integration id under an on-call override, then delete the old integration."
     }
   ],
   "collections": [
@@ -1570,7 +1579,8 @@
         "zone-topology-spread-cannot-move-packed-pods",
         "agent-doc-drift-audit",
         "helm-chart-repo-migration-parity",
-        "search-backend-phrase-verification"
+        "search-backend-phrase-verification",
+        "pagerduty-integration-key-rotation"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3483,6 +3493,19 @@
         "search-backend-phrase-verification"
       ],
       "summary": "Single-skill plugin: search-backend-phrase-verification."
+    },
+    {
+      "name": "pagerduty-integration-key-rotation",
+      "claude_manifest": "plugins/pagerduty-integration-key-rotation/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/pagerduty-integration-key-rotation/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "pagerduty-integration-key-rotation"
+      ],
+      "summary": "Single-skill plugin: pagerduty-integration-key-rotation."
     }
   ],
   "defaults": {
