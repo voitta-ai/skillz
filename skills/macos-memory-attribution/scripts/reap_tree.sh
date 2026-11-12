@@ -2,7 +2,7 @@
 # Capture a process tree now, signal it later, and only touch processes that still match the capture
 # (pid + start time + command), so a reused PID is never hit.
 #   reap_tree.sh capture '<ERE matching the ROOT processes args>' <file>
-#       file gets pid|rootpid|lstart|command for each root and every descendant. This script and its own parents are excluded.
+#       file gets pid|rootpid|lstart|command for each root and every descendant. This script, its own ps/awk pipeline and its own parents are excluded.
 #   reap_tree.sh alive <file>                       count captured processes still alive and unchanged
 #   reap_tree.sh signal <TERM|KILL|...> <file> [skip-ERE]
 #       send the signal to alive, unchanged captured processes; commands matching skip-ERE are left alone
@@ -39,7 +39,7 @@ if [ "$MODE" = "capture" ]; then
   END {
     for (i = 1; i <= n; i++) {
       p = order[i]
-      if (cmd[p] ~ re && cmd[p] !~ /reap_tree\.sh/ && p != me) root[p] = 1
+      if (cmd[p] ~ re && cmd[p] !~ /reap_tree\.sh/ && p != me && ppid[p] != me) root[p] = 1
     }
     for (i = 1; i <= n; i++) {
       p = order[i]; r = p; d = 0; found = 0

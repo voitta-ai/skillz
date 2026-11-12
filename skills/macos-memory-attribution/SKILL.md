@@ -91,3 +91,6 @@ After stopping the helper trees of 16 idle workers: swap 7.1 of 8.0 GiB in 8 fil
 
 ## References
 - Local man pages: footprint(1), zprint(1), vm_stat(1), top(1). Verified on macOS 26 (Darwin 25.6), 2026-11-12.
+
+## Related
+- `mcp-language-server-orphan-fd-exhaustion` — the same pile-up of orphaned MCP helper processes on a workstation, when the exhausted resource is file descriptors instead of memory

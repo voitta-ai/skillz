@@ -330,6 +330,8 @@ environments and older Codex versions.
 | [`search-backend-phrase-verification` plugin](./plugins/search-backend-phrase-verification/) | plugin | Claude, Codex | Single-skill plugin: search-backend-phrase-verification |
 | [pagerduty-integration-key-rotation](./skills/pagerduty-integration-key-rotation/SKILL.md) | skill | Claude, Codex | Rotate a leaked PagerDuty integration key behind CloudWatch and SNS with no paging gap: add a second integration, move every subscription, prove delivery through the new integration id, then delete the old one. |
 | [`pagerduty-integration-key-rotation` plugin](./plugins/pagerduty-integration-key-rotation/) | plugin | Claude, Codex | Single-skill plugin: pagerduty-integration-key-rotation |
+| [macos-memory-attribution](./skills/macos-memory-attribution/SKILL.md) | skill | Claude, Codex | Find what holds macOS swap, compressed and wired memory (per-family attribution, page tables) and stop process trees safely with a PID-reuse guard. |
+| [`macos-memory-attribution` plugin](./plugins/macos-memory-attribution/) | plugin | Claude, Codex | Single-skill plugin: macos-memory-attribution |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries

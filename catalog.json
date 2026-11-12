@@ -1399,6 +1399,21 @@
         "codex"
       ],
       "summary": "Rotate a leaked PagerDuty integration key that CloudWatch alarms reach through SNS, with no window of lost pages: add a second integration instead of regenerating, move every SNS subscription to it through Secrets Manager with create_before_destroy, prove delivery through the new integration id under an on-call override, then delete the old integration."
+    },
+    {
+      "name": "macos-memory-attribution",
+      "path": "skills/macos-memory-attribution/SKILL.md",
+      "files": [
+        "scripts/mem_by_family.sh",
+        "scripts/pagetables_by_family.sh",
+        "scripts/procfam.sh",
+        "scripts/reap_tree.sh"
+      ],
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Find what holds macOS swap, compressed and wired memory and stop it safely: attribute top's compressed memory by process family and reconcile it with vm_stat, find the real owner by ancestor chain, read the wired breakdown from zprint and per-process page tables, and stop a process tree with a capture-first reaper that never signals a reused PID."
     }
   ],
   "collections": [
@@ -1580,7 +1595,8 @@
         "agent-doc-drift-audit",
         "helm-chart-repo-migration-parity",
         "search-backend-phrase-verification",
-        "pagerduty-integration-key-rotation"
+        "pagerduty-integration-key-rotation",
+        "macos-memory-attribution"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3506,6 +3522,19 @@
         "pagerduty-integration-key-rotation"
       ],
       "summary": "Single-skill plugin: pagerduty-integration-key-rotation."
+    },
+    {
+      "name": "macos-memory-attribution",
+      "claude_manifest": "plugins/macos-memory-attribution/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/macos-memory-attribution/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "macos-memory-attribution"
+      ],
+      "summary": "Single-skill plugin: macos-memory-attribution."
     }
   ],
   "defaults": {
