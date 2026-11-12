@@ -740,6 +740,11 @@
       "name": "pagerduty-integration-key-rotation",
       "source": "./plugins/pagerduty-integration-key-rotation/",
       "description": "Rotate a leaked PagerDuty integration key behind CloudWatch and SNS with no paging gap: add a second integration, move every subscription, prove delivery through the new integration id, then delete the old one."
+    },
+    {
+      "name": "macos-memory-attribution",
+      "source": "./plugins/macos-memory-attribution/",
+      "description": "Find what holds macOS swap, compressed and wired memory (per-family attribution, page tables) and stop process trees safely with a PID-reuse guard."
     }
   ]
 }

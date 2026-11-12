@@ -1,0 +1,18 @@
+{
+  "name": "macos-memory-attribution",
+  "version": "1.0.0",
+  "description": "Find what holds macOS swap, compressed and wired memory (per-family attribution, page tables) and stop process trees safely with a PID-reuse guard.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "macos",
+    "memory",
+    "swap"
+  ],
+  "skills": "./skills/"
+}
