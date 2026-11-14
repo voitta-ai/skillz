@@ -306,6 +306,31 @@ Spawning many teammates in one message can also fail some of the calls with
 `Lock file is already being held` (15 of 26 in one message, 2 of 3 in a later
 one). That failure is explicit and per call: respawn the ones that failed.
 
+A teammate whose only assistant text is `Not logged in · Please run /login`
+(1 of 26 in that wave) never starts either: `TaskStop` it and respawn.
+
+### A pane teammate stopped on a permission prompt: decline, then redirect
+
+Same wave, later: one teammate went quiet for seven minutes with its report
+unwritten. Three readings together name a permission prompt rather than a slow
+model call: its transcript ends in a `tool_use` with no result, its process has
+no child running that command (`ps -axo pid,ppid,command`), and two
+`capture-pane` reads a few seconds apart are identical (a working teammate
+redraws its spinner).
+
+The lead must not approve another agent's prompt, but it can decline it:
+
+```bash
+tmux -S "$SOCK" send-keys -t %N Escape
+```
+
+Escape rejects the call and interrupts the turn; the teammate keeps its
+context. Follow with a `SendMessage` that names the constraint and the next
+step. Measured: the teammate resumed within half a minute and finished its
+report. The call that raised the prompt was `cd <repo> && <shell function>;
+for ...`; the same teammate's plain `cd <repo> && grep ...` calls had run.
+Brief pane teammates to use absolute paths and one simple command per call.
+
 ## The roles
 Each issue in the active wave gets a squad. Roles are deliberately separated so
 no agent both writes and blesses the same code.
@@ -733,6 +758,7 @@ posing it twice is friction.
 | Confirm the wedge, name the call | agent transcript: a `tool_use` with no matching `tool_result` |
 | Wedged wave, recovery | `TaskStop` per agent by name; worktrees + branches + baseline survive |
 | Pane teammate never started | inbox still holds the task with `"read": false`; `tmux -S /tmp/tmux-$(id -u)/claude-swarm-<lead pid> capture-pane -p -J -S -200 -t %N` shows the folder-trust prompt; respawn from a trusted directory |
+| Pane teammate on a permission prompt | `tmux -S <swarm socket> send-keys -t %N Escape` declines it and keeps the teammate's context; then `SendMessage` the constraint |
 | Idempotency pre-flight | `gh issue list` / `gh pr list` / `git branch -a` before creating |
 | Plan parallel set | architect reads `gh issue list` / `gh issue view`, groups independent vs serialized |
 | Default scope | all ready/independent issues up to the supervision cap |
