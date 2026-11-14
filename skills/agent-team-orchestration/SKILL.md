@@ -314,9 +314,9 @@ A teammate whose only assistant text is `Not logged in · Please run /login`
 Same wave, later: one teammate went quiet for seven minutes with its report
 unwritten. Three readings together name a permission prompt rather than a slow
 model call: its transcript ends in a `tool_use` with no result, its process has
-no child running that command (`ps -axo pid,ppid,command`), and two
-`capture-pane` reads a few seconds apart are identical (a working teammate
-redraws its spinner).
+no child running that command (`ps -axo pid,ppid,comm`: names only, because a
+claude process's arguments can carry secrets), and two `capture-pane` reads a
+few seconds apart are identical (a working teammate redraws its spinner).
 
 The lead must not approve another agent's prompt, but it can decline it:
 
