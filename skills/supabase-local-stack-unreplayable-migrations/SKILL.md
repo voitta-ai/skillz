@@ -143,11 +143,12 @@ psql_db() {
    database, not the output of `gen types`: in CLI 3.x that output is
    unformatted and does not parse the same way as the committed file.
 
+   List views as well as tables: the generated types carry a `Row` for both,
+   so a query limited to base tables reports every view column as missing.
+
    ```bash
-   psql_db -tA -c "select c.table_name || '.' || c.column_name
-     from information_schema.columns c
-     join information_schema.tables t using (table_schema, table_name)
-     where c.table_schema = 'public' and t.table_type = 'BASE TABLE'" \
+   psql_db -tA -c "select table_name || '.' || column_name
+     from information_schema.columns where table_schema = 'public'" \
      | python3 check_schema.py src/integrations/supabase/types.ts
    ```
 
