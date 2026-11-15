@@ -278,8 +278,24 @@ role that only the hosting platform has; step 4 creates it.
   override at a small stand-in server on the host (containers reach it by
   the host name Docker provides for the host machine) that logs the path, the
   model and whether a bearer header arrived, and answers with one fixed
-  completion. In the session one function was run this way; no real model was
-  called.
+  completion.
+- A stand-in proves the address, not the protocol. Pointing the override
+  straight at another OpenAI-compatible gateway failed twice in the session,
+  and one function passing told nothing about the rest. First, about half of
+  the call sites, and the platform's SDK, sent the key in a platform-specific
+  header and not in `Authorization: Bearer`; the other gateway answered those
+  with 401. Count the header styles (`grep` for `Authorization` and for the
+  platform's header near each gateway call) before you trust one passing
+  function. Second, the other gateway refused a parameter value the hosted
+  one accepts (`reasoning_effort: "none"` for one model, HTTP 400), which the
+  function reported only as a generic gateway failure.
+- Both were solved outside the product code by a small proxy on the host:
+  it accepts either header, forwards with your own key, retries the refused
+  parameter with the nearest accepted value, and logs model, status and
+  milliseconds for each request. The key then stays in the proxy and the
+  functions get a placeholder. Say in the docs that a function changed this
+  way runs close to production and not identically. After that, a full
+  simulated call ran through the local stack with real models.
 - Deno tests run without installing Deno:
   `docker run --rm -e DENO_NO_PACKAGE_JSON=1 -v "$PWD":/w -w /w denoland/deno:latest deno test --no-lock --allow-read --allow-env --allow-net supabase/functions`.
   `DENO_NO_PACKAGE_JSON=1` matters when the repo root has a `package.json`:
