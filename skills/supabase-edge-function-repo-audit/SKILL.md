@@ -63,9 +63,15 @@ as 404, has no row for 42703 (undefined column), and ends with "other | 400".
    that every one of those calls is broken.
 
    ```bash
-   grep -rnE 'const \{ data(: \w+)? \} = await' supabase/functions src | wc -l
-   grep -rnE 'const \{ data(: \w+)?, error' supabase/functions src | wc -l
+   grep -roE '\{ data(: \w+)? \}' supabase/functions | wc -l        # data only
+   grep -roE '\{ data(: \w+)?, error' supabase/functions | wc -l    # data and error
    ```
+
+   `-o` counts each destructuring pattern, so the array form
+   `const [{ data: a }, { data: b }] = await Promise.all([...])` is counted
+   too; a pattern that insists on `= await` on the same line misses it. In
+   browser code the first pattern also matches hooks such as `useQuery`, so
+   read those hits before you count them.
 
 2. Find the generated types file. It is commonly
    `src/integrations/supabase/types.ts` or `database.types.ts`, and it exports
