@@ -274,8 +274,8 @@ role that only the hosting platform has; step 4 creates it.
   `[edge_runtime.secrets]` to the generated config with values written as
   `"env(NAME)"`, and export `NAME` in the shell that runs `start`. A changed
   secret needs a stop and a start.
-- To prove model wiring before any real key is used, point the gateway
-  override at a small stand-in server on the host (containers reach it by
+- To check that the override reaches the functions before any real key is
+  used, point it at a small stand-in server on the host (containers reach it by
   the host name Docker provides for the host machine) that logs the path, the
   model and whether a bearer header arrived, and answers with one fixed
   completion.
@@ -293,7 +293,11 @@ role that only the hosting platform has; step 4 creates it.
   it accepts either header, forwards with your own key, retries the refused
   parameter with the nearest accepted value, and logs model, status and
   milliseconds for each request. The key then stays in the proxy and the
-  functions get a placeholder. Say in the docs that a function changed this
+  functions get a placeholder. Bind the proxy to the loopback address only.
+  It adds your key to every request it receives, so a proxy that listens on
+  every interface lets any machine on the network spend that key. In the
+  session the containers still reached a proxy bound to 127.0.0.1 through the
+  host name Docker provides. Say in the docs that a function changed this
   way runs close to production and not identically. After that, a full
   simulated call ran through the local stack with real models.
 - Deno tests run without installing Deno:
