@@ -332,6 +332,8 @@ environments and older Codex versions.
 | [`pagerduty-integration-key-rotation` plugin](./plugins/pagerduty-integration-key-rotation/) | plugin | Claude, Codex | Single-skill plugin: pagerduty-integration-key-rotation |
 | [macos-memory-attribution](./skills/macos-memory-attribution/SKILL.md) | skill | Claude, Codex | Find what holds macOS swap, compressed and wired memory (per-family attribution, page tables) and stop process trees safely with a PID-reuse guard. |
 | [`macos-memory-attribution` plugin](./plugins/macos-memory-attribution/) | plugin | Claude, Codex | Single-skill plugin: macos-memory-attribution |
+| [supabase-edge-function-repo-audit](./skills/supabase-edge-function-repo-audit/SKILL.md) | skill | Claude, Codex | Audit a Supabase project from a clone of its repo when behaviour is inconsistent and no error shows: find queries that fail silently because the error is never read, tabulate which Edge Functions check their caller, and probe with a CORS preflight whether a function is deployed. |
+| [`supabase-edge-function-repo-audit` plugin](./plugins/supabase-edge-function-repo-audit/) | plugin | Claude, Codex | Single-skill plugin: supabase-edge-function-repo-audit |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
