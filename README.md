@@ -334,6 +334,8 @@ environments and older Codex versions.
 | [`macos-memory-attribution` plugin](./plugins/macos-memory-attribution/) | plugin | Claude, Codex | Single-skill plugin: macos-memory-attribution |
 | [supabase-edge-function-repo-audit](./skills/supabase-edge-function-repo-audit/SKILL.md) | skill | Claude, Codex | Audit a Supabase project from a clone of its repo when behaviour is inconsistent and no error shows: find queries that fail silently because the error is never read, tabulate which Edge Functions check their caller, and probe with a CORS preflight whether a function is deployed. |
 | [`supabase-edge-function-repo-audit` plugin](./plugins/supabase-edge-function-repo-audit/) | plugin | Claude, Codex | Single-skill plugin: supabase-edge-function-repo-audit |
+| [supabase-local-stack-unreplayable-migrations](./skills/supabase-local-stack-unreplayable-migrations/SKILL.md) | skill | Claude, Codex | Build a local Supabase stack from a repo whose migration history does not replay on an empty database: replay it in replica mode from a migration-free work directory, check the schema column by column against the generated types, seed from a JSON row snapshot, and smoke-test with a check that refuses a non-local URL. |
+| [`supabase-local-stack-unreplayable-migrations` plugin](./plugins/supabase-local-stack-unreplayable-migrations/) | plugin | Claude, Codex | Single-skill plugin: supabase-local-stack-unreplayable-migrations |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries

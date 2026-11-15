@@ -750,6 +750,11 @@
       "name": "supabase-edge-function-repo-audit",
       "source": "./plugins/supabase-edge-function-repo-audit/",
       "description": "Audit a Supabase project from a clone of its repo when behaviour is inconsistent and no error shows: find queries that fail silently because the error is never read, tabulate which Edge Functions check their caller, and probe with a CORS preflight whether a function is deployed."
+    },
+    {
+      "name": "supabase-local-stack-unreplayable-migrations",
+      "source": "./plugins/supabase-local-stack-unreplayable-migrations/",
+      "description": "Build a local Supabase stack from a repo whose migration history does not replay on an empty database: replay it in replica mode from a migration-free work directory, check the schema column by column against the generated types, seed from a JSON row snapshot, and smoke-test with a check that refuses a non-local URL."
     }
   ]
 }
