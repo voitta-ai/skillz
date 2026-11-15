@@ -261,8 +261,31 @@ role that only the hosting platform has; step 4 creates it.
 - The first image pull can log `toomanyrequests: Rate exceeded` several times
   and still finish.
 - `start` already serves the edge functions at `/functions/v1`. A function
-  that reads a secret fails until you supply one. Functions that call a model
-  were not run locally in the session.
+  that reads a secret fails until you supply one. Check every function with an
+  `OPTIONS` request: a 503 with `worker boot error` in the edge-runtime log is
+  an import the local runtime cannot resolve.
+- A function that imports a `.d.ts` naming a bare package (`import "pkg";`)
+  needs an import map locally. Put it in the generated work directory and set
+  `[functions.<name>] import_map = "./deno.json"` in the generated config. The
+  file had to be called `deno.json`: the same mapping under another file name
+  was mounted and listed in the function's config, and the function still did
+  not boot (CLI 3.1.0; cause not established).
+- Secrets reach the local functions without a file: append
+  `[edge_runtime.secrets]` to the generated config with values written as
+  `"env(NAME)"`, and export `NAME` in the shell that runs `start`. A changed
+  secret needs a stop and a start.
+- To prove model wiring before any real key is used, point the gateway
+  override at a small stand-in server on the host (containers reach it by
+  the host name Docker provides for the host machine) that logs the path, the
+  model and whether a bearer header arrived, and answers with one fixed
+  completion. In the session one function was run this way; no real model was
+  called.
+- Deno tests run without installing Deno:
+  `docker run --rm -e DENO_NO_PACKAGE_JSON=1 -v "$PWD":/w -w /w denoland/deno:latest deno test --no-lock --allow-read --allow-env --allow-net supabase/functions`.
+  `DENO_NO_PACKAGE_JSON=1` matters when the repo root has a `package.json`:
+  without it Deno looks for npm packages in `node_modules` and stops.
+  `--no-lock` keeps it from writing a lock file into the repo. Run the same
+  command on the default branch first, to tell old failures from new ones.
 - The stock local password and the local admin password are defaults of a
   throwaway stack. Do not reuse a real credential for either.
 - Rows that the migrations insert into tables outside the snapshot stay as the
