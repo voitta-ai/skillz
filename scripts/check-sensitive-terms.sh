@@ -52,11 +52,18 @@ fi
 # five more rendered into committed diagram images, through a gate that
 # scanned those exact files on every CI run and printed clean.
 #
-# It needs a preposition before the octet and two or three digits in it. A
-# bare dot-and-digits is also how CSS writes a length, how a format specifier
-# writes its precision and how a version writes a component; the preposition is
-# what separates a host from a number. Checked against five real phrasings and
-# nine shapes that must stay silent.
+# It needs a preposition before the octet, optionally one quote character, and
+# two or three digits. A bare dot-and-digits is also how CSS writes a length,
+# how a format specifier writes its precision and how a version writes a
+# component; the preposition is what separates a host from a number. Checked
+# against eight real phrasings and eleven shapes that must stay silent.
+#
+# "as" and "is" are in the list, and the quote is allowed, because the first
+# version of this pattern missed the sentence that documented it -- a comment
+# reading 'names its host as "<dot>NNN"' matched nothing. One shape is left as
+# noise rather than patterned away: a two-digit decimal after a preposition,
+# as in 'rounded to <dot>25 of a second'. Narrowing to three digits would drop
+# a real two-digit octet; judge those by context.
 #
 # Write any example of a new pattern with a placeholder, never a literal: this
 # script is usually inside the paths it is pointed at, so a literal example in
@@ -75,7 +82,7 @@ private-ip-10|(^|[^0-9])10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}
 private-ip-192|(^|[^0-9])192\.168\.[0-9]{1,3}\.[0-9]{1,3}
 private-ip-172|(^|[^0-9])172\.(1[6-9]|2[0-9]|3[01])\.[0-9]{1,3}\.[0-9]{1,3}
 internal-domain|[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?\.(internal|corp|intranet)\b
-bare-octet-host|(^|[^A-Za-z0-9_.])(on|to|at|from|host|ssh|scp|via) \.[0-9]{2,3}([^0-9]|$)
+bare-octet-host|(^|[^A-Za-z0-9_.])(on|to|at|from|host|ssh|scp|via|as|is) [\"']?\.[0-9]{2,3}([^0-9]|$)
 "
 
 status=0
