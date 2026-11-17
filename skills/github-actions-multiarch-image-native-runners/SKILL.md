@@ -57,12 +57,18 @@ Download the build job's log to a file:
 
 ```bash
 gh run view <run-id> --json jobs --jq '.jobs[] | "\(.databaseId) \(.name)"'
+gh run view <run-id> --log --job <job-id> > build.log
+# or the raw text of one job:
 gh api --allow-escape-sequences repos/<owner>/<repo>/actions/jobs/<job-id>/logs > build.log
 ```
 
-Without `--allow-escape-sequences`, `gh api` prints nothing and exits 1 with
-"the response contains terminal escape sequences". If you discard stderr,
-that looks like an empty log.
+Seen with gh 2.101.0: when the log holds ESC bytes, `gh api .../logs`
+without that flag writes nothing and exits 1 with
+`the response contains terminal escape sequences; pass --allow-escape-sequences to output it anyway`.
+The colored echo of a `run:` script is enough to put ESC bytes in a log. If
+you discard stderr, that looks like an empty log. A log without ESC bytes
+prints without the flag, and `gh run view --log --job` printed the same log
+with no flag.
 
 Buildkit prints a header for each step and, later, a `DONE` line with the same
 `#N`:
@@ -198,18 +204,22 @@ finishes last would take `latest`. Let only the newest version move it:
           if [ "$newest" = "$VERSION" ]; then
             docker buildx imagetools create --tag "$IMAGE:latest" "$IMAGE:$VERSION"
           else
-            echo "::notice::v$newest is newer than v$VERSION; :latest is left alone."
+            echo "::notice::v$VERSION is not the newest final release (v$newest is); :latest is left alone."
           fi
 ```
 
 `imagetools create` points `latest` at the same index, so the two tags then
-have the same digest.
+have the same digest. The `grep` keeps final versions only, so a build of a
+pre-release such as `1.11.0-beta` never takes `latest`.
 
 ### 5. The layer cache: order the Dockerfile, and say what the cache changes
 
 `cache: true` keeps the layers in the GitHub Actions cache, one scope per
-platform (`buildkit-linux-amd64`, `buildkit-linux-arm64`). The scope names do
-not contain the tag, so the releases of one branch share them.
+platform. With neither `cache-scope` nor `target` set, the scopes are
+`buildkit-linux-amd64` and `buildkit-linux-arm64`: the workflow builds the
+name from `cache-scope`, else `target`, else `buildkit`, and adds the
+platform. The names do not contain the tag, so the releases of one branch
+share them.
 
 The cache can reuse a layer only if nothing before it changed. Install the
 dependencies before you copy the code. For an editable Python install:
@@ -250,16 +260,40 @@ Costs to know:
 - GitHub removes cache entries that were not accessed for over 7 days, and
   the default limit is 10 GB per repository (GitHub's documentation, read
   2026-11-17). A project that releases less often than weekly gets no hit.
+- Whether a build may write the cache depends on its trigger. The same
+  documentation lets only `push`, `workflow_dispatch`, `repository_dispatch`,
+  `delete`, `registry_package`, `page_build` and `schedule` create or
+  overwrite entries in the default branch's scope. A run on the default
+  branch that another event started, `workflow_run` for example, can read
+  them only. With `ignore-error=true` such a build should pass and write
+  nothing. That was not run here: the example builds on `push`.
 
 ### 6. Before you merge: the version check can be stale
 
 If the release is driven by a version file and another pull request merged
 while yours waited, look at the version again. When both took the same
-number, `git rebase` drops your bump (`dropping <sha> ... -- patch contents
-already upstream`). The "version must advance" check on your pull request ran
-against the old base, so it is still green. Take the next number, push, and
-let the check run on the new head. A merge whose version is not new releases
-nothing, and the run is still green.
+number, your bump is gone after a rebase or a squash merge, because both
+sides made the same edit. What git says depends on the shape (git 2.39.5,
+tried on a synthetic repository):
+
+| Your bump | The same bump on the default branch | `git rebase` prints |
+|---|---|---|
+| A commit of its own | A commit of its own | `warning: skipped previously applied commit <sha>` |
+| A commit of its own | Inside a larger commit | `dropping <sha> <subject> -- patch contents already upstream` |
+| Inside a larger commit | Either | Nothing. The commit keeps its subject and loses the version hunk |
+
+A squash merge without a rebase (`git merge --squash`) also stages your
+change without the version file. So do not wait for a message. Ask git:
+
+```bash
+git fetch origin
+git diff --quiet origin/<default branch> -- <version file> && echo "no bump left"
+```
+
+The "version must advance" check on your pull request ran against the old
+base, so it is still green. Take the next number, push, and let the check run
+on the new head. A merge whose version is not new releases nothing, and the
+run is still green.
 
 Then read what the other pull request changed
 (`git diff --stat <old base> origin/<default branch>`) before you trust the
