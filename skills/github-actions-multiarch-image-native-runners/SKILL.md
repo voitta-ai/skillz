@@ -67,8 +67,10 @@ without that flag writes nothing and exits 1 with
 `the response contains terminal escape sequences; pass --allow-escape-sequences to output it anyway`.
 The colored echo of a `run:` script is enough to put ESC bytes in a log. If
 you discard stderr, that looks like an empty log. A log without ESC bytes
-prints without the flag, and `gh run view --log --job` printed the same log
-with no flag.
+prints without the flag. `gh run view --log --job` needs no flag: it prints
+the same lines with the job name and the step name in front of each, and it
+writes each ESC byte as the two characters `^[`. For pairing `#N` lines that
+makes no difference.
 
 Buildkit prints a header for each step and, later, a `DONE` line with the same
 `#N`:
