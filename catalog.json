@@ -1414,6 +1414,24 @@
         "codex"
       ],
       "summary": "Find what holds macOS swap, compressed and wired memory and stop it safely: attribute top's compressed memory by process family and reconcile it with vm_stat, find the real owner by ancestor chain, read the wired breakdown from zprint and per-process page tables, and stop a process tree with a capture-first reaper that never signals a reused PID."
+    },
+    {
+      "name": "supabase-edge-function-repo-audit",
+      "path": "skills/supabase-edge-function-repo-audit/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Audit a Supabase project from a clone of its repo when behaviour is inconsistent and nothing is logged: compare the columns each query names with the generated Database types to find queries that fail silently because error is never read, build a per-function table of which Edge Functions check their caller (including verify_jwt = false), and use a CORS preflight with a known-deployed and a made-up control to tell whether a function is deployed without invoking it."
+    },
+    {
+      "name": "supabase-local-stack-unreplayable-migrations",
+      "path": "skills/supabase-local-stack-unreplayable-migrations/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Build a local Supabase stack from a repo whose migration history does not replay on an empty database (supabase start stops with MigrationApplyError): start the CLI from a migration-free work directory, apply the history yourself in replica mode as postgres with a retry rule for data-dependent constraints, create the platform roles it grants to, check the result column by column against the committed generated types, seed from a JSON row snapshot with a count check, and finish with a smoke check that refuses a non-local URL."
     }
   ],
   "collections": [
@@ -1596,7 +1614,9 @@
         "helm-chart-repo-migration-parity",
         "search-backend-phrase-verification",
         "pagerduty-integration-key-rotation",
-        "macos-memory-attribution"
+        "macos-memory-attribution",
+        "supabase-edge-function-repo-audit",
+        "supabase-local-stack-unreplayable-migrations"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3535,6 +3555,32 @@
         "macos-memory-attribution"
       ],
       "summary": "Single-skill plugin: macos-memory-attribution."
+    },
+    {
+      "name": "supabase-edge-function-repo-audit",
+      "claude_manifest": "plugins/supabase-edge-function-repo-audit/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/supabase-edge-function-repo-audit/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "supabase-edge-function-repo-audit"
+      ],
+      "summary": "Single-skill plugin: supabase-edge-function-repo-audit."
+    },
+    {
+      "name": "supabase-local-stack-unreplayable-migrations",
+      "claude_manifest": "plugins/supabase-local-stack-unreplayable-migrations/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/supabase-local-stack-unreplayable-migrations/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "supabase-local-stack-unreplayable-migrations"
+      ],
+      "summary": "Single-skill plugin: supabase-local-stack-unreplayable-migrations."
     }
   ],
   "defaults": {
