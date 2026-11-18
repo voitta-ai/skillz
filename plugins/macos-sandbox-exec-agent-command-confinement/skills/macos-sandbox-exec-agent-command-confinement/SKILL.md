@@ -15,15 +15,17 @@ description: |
   agent's in-tree writes and needing the containment that makes that sound;
   (6) `git push` must work inside the sandbox but `~/.ssh` must not be
   readable -- or `git ls-remote` hangs silently inside the profile (Homebrew's
-  `credential.helper osxkeychain` waiting on a keychain prompt).
+  `credential.helper osxkeychain` waiting on a keychain prompt); (7) a
+  `file-write*` regex deny protects files by name (`.git/config`, `hooks/`)
+  and an agent can install them anyway with `mv prebuilt_dir .git`.
   Encodes the profile shape (allow-default + global write deny + read deny
   under /Users and /Volumes + carve-outs), the ancestor `file-read-metadata`
   rule that traversal needs, realpath everywhere, per-tenant allowances, the
   fail-closed wrapper, the argv-in-logs trap, and the live tests that prove
   it.
 author: Claude Code
-version: 1.1.1
-date: 2026-08-28
+version: 1.2.0
+date: 2026-11-18
 source: Built for voitta-ai/shmobster #116 (sandbox per Slack channel), verified live on Darwin 25 against a real git worktree.
 source_file: skills/macos-sandbox-exec-agent-command-confinement/SKILL.md
 ---
@@ -231,10 +233,58 @@ key even though the command is read-only.
   published escapes of allow-default agent sandboxes use exactly those. If
   the threat model includes a hostile model rather than a careless one,
   move to deny-default and pay the enumeration cost.
-- `file-write*` covers create/unlink/rename/mode; a single deny is enough.
+- `file-write*` covers create/unlink/rename/mode for **the path it
+  matches** -- and only that path. See the next section: a rename of a
+  parent never matches a deny written against a child.
 - Apple's documentation for the profile language is the `.sb` files under
   `/System/Library/Sandbox/Profiles/` and `/usr/share/sandbox/`; read those
   for operation names.
+
+## Path-regex denies do not survive a directory rename
+
+A deny that protects files by name -- `(regex #"/\.git/(.+/)?config$")`,
+`(regex #"/\.git/(.+/)?hooks/")` -- is checked against the path being
+written. Renaming a directory writes only the directory's own entry, so
+nothing beneath it is ever matched:
+
+```sh
+mkdir -p d && printf '[core]\n\tfsmonitor = cmd\n' > d/config   # d/config: allowed
+mv d repo/.git          # writes `repo/.git`, not `repo/.git/config`: allowed
+```
+
+The protected file now exists at the protected path. Measured under the real
+sandbox on Darwin 25: the direct write `printf x > a/.git/config` is refused,
+`mv d b/.git` with `d/config` inside succeeds, both in the tree and in
+TMPDIR. `mv .git/cfg .git/config` (renaming the *file* onto the name) is
+refused, because that does write the matched path.
+
+The fix is to deny the **entries that contain** the protected files, not only
+the files: every directory on the path from the trusted root down to them, as
+an entry (`$`-anchored), so it cannot be created, removed or renamed over.
+For git that was `/\.git$`, `/\.git/hooks$`, `.git/worktrees` and each
+`.git/worktrees/<name>` with its `commondir`/`gitdir`, and `.git/modules`
+with each `<name>`. Missing one container level reopens it: freezing
+`.git/worktrees/<name>` but not `.git/worktrees` let a prebuilt container be
+renamed over the whole set.
+
+Anchor the new regexes to where the containers really are. A loose
+`/\.git/(.+/)?hooks$` also matches `refs/heads/hooks`, a branch named
+`hooks`; `(modules/.+/)?` instead of `(.+/)?` keeps ordinary git writes
+(index, objects, refs) working.
+
+What it costs is anything that legitimately creates those entries: for git,
+`init`, `clone`, `worktree add/remove/prune`, `submodule add` stop working
+inside the sandbox. Decide that trade explicitly; the alternative is a deny
+that reads as protection and is not.
+
+Case: on case-insensitive APFS, `mv d a/.GIT` and `mkdir b/.Git` were also
+refused by the lowercase regex. Measure it on your volume rather than relying
+on that.
+
+Verify with both lists under the real profile: every rename/overwrite route
+refused, and the normal work the sandbox exists to allow (for git: edit,
+`add`, `commit`, `stash`, `checkout -b`, `gc`, `fetch`, a branch named
+`hooks`) still succeeds.
 
 ## References
 
