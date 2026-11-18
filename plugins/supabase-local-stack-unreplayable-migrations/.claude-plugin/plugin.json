@@ -1,0 +1,12 @@
+{
+  "name": "supabase-local-stack-unreplayable-migrations",
+  "version": "1.0.0",
+  "description": "Build a local Supabase stack from a repo whose migration history does not replay on an empty database: replay it in replica mode from a migration-free work directory, check the schema column by column against the generated types, seed from a JSON row snapshot, and smoke-test with a check that refuses a non-local URL.",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

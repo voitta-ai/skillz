@@ -1,0 +1,18 @@
+{
+  "name": "supabase-edge-function-repo-audit",
+  "version": "1.0.0",
+  "description": "Audit a Supabase project from a clone of its repo when behaviour is inconsistent and no error shows: find queries that fail silently because the error is never read, tabulate which Edge Functions check their caller, and probe with a CORS preflight whether a function is deployed.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "supabase",
+    "edge-functions",
+    "audit"
+  ],
+  "skills": "./skills/"
+}
