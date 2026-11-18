@@ -19,8 +19,8 @@ description: |
   other multiplexers. Also use when (5) a spawned wave produces no commits, no
   dirty files and no replies - agents that are visible but wedged.
 author: Claude Code
-version: 1.10.2
-date: 2026-10-10
+version: 1.11.0
+date: 2026-11-13
 source: https://github.com/voitta-ai/skillz
 source_file: skills/agent-team-orchestration/SKILL.md
 ---
@@ -156,7 +156,9 @@ Three caveats, each of which cost a run:
 - **Start each peer in an already-trusted folder** - check
   `~/.claude.json` `.projects[dir].hasTrustDialogAccepted`. Otherwise it sits
   silently on the folder-trust prompt. The step 0b probe catches this: one run
-  scored 4/5 PROBE_OK with the fifth stuck on that dialog.
+  scored 4/5 PROBE_OK with the fifth stuck on that dialog. Pane teammates hit
+  the same prompt when the lead's shell has moved into an untrusted folder: see
+  "Pane teammates that never start" under step 0b.
 
 ## Step 0b: executability precondition (a single probe agent, before the wave)
 Step 0 answers "will agents be **visible**." It does not answer "can agents
@@ -252,6 +254,82 @@ subagents, say) as covering one tool, not the class.
 
 Every squad brief carries the same liveness first call, not just the probe's -
 it turns a 45-minute silent stall into a sub-minute signal.
+
+### Pane teammates that never start: read the inbox and the pane
+
+When teammates run in tmux panes (`"backendType": "tmux"` in the team's
+`config.json`), silence has a third reading, and this one the lead can settle
+alone: the teammate never took a turn. Measured 2026-11-13: 26 teammates each
+returned `Spawned successfully`, appeared in `ListAgents` with elapsed time
+ticking and had live processes. All 26 sat on the folder-trust prompt for
+3 h 51 min. No transcript existed to read, because none had started.
+
+**Cause.** A pane teammate starts in the lead's *current* working directory,
+not in the directory the session was launched from. An earlier `cd <repo>` in
+a Bash call had moved the lead into a fresh clone with no
+`hasTrustDialogAccepted` entry in `~/.claude.json`. Every teammate inherited
+that directory and stopped at "Quick safety check: Is this a project you
+created or one you trust?".
+
+**Two oracles, both readable by the lead:**
+
+```bash
+# 1. Did the teammate take its task? A stuck teammate's inbox still holds the
+#    task message with "read": false. A started one consumes it within seconds
+#    (the list empties).
+python3 -c 'import json,sys; print([m.get("read") for m in json.load(open(sys.argv[1]))])' \
+  ~/.claude/teams/session-<first 8 chars of the lead's session id>/inboxes/<teammate>.json
+
+# 2. What is on its screen? The swarm runs its own tmux server, named after the
+#    lead's pid.
+SOCK=/tmp/tmux-$(id -u)/claude-swarm-<lead pid>
+tmux -S "$SOCK" list-panes -a -F '#{pane_id} #{pane_current_path} #{pane_width}x#{pane_height}'
+tmux -S "$SOCK" capture-pane -p -J -S -200 -t %0
+```
+
+Keep `-J -S -200`: with many teammates the panes shrink to about 15x2, and a
+plain capture returns two fragments of a wrapped dialog.
+
+**Fix.** `TaskStop` each teammate, return the lead to a trusted directory and
+respawn. Do not answer the trust prompt by sending keys to the pane: that
+decision is the operator's. From then on use `git -C <repo>` and absolute
+paths instead of `cd`, so the lead's directory does not move again. `TaskStop`
+removes the teammate's entry, and its brief with it, from `config.json`; the
+inbox file still holds the full task text.
+
+**Verify before saying "running".** `Spawned successfully` and a row in
+`ListAgents` prove that a process exists, not that it took the task. Report a
+wave as running only after oracle 1 shows every task taken and oracle 2 shows
+no prompt.
+
+Spawning many teammates in one message can also fail some of the calls with
+`Lock file is already being held` (15 of 26 in one message, 2 of 3 in a later
+one). That failure is explicit and per call: respawn the ones that failed.
+
+A teammate whose only assistant text is `Not logged in · Please run /login`
+(1 of 26 in that wave) never starts either: `TaskStop` it and respawn.
+
+### A pane teammate stopped on a permission prompt: decline, then redirect
+
+Same wave, later: one teammate went quiet for seven minutes with its report
+unwritten. Three readings together name a permission prompt rather than a slow
+model call: its transcript ends in a `tool_use` with no result, its process has
+no child running that command (`ps -axo pid,ppid,comm`: names only, because a
+claude process's arguments can carry secrets), and two `capture-pane` reads a
+few seconds apart are identical (a working teammate redraws its spinner).
+
+The lead must not approve another agent's prompt, but it can decline it:
+
+```bash
+tmux -S "$SOCK" send-keys -t %N Escape
+```
+
+Escape rejects the call and interrupts the turn; the teammate keeps its
+context. Follow with a `SendMessage` that names the constraint and the next
+step. Measured: the teammate resumed within half a minute and finished its
+report. The call that raised the prompt was `cd <repo> && <shell function>;
+for ...`; the same teammate's plain `cd <repo> && grep ...` calls had run.
+Brief pane teammates to use absolute paths and one simple command per call.
 
 ## The roles
 Each issue in the active wave gets a squad. Roles are deliberately separated so
@@ -679,6 +757,8 @@ posing it twice is friction.
 | Liveness oracle (wedged vs busy) | transcript first (dangling `tool_use`); filesystem is positive evidence only - silence in the first minutes is normal while an agent reads |
 | Confirm the wedge, name the call | agent transcript: a `tool_use` with no matching `tool_result` |
 | Wedged wave, recovery | `TaskStop` per agent by name; worktrees + branches + baseline survive |
+| Pane teammate never started | inbox still holds the task with `"read": false`; `tmux -S /tmp/tmux-$(id -u)/claude-swarm-<lead pid> capture-pane -p -J -S -200 -t %N` shows the folder-trust prompt; respawn from a trusted directory |
+| Pane teammate on a permission prompt | `tmux -S <swarm socket> send-keys -t %N Escape` declines it and keeps the teammate's context; then `SendMessage` the constraint |
 | Idempotency pre-flight | `gh issue list` / `gh pr list` / `git branch -a` before creating |
 | Plan parallel set | architect reads `gh issue list` / `gh issue view`, groups independent vs serialized |
 | Default scope | all ready/independent issues up to the supervision cap |
