@@ -85,6 +85,9 @@ has concurrency and slow models that a frozen run does not have. Accept a
 recording only when two frozen runs in a row agree, and refuse it when any
 request misses on unchanged code.
 
+Two runs are the routine check for one recording. They do not show that the
+replay itself can be trusted: for that, see Verification.
+
 ### 3. Answer concurrent requests in the order the recording finished them
 
 This is the step that is not obvious. Code decides by the order in which
@@ -141,9 +144,13 @@ Each of these made a replay differ from its recording or from another replay:
 | A new connection for every model request | Keep connections open in the replay proxy (HTTP/1.1, a Content-Length on every answer). See below |
 | Durations in responses | Drop those keys before comparing |
 
-To learn what a run writes, hash every table before and after
-(`md5(string_agg(t::text, ... order by t::text))`). Do not trust a list read
-from the code.
+To learn what a run writes, hash every table before and after, and compare.
+Do not trust a list read from the code. For one table:
+
+```sql
+select count(*), md5(coalesce(string_agg(t::text, E'\n' order by t::text), ''))
+from public.some_table t;
+```
 
 **The connection trap.** A proxy that closes each connection after one
 answer makes the functions open hundreds of connections in a run. From
@@ -183,15 +190,20 @@ trust it, make each of these fail the way it should:
    text is unchanged.
 5. Replay on a second backend built from nothing. If it differs there, the
    recording depends on the state of one machine.
-6. In the tool's own self-test (a stub function and a stub model), switch the
-   race handling off and watch the race check fail.
+6. Give the tools a self-test that needs no backend: a stub function that
+   asks a second stub model when the first is slow, recorded and replayed
+   with the same proxies. One of its checks is that the replay ends the race
+   as the recording did. Switch the ordering of step 3 off and watch that
+   check fail.
 
 ## Verification
 
-- Ten frozen runs agree, not two: a fault that shows in one run of five
-  passes a pair of runs more often than not. The responses of a frozen run
-  equal those of the live run once durations are dropped, or you can say why
-  the rest differ.
+- When the replay is new, or its ordering has changed, ten frozen runs of
+  the longest recording agree, not two: a fault that shows in one run of
+  five passes a pair of runs more often than not. After that, the two runs
+  of step 2 are enough to accept a recording.
+- The responses of a frozen run equal those of the live run once durations
+  are dropped, or you can say why the rest differ.
 - The six checks above each fail as described.
 - The sum of the answers' cost fields equals the change in the key's usage
   counter. Read the key's remaining limit before you record.
