@@ -9,9 +9,10 @@ description: |
   does not hold") on unchanged code; (3) a recording replays on one database
   and not on another; (4) you must show that the replay check is not vacuous.
   Covers two recording proxies, a baseline taken from a frozen run instead of
-  the live one, replaying a race between models in recorded finish order,
-  background model requests, caches and unordered rows as hidden state, the
-  four outcomes of a request, and the mutation checks that prove it works.
+  the live one, answering concurrent model requests in recorded finish order,
+  late-arriving requests and persistent connections, caches and unordered
+  rows as hidden state, the four outcomes of a request, and the mutation
+  checks that prove it works.
 author: Claude Code
 version: 1.0.0
 date: 2026-11-19
@@ -65,6 +66,12 @@ Send `Accept-Encoding: identity` upstream so that what you save is text.
 Scan the result for tokens before you commit it. A base64 string that starts
 `eyJ` is not always a token: decode one before you panic.
 
+A gateway names the account in the answer when it refuses a request (a rate
+limit, no credit): `"user_id":"user_..."`. Successful answers do not carry
+it, so a clean run hides this. Take such ids out of the answers when the
+recording is written, by key name and by the shape of the id, and leave the
+requests alone: the replay finds an answer by its request.
+
 ### 2. Replay sequentially, and take the baseline from a replay
 
 Send the recorded function requests again one after the other, in the order
@@ -78,26 +85,47 @@ has concurrency and slow models that a frozen run does not have. Accept a
 recording only when two frozen runs in a row agree, and refuse it when any
 request misses on unchanged code.
 
-### 3. Replay a race between models as it ended
+### 3. Answer concurrent requests in the order the recording finished them
 
-This is the step that is not obvious. Code that asks a second model when the
-first is slow, and takes the first usable answer, behaves differently when
-answers come at once: the first model always wins. If the live run was won by
-the second model, the replay now carries another line forward, and the next
-model request (a judge, a rewrite) is one the recording never saw.
+This is the step that is not obvious. Code decides by the order in which
+answers come back, and answers from a file come back at once.
 
-- **Recognise a race from the recording:** requests with the same `messages`
-  whose time windows overlap. They differ only in `model` and its limits.
-- **Answer them in recorded finish order.** Hold a request until every
-  request that overtook it in the recorded run has had its answer.
-- **An overtaker that has not arrived yet** is sent by a timer in the
-  function. Wait for it until the moment it was due (its recorded start
-  offset from the first request of the race, plus a margin), then stop
-  waiting. If the code no longer sends it, the replay must end, not hang.
-- Leave a few tens of milliseconds between two answers of one race, and give
-  every wait a hard ceiling.
+- A function asks a second model when the first is slow and takes the first
+  usable answer. With instant answers the first model always wins. If the
+  live run was won by the second, the replay carries another line forward,
+  and the next model request (a judge, a rewrite) is one the recording never
+  saw.
+- A function sends three drafts side by side and uses the first that passes
+  its checks. These have different prompts, so "the same question asked of
+  several models" does not find them.
 
-Cost: a race the second model won takes as long as the timer that sends it.
+The rule that held:
+
+- **Any requests that are open at the proxy together are answered in recorded
+  finish order.** A request waits for every request that overtook it in the
+  recorded run. In a sequential replay, requests that are open together
+  belong to one function call.
+- **Wait for a request that has not arrived only if it is a sibling:** the
+  same system prompt, and sent within a few seconds of this one in the
+  recording. A later turn reuses the system prompt and is not a sibling;
+  waiting for every overtaker made a run three times as long.
+- A sibling the recording sent *after* this request is sent by a timer in the
+  function: wait until the moment it was due, plus a margin, then stop. If
+  the code no longer sends it, the replay must end, not hang.
+- A sibling the recording sent *before* this request is on its way: wait a
+  few seconds for it.
+- A request that asks a recorded question of a model the recording did not
+  ask is a race that went one model further. Hold it until that question is
+  answered, give it no answer, and fail the function request as different.
+- Leave a few tens of milliseconds between two answers, and give every wait
+  a hard ceiling.
+
+Cost: a race a later model won takes as long as the timer that sends it.
+
+Limit: streams are replayed whole. If the code acts when a field inside a
+stream closes, the live order of those moments is not in a recording that
+keeps only start and finish times. Record the time of each piece if you need
+it.
 
 ### 4. Find the hidden state
 
@@ -110,17 +138,30 @@ Each of these made a replay differ from its recording or from another replay:
 | Rows read with `ORDER BY` on a key that has ties | The order follows the heap layout; any `UPDATE` reshuffles it. Run on a database built from nothing, and fix the query with a unique second key |
 | A model request made after the response (`waitUntil`) | After each function request, wait until the proxy has been idle for a short time |
 | A date written into a prompt | Replace it with a placeholder before hashing; add a pattern only when a replay shows the need |
+| A new connection for every model request | Keep connections open in the replay proxy (HTTP/1.1, a Content-Length on every answer). See below |
 | Durations in responses | Drop those keys before comparing |
 
 To learn what a run writes, hash every table before and after
 (`md5(string_agg(t::text, ... order by t::text))`). Do not trust a list read
 from the code.
 
+**The connection trap.** A proxy that closes each connection after one
+answer makes the functions open hundreds of connections in a run. From
+containers to a proxy on the host, about one attempt in several hundred did
+not get through at once: a request arrived 1 second late, 4 seconds late,
+once 67 seconds late, which fits a connection attempt retried at 1, 2, 4, 8,
+16 and 32 seconds. A race then ends the other way, and one replay in four or
+five differs from the rest. It looks like a bug in the ordering rule and is
+not. With connections kept open, ten runs in a row agreed. Give each run its
+own proxy log with times: the late arrival is plain to see there.
+
 ### 5. Four outcomes for a request
 
-- **same**: it made the baseline's model requests and its response is equal.
-- **different**: every model request was answered, and the response or the
-  list of requests differs. Code outside the model changed. Fail the run.
+- **same**: it asked the baseline's questions and its response is equal.
+  Compare the questions (the messages), not the requests: how many models a
+  question reaches depends on timers and differs between runs.
+- **different**: every question was answered, and the response or the list
+  of questions differs. Code outside the model changed. Fail the run.
 - **prompt changed**: a model request missed. Show the closest recorded
   request and the lines that changed. If the lines are the same in another
   order, say so in one line: that is the tie order above, not a wording change.
@@ -147,8 +188,10 @@ trust it, make each of these fail the way it should:
 
 ## Verification
 
-- Two frozen runs agree, and the responses of a frozen run equal those of the
-  live run once durations are dropped.
+- Ten frozen runs agree, not two: a fault that shows in one run of five
+  passes a pair of runs more often than not. The responses of a frozen run
+  equal those of the live run once durations are dropped, or you can say why
+  the rest differ.
 - The six checks above each fail as described.
 - The sum of the answers' cost fields equals the change in the key's usage
   counter. Read the key's remaining limit before you record.
@@ -164,14 +207,23 @@ call in all 28 responses and took 13 seconds. A later test updated one rule
 row and restored its text: 21 of 28 requests then sent a prompt with the same
 rules in another order, because 130 of 190 rows shared a sort key.
 
+A whole call of 173 function requests and 319 model requests then replayed
+differently about one run in five. Two causes: three drafts with different
+prompts raced, and a request arrived late. With concurrent requests ordered
+and connections kept open, ten runs in a row agreed in all 173 requests, at
+76 seconds a run; 168 responses equalled the live call's.
+
 ## Notes
 
 - Compress recordings with xz, not gzip. Prompts repeat across requests
   farther apart than gzip's window: 2.7 MB became 78 KB with xz and 913 KB
   with gzip.
 - A recording holds the prompts. Treat it like the prompt source itself.
-- Record with the client's fastest mode. A browser tab in the background
-  throttles timers, and a UI that paces itself with animation stalls.
+- Play the recorded run in a headless browser. A tab in the background
+  throttles timers, and an app may rebuild its page when the tab returns;
+  the first recording here ended after seven turns that way.
+- A new model account may be rate limited. Refused requests end up in the
+  recording as real failures; decide whether that is the run you want.
 - Do not test a database mutation on the developer's working stack. Build a
   second stack for it, or save the row and the table hash to a file first.
 - This checks code around the model. Whether a *changed* prompt still gets
