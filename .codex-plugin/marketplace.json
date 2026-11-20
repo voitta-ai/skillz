@@ -755,6 +755,11 @@
       "name": "supabase-local-stack-unreplayable-migrations",
       "source": "./plugins/supabase-local-stack-unreplayable-migrations/",
       "description": "Build a local Supabase stack from a repo whose migration history does not replay on an empty database: replay it in replica mode from a migration-free work directory, check the schema column by column against the generated types, seed from a JSON row snapshot, and smoke-test with a check that refuses a non-local URL."
+    },
+    {
+      "name": "github-actions-multiarch-image-native-runners",
+      "source": "./plugins/github-actions-multiarch-image-native-runners/",
+      "description": "Move a slow QEMU-emulated multi-platform (amd64 + arm64) image build in GitHub Actions to native runners with Docker's reusable workflow, test it without publishing, add the layer cache knowing what it does to unpinned dependencies, and verify the pushed image and its signatures on ghcr."
     }
   ]
 }
