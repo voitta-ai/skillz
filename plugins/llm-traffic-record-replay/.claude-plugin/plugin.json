@@ -1,0 +1,12 @@
+{
+  "name": "llm-traffic-record-replay",
+  "version": "1.0.0",
+  "description": "Build a regression check for a backend that calls LLMs: record a real run's traffic at two boundaries, replay it with no model, and sort each request as same, different, prompt changed or unstable. Answer concurrent model requests in recorded finish order, keep connections open so no request arrives late, remove the hidden state that makes a replay differ, and prove the check is not vacuous.",
+  "author": {
+    "name": "voitta-ai"
+  },
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "skills": "./skills/"
+}

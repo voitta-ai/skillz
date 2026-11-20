@@ -338,6 +338,8 @@ environments and older Codex versions.
 | [`supabase-local-stack-unreplayable-migrations` plugin](./plugins/supabase-local-stack-unreplayable-migrations/) | plugin | Claude, Codex | Single-skill plugin: supabase-local-stack-unreplayable-migrations |
 | [github-actions-multiarch-image-native-runners](./skills/github-actions-multiarch-image-native-runners/SKILL.md) | skill | Claude, Codex | Move a slow QEMU-emulated multi-platform (amd64 + arm64) image build in GitHub Actions to native runners with Docker's reusable workflow, test it without publishing, add the layer cache knowing what it does to unpinned dependencies, and verify the pushed image and its signatures on ghcr. |
 | [`github-actions-multiarch-image-native-runners` plugin](./plugins/github-actions-multiarch-image-native-runners/) | plugin | Claude, Codex | Single-skill plugin: github-actions-multiarch-image-native-runners |
+| [llm-traffic-record-replay](./skills/llm-traffic-record-replay/SKILL.md) | skill | Claude, Codex | Build a regression check for a backend that calls LLMs: record a real run's traffic at two boundaries, replay it with no model, and sort each request as same, different, prompt changed or unstable. Answer concurrent model requests in recorded finish order, keep connections open so no request arrives late, remove the hidden state that makes a replay differ, and prove the check is not vacuous. |
+| [`llm-traffic-record-replay` plugin](./plugins/llm-traffic-record-replay/) | plugin | Claude, Codex | Single-skill plugin: llm-traffic-record-replay |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
