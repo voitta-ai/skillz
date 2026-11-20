@@ -1441,6 +1441,15 @@
         "codex"
       ],
       "summary": "Move a slow multi-platform (linux/amd64 + linux/arm64) image build in GitHub Actions off QEMU emulation: find the emulated steps in the buildkit log, replace the hand-written build job with Docker's reusable workflow docker/github-builder so each platform builds on a native runner, test it on a throwaway branch that cannot publish, add the layer cache and tell the owner what it does to unpinned dependencies, and verify the pushed image, its attestation signatures and every platform instead of trusting a green run."
+    },
+    {
+      "name": "llm-traffic-record-replay",
+      "path": "skills/llm-traffic-record-replay/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Build a regression check for server code that calls an OpenAI-compatible model gateway, so a change to a gate, guard, fallback or prompt shows before anyone runs a paid call: record a real run with two proxies (client to functions, functions to model), replay it with no model against a baseline taken from a frozen run, answer concurrent model requests in recorded finish order and keep connections open so no request arrives late, remove the hidden state that makes a replay differ (caches, rows sorted by a key with ties, a model request made after the response), sort each request as same, different, prompt changed or unstable, and prove the check is not vacuous with six checks that must each fail as described."
     }
   ],
   "collections": [
@@ -1626,7 +1635,8 @@
         "macos-memory-attribution",
         "supabase-edge-function-repo-audit",
         "supabase-local-stack-unreplayable-migrations",
-        "github-actions-multiarch-image-native-runners"
+        "github-actions-multiarch-image-native-runners",
+        "llm-traffic-record-replay"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3604,6 +3614,19 @@
         "github-actions-multiarch-image-native-runners"
       ],
       "summary": "Single-skill plugin: github-actions-multiarch-image-native-runners."
+    },
+    {
+      "name": "llm-traffic-record-replay",
+      "claude_manifest": "plugins/llm-traffic-record-replay/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/llm-traffic-record-replay/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "llm-traffic-record-replay"
+      ],
+      "summary": "Single-skill plugin: llm-traffic-record-replay."
     }
   ],
   "defaults": {

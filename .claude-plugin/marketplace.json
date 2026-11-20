@@ -765,6 +765,11 @@
       "name": "github-actions-multiarch-image-native-runners",
       "source": "./plugins/github-actions-multiarch-image-native-runners/",
       "description": "Move a slow QEMU-emulated multi-platform (amd64 + arm64) image build in GitHub Actions to native runners with Docker's reusable workflow, test it without publishing, add the layer cache knowing what it does to unpinned dependencies, and verify the pushed image and its signatures on ghcr."
+    },
+    {
+      "name": "llm-traffic-record-replay",
+      "source": "./plugins/llm-traffic-record-replay/",
+      "description": "Build a regression check for a backend that calls LLMs: record a real run's traffic at two boundaries, replay it with no model, and sort each request as same, different, prompt changed or unstable. Answer concurrent model requests in recorded finish order, keep connections open so no request arrives late, remove the hidden state that makes a replay differ, and prove the check is not vacuous."
     }
   ]
 }
