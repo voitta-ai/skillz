@@ -338,6 +338,8 @@ environments and older Codex versions.
 | [`supabase-local-stack-unreplayable-migrations` plugin](./plugins/supabase-local-stack-unreplayable-migrations/) | plugin | Claude, Codex | Single-skill plugin: supabase-local-stack-unreplayable-migrations |
 | [github-actions-multiarch-image-native-runners](./skills/github-actions-multiarch-image-native-runners/SKILL.md) | skill | Claude, Codex | Move a slow QEMU-emulated multi-platform (amd64 + arm64) image build in GitHub Actions to native runners with Docker's reusable workflow, test it without publishing, add the layer cache knowing what it does to unpinned dependencies, and verify the pushed image and its signatures on ghcr. |
 | [`github-actions-multiarch-image-native-runners` plugin](./plugins/github-actions-multiarch-image-native-runners/) | plugin | Claude, Codex | Single-skill plugin: github-actions-multiarch-image-native-runners |
+| [failing-test-break-commit-bisect](./skills/failing-test-break-commit-bisect/SKILL.md) | skill | Claude, Codex | Trace each failing test to the commit that broke it: when the test was written, whether it passed then, and the first commit where it fails. Bisect without checking anything out, feed each commit to the test container through git archive, cache one whole-file run per commit, skip commits where the test cannot run instead of counting them, and classify the failure as out of date or a regression. |
+| [`failing-test-break-commit-bisect` plugin](./plugins/failing-test-break-commit-bisect/) | plugin | Claude, Codex | Single-skill plugin: failing-test-break-commit-bisect |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries

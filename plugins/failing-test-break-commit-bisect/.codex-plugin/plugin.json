@@ -1,0 +1,18 @@
+{
+  "name": "failing-test-break-commit-bisect",
+  "version": "1.0.0",
+  "description": "Trace each failing test to the commit that broke it: when the test was written, whether it passed then, and the first commit where it fails. Bisect without checking anything out, feed each commit to the test container through git archive, cache one whole-file run per commit, skip commits where the test cannot run instead of counting them, and classify the failure as out of date or a regression.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "git",
+    "bisect",
+    "testing"
+  ],
+  "skills": "./skills/"
+}
