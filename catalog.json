@@ -1441,6 +1441,15 @@
         "codex"
       ],
       "summary": "Move a slow multi-platform (linux/amd64 + linux/arm64) image build in GitHub Actions off QEMU emulation: find the emulated steps in the buildkit log, replace the hand-written build job with Docker's reusable workflow docker/github-builder so each platform builds on a native runner, test it on a throwaway branch that cannot publish, add the layer cache and tell the owner what it does to unpinned dependencies, and verify the pushed image, its attestation signatures and every platform instead of trusting a green run."
+    },
+    {
+      "name": "failing-test-break-commit-bisect",
+      "path": "skills/failing-test-break-commit-bisect/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Trace every failing test in a repository that nothing ran to the commit that broke it: find the commit that added the test and the first commit where it passed, run git bisect with --no-checkout in a spare worktree so a history with merges blames the right commit, give the test container each commit through git archive instead of a bind mount that can show stale files on a VM-backed Docker, run the whole test file once per commit and cache every test's status, skip a commit where the test cannot run instead of counting it as a pass or a failure, check the named commit against its parents, and classify the test as out of date or a regression."
     }
   ],
   "collections": [
@@ -1626,7 +1635,8 @@
         "macos-memory-attribution",
         "supabase-edge-function-repo-audit",
         "supabase-local-stack-unreplayable-migrations",
-        "github-actions-multiarch-image-native-runners"
+        "github-actions-multiarch-image-native-runners",
+        "failing-test-break-commit-bisect"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3604,6 +3614,19 @@
         "github-actions-multiarch-image-native-runners"
       ],
       "summary": "Single-skill plugin: github-actions-multiarch-image-native-runners."
+    },
+    {
+      "name": "failing-test-break-commit-bisect",
+      "claude_manifest": "plugins/failing-test-break-commit-bisect/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/failing-test-break-commit-bisect/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "failing-test-break-commit-bisect"
+      ],
+      "summary": "Single-skill plugin: failing-test-break-commit-bisect."
     }
   ],
   "defaults": {
