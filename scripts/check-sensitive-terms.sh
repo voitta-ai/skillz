@@ -10,7 +10,8 @@
 # The paradox this design resolves: a denylist of *client names* is itself
 # sensitive and cannot be checked into the public repo. So this script ships
 # only STRUCTURAL patterns (safe to be public - key/token/account-id shapes,
-# private IPs, internal-domain suffixes) and reads any name-based terms from a
+# private IPs, internal-domain suffixes, a host named by its last octet alone)
+# and reads any name-based terms from a
 # PRIVATE, out-of-repo wordlist (one term per line; blank lines and lines
 # starting with # are ignored). The wordlist is read from
 # $SKILLZ_SENSITIVE_TERMS_FILE, defaulting to
@@ -40,7 +41,33 @@ if [ "$#" -eq 0 ]; then
 fi
 
 # Structural patterns - safe to live in the public repo. Extended-regex.
-# Each entry: "label|regex".
+# Each entry: "label|regex". Note `read -r label regex` puts everything after
+# the first delimiter in `regex`, so a pattern may contain its own alternation.
+#
+# On bare-octet-host. The three private-ip patterns all require a full dotted
+# quad, so a project that refers to a machine by its last octet alone passes
+# every one of them while publishing both an address and a host numbering
+# convention. Measured once, in a repo one day after it was made public: 28
+# such references, the first of them in the README's opening paragraph and
+# five more rendered into committed diagram images, through a gate that
+# scanned those exact files on every CI run and printed clean.
+#
+# It needs a preposition before the octet, optionally one quote character, and
+# two or three digits. A bare dot-and-digits is also how CSS writes a length,
+# how a format specifier writes its precision and how a version writes a
+# component; the preposition is what separates a host from a number. Checked
+# against eight real phrasings and eleven shapes that must stay silent.
+#
+# "as" and "is" are in the list, and the quote is allowed, because the first
+# version of this pattern missed the sentence that documented it -- a comment
+# reading 'names its host as "<dot>NNN"' matched nothing. One shape is left as
+# noise rather than patterned away: a two-digit decimal after a preposition,
+# as in 'rounded to <dot>25 of a second'. Narrowing to three digits would drop
+# a real two-digit octet; judge those by context.
+#
+# Write any example of a new pattern with a placeholder, never a literal: this
+# script is usually inside the paths it is pointed at, so a literal example in
+# a comment makes the gate fail on its own documentation.
 STRUCTURAL="
 aws-account-id|(^|[^0-9])[0-9]{12}([^0-9]|$)
 aws-access-key|AKIA[0-9A-Z]{16}
@@ -55,6 +82,7 @@ private-ip-10|(^|[^0-9])10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}
 private-ip-192|(^|[^0-9])192\.168\.[0-9]{1,3}\.[0-9]{1,3}
 private-ip-172|(^|[^0-9])172\.(1[6-9]|2[0-9]|3[01])\.[0-9]{1,3}\.[0-9]{1,3}
 internal-domain|[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?\.(internal|corp|intranet)\b
+bare-octet-host|(^|[^A-Za-z0-9_.])(on|to|at|from|host|ssh|scp|via|as|is) [\"']?\.[0-9]{2,3}([^0-9]|$)
 "
 
 status=0
