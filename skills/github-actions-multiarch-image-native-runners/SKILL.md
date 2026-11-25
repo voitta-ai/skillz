@@ -6,10 +6,11 @@ description: |
   (2) the buildkit log shows a step taking seconds under `[linux/amd64 ...]` and minutes under `[linux/arm64 ...]`;
   (3) you are about to hand-write a per-platform matrix with push-by-digest and a merge job;
   (4) you want to add a layer cache to such a build, and the dependencies are not pinned;
-  (5) you must check a pushed multi-platform image and its signatures on ghcr, not only that the run is green.
+  (5) you must check a pushed multi-platform image and its signatures on ghcr, not only that the run is green;
+  (6) a build with a layer cache prints no `CACHED` step, although the cache entries exist.
 author: Claude Code
-version: 1.0.0
-date: 2026-11-17
+version: 1.1.0
+date: 2026-11-25
 source: https://github.com/voitta-ai/skillz
 source_file: skills/github-actions-multiarch-image-native-runners/SKILL.md
 ---
@@ -262,6 +263,18 @@ Costs to know:
 - GitHub removes cache entries that were not accessed for over 7 days, and
   the default limit is 10 GB per repository (GitHub's documentation, read
   2026-11-17). A project that releases less often than weekly gets no hit.
+- A cache that is found can still give nothing. A layer is reused only if
+  nothing before it changed, and the base image comes first. When a floating
+  base tag (`python:3.12-slim`, for example) has moved to a new digest since
+  the cache was written, no step of that stage is `CACHED`. Seen between two
+  releases about 44 hours apart, with no file of the image changed: the
+  `FROM ...@sha256:` line of the final stage differed from the earlier
+  build's, and both platforms had 0 `CACHED` steps. The log does not say why
+  a step missed; the moved base is the one difference that was found. The
+  build still exported a whole cache (110 s on arm64), and the default branch
+  then held two generations of entries: 72 entries, 4.3 GB. A base image
+  pinned by digest in the `Dockerfile` would stay still until someone moves
+  the pin; that was not tried here.
 - Whether a build may write the cache depends on its trigger. The same
   documentation lets only `push`, `workflow_dispatch`, `repository_dispatch`,
   `delete`, `registry_package`, `page_build` and `schedule` create or
@@ -372,6 +385,15 @@ A green run says the jobs ended without an error. Check the result itself.
    per platform. The next build that changes only the code prints `CACHED`
    for the dependency step.
 
+   If a build prints no `CACHED` at all, find out which case it is before
+   you blame eviction. Both builds log
+   `importing cache manifest from gha:...`. In the build that had no entries
+   left, that step ended there. In the build that found the cache, the next
+   line was `verifying signature of cache index sha256:... done`. With the
+   cache found, compare the `FROM ...@sha256:` lines of this build log and
+   the previous one: a base tag that moved explains the miss (Solution,
+   step 5).
+
 ## Example
 
 A FastAPI backend whose last `RUN` builds a docs search index with onnxruntime
@@ -398,8 +420,13 @@ embeddings. Its release builds took 45 minutes to 2 hours 11 minutes.
    same application files and the same 219 package versions as the release
    before it, and the default branch had 37 cache entries, 2.1 GB.
 
-Not observed when this was written: a cache hit between two releases on the
-default branch. The hit was seen between two runs on the test branch.
+A cache hit between two releases on the default branch was still not seen
+after the next two releases. The first came 7 days after the cache was
+written, and no entry of it was left; GitHub's 7-day rule fits, but the
+removal itself was not seen. The second came about 44 hours after the first:
+the cache was found, the base image had a new digest, and no step was
+`CACHED`. The hit was seen only between two runs on the test branch, minutes
+apart.
 
 ## Notes
 
