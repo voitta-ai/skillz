@@ -1,0 +1,18 @@
+{
+  "name": "github-actions-release-step-dry-run",
+  "version": "1.0.0",
+  "description": "Dry-run one step of a release-gated GitHub Actions job before any release exists: take the step's own text out of the workflow file and run it against a fake CLI that records its arguments, first on your machine and then on a real runner through a temporary push-triggered workflow on the pull request branch.",
+  "author": "voitta-ai",
+  "homepage": "https://github.com/voitta-ai/skillz",
+  "repository": "https://github.com/voitta-ai/skillz",
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "github-actions",
+    "release",
+    "dry-run"
+  ],
+  "skills": "./skills/"
+}

@@ -338,6 +338,8 @@ environments and older Codex versions.
 | [`supabase-local-stack-unreplayable-migrations` plugin](./plugins/supabase-local-stack-unreplayable-migrations/) | plugin | Claude, Codex | Single-skill plugin: supabase-local-stack-unreplayable-migrations |
 | [github-actions-multiarch-image-native-runners](./skills/github-actions-multiarch-image-native-runners/SKILL.md) | skill | Claude, Codex | Move a slow QEMU-emulated multi-platform (amd64 + arm64) image build in GitHub Actions to native runners with Docker's reusable workflow, test it without publishing, add the layer cache knowing what it does to unpinned dependencies, and verify the pushed image and its signatures on ghcr. |
 | [`github-actions-multiarch-image-native-runners` plugin](./plugins/github-actions-multiarch-image-native-runners/) | plugin | Claude, Codex | Single-skill plugin: github-actions-multiarch-image-native-runners |
+| [github-actions-release-step-dry-run](./skills/github-actions-release-step-dry-run/SKILL.md) | skill | Claude, Codex | Dry-run one step of a release-gated GitHub Actions job before any release exists: take the step's own text out of the workflow file and run it against a fake CLI that records its arguments, first on your machine and then on a real runner through a temporary push-triggered workflow on the pull request branch. |
+| [`github-actions-release-step-dry-run` plugin](./plugins/github-actions-release-step-dry-run/) | plugin | Claude, Codex | Single-skill plugin: github-actions-release-step-dry-run |
 
 Machine-readable index: [`catalog.json`](./catalog.json). The
 installer and validation script both read from it, so new entries
