@@ -83,13 +83,33 @@ test -f "$last" || { echo "fake gh: no such file: $last" >&2; exit 1; }
 
 Put it in a directory that comes first on `PATH`, under the real tool's name.
 
+The fake replaces one tool, and only where the step calls it by name. A call
+by full path (`/usr/bin/gh`) goes around it. Read the step for every command
+that changes something outside the machine (`docker push`, `npm publish`, a
+cloud CLI) and write a fake for each.
+
 ### 3. Run the step on your machine
 
 Take the text out with any YAML parser and run it from the repository root.
-This example needs PyYAML:
+Save the lines below as a script; do not paste them into your shell, because
+they change `PATH` and exit. This example needs PyYAML:
 
 ```bash
+#!/bin/bash
+# Runs one step of the workflow file with a fake gh. Uploads nothing.
+set -euo pipefail
 out=$(mktemp -d)
+mkdir "$out/bin" "$out/runner-temp"
+
+# The fake of step 2, under the real tool's name.
+cat > "$out/bin/gh" <<'EOF'
+#!/bin/bash
+echo "gh $*" >> "$GH_LOG"
+for last in "$@"; do :; done
+test -f "$last" || { echo "fake gh: no such file: $last" >&2; exit 1; }
+EOF
+chmod +x "$out/bin/gh"
+
 python3 - .github/workflows/release.yml "<job id>" "<the step's name>" > "$out/step.sh" <<'EOF'
 import sys
 import yaml
@@ -101,17 +121,36 @@ assert len(found) == 1, "expected exactly one step with that name"
 sys.stdout.write(found[0])
 EOF
 
-mkdir "$out/bin" "$out/runner-temp"
-# write the fake of step 2 to "$out/bin/gh", then: chmod +x "$out/bin/gh"
+export PATH="$out/bin:$PATH"
+# Stop unless gh now means the fake. A fake that is missing or not executable
+# would let the real, logged-in gh run the upload. The -x test is needed too:
+# with no other gh on PATH, `command -v` names a file that cannot run.
+if [ ! -x "$out/bin/gh" ] || [ "$(command -v gh)" != "$out/bin/gh" ]; then
+  echo "gh does not resolve to the fake; the step was not run" >&2
+  exit 1
+fi
 
+status=0
 GH_LOG="$out/gh.log" RUNNER_TEMP="$out/runner-temp" VERSION=9.9.9 \
-  PATH="$out/bin:$PATH" bash -e "$out/step.sh"
-cat "$out/gh.log"
+  bash -e "$out/step.sh" || status=$?
+echo "== recorded calls =="
+cat "$out/gh.log" 2>/dev/null || echo "(none)"
+exit "$status"
 ```
 
-- Set every variable of the step's `env:` and every runner variable the script
-  reads (`RUNNER_TEMP` here). A token variable needs no value: only the real
-  CLI would read it.
+- **Only the faked tool is fake.** Every other command of the step runs for
+  real on your machine: it builds, writes files in the checkout and may call
+  the network. Read the step before you run it.
+- **A missing token does not protect you.** A real `gh` that has run
+  `gh auth login` needs no token variable, and `docker` and `npm` keep stored
+  logins too. What keeps the real tool out is the `command -v` check: when the
+  fake is missing, misnamed or not executable, the script stops before the
+  step starts. Add one such check for each tool you fake.
+- The script ends with the step's exit status. The fake logs a call before it
+  checks it, so a rejected call still shows in the log, and the script still
+  fails.
+- Set every variable of the step's `env:` that the script reads, and every
+  runner variable (`RUNNER_TEMP` here). Leave token variables unset.
 - Start the script as the runner does. GitHub's workflow syntax reference
   gives `bash -e {0}` for a step without a `shell:` key and
   `bash --noprofile --norc -eo pipefail {0}` for `shell: bash`. The runner log
@@ -144,7 +183,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # ... the real job's other `uses:` steps, copied by hand ...
+      # ... the real job's setup steps (toolchains), copied by hand.
+      # Never a login step, and nothing that reads `secrets.*` ...
       - name: Run the real step with a fake gh
         env:
           STEP_NAME: Build the package, zip it and attach it to the release
@@ -161,6 +201,10 @@ jobs:
           chmod +x "$RUNNER_TEMP/fake-bin/gh"
           export GH_LOG="$RUNNER_TEMP/gh.log"
           export PATH="$RUNNER_TEMP/fake-bin:$PATH"
+          # Stop unless gh now means the fake. Two lines on purpose: in an
+          # `A && B` list, `set -e` does not stop the script when A fails.
+          test -x "$RUNNER_TEMP/fake-bin/gh"
+          test "$(command -v gh)" = "$RUNNER_TEMP/fake-bin/gh"
 
           yq '.jobs["<job id>"].steps[] | select(.name == strenv(STEP_NAME)) | .run' \
             .github/workflows/release.yml > "$RUNNER_TEMP/step.sh"
@@ -178,8 +222,17 @@ Why each part is there:
 - **A push trigger on this branch.** A workflow file that exists only on a
   branch runs for a push to that branch. `workflow_dispatch` would not: GitHub
   starts it only when the file is on the default branch.
-- **`permissions: contents: read`, and no token in `env:`.** Even without the
-  fake, the step could not publish.
+- **`permissions: contents: read`, no `secrets.*`, no login step.**
+  `permissions` limits `GITHUB_TOKEN` and nothing else. A run that a push to a
+  branch of the repository itself starts can also use the repository's secrets
+  wherever the file names them, so a login step copied from the real job (a
+  registry password, a cloud key, a personal token) would give this test real
+  publishing rights. Keep `secrets.*` and every login step out of the file,
+  and do not add `id-token: write`, which an OIDC login needs. If the step
+  cannot run without a login, fake that tool as well. The fake and its
+  `command -v` check are the protection; the token limit backs them up for
+  `GITHUB_TOKEN` only. (The part about secrets is from GitHub's documentation
+  and was not tried in a run.)
 - **`yq ... strenv(STEP_NAME)`.** The step is found by its name, and the text
   that runs is the text in the real file. This is the syntax of mikefarah's yq
   (v4), which `ubuntu-latest` had in both runs below.
@@ -211,6 +264,8 @@ and delete that branch afterwards.
 The dry run does not cover:
 
 - the real publishing call, and whether the job's `permissions` allow it;
+- any login of the real job: the test must not log in, so a wrong secret name
+  or an expired credential shows only in the real run;
 - the job's `needs:`, `if:` and outputs;
 - the `uses:` steps: the test copies them, so they can drift.
 
@@ -222,7 +277,12 @@ the asset exists, and holds what the dry run produced.
 - The run's conclusion is `success`, read with `gh run view`, and the log
   shows the recorded call and the artifact listing.
 - Change the expected call in the `grep -qx` line once, or point the fake at a
-  missing file: the run must fail. A test that cannot fail proves nothing.
+  missing file: the run on the runner must fail, and the local script must
+  exit non-zero. A test that cannot fail proves nothing.
+- The `command -v` check of the local script was tried with a harmless
+  stand-in for the real tool later on `PATH`: with the fake's `chmod` line
+  left out, the script stopped before the step started. Do not try this with
+  a real, logged-in tool.
 - On the pull request, the release-gated job appears in the checks list as
   skipped. That shows GitHub parsed the new job, and nothing more.
 
@@ -264,3 +324,6 @@ make the expected one. That run took about a minute and passed the first time.
 - GitHub, "Workflow syntax for GitHub Actions", `jobs.<job_id>.steps[*].shell`
   (the command behind each shell; read 2026-11-25):
   https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+- GitHub, "Using secrets in GitHub Actions" (apart from `GITHUB_TOKEN`,
+  secrets are not passed to a run that a fork triggered; read 2026-11-25):
+  https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets

@@ -244,7 +244,9 @@ Verification, step 4.
 dependency file sets lower bounds only and there is no lock file, a build
 without a cache installs the newest versions at every release. With a cached
 dependency layer, a release keeps the versions of the day that layer was
-built, until the dependency file changes or GitHub removes the entry.
+built, until the dependency file changes, GitHub removes the entry, or a
+floating base tag moves to a new digest (see the costs below). In each of
+those cases the dependency step runs again and the newest versions come in.
 Measured between consecutive uncached releases of one project: five packages
 moved in two days, then 41 packages moved and one was replaced in 22 hours.
 
