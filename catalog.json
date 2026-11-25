@@ -1441,6 +1441,15 @@
         "codex"
       ],
       "summary": "Move a slow multi-platform (linux/amd64 + linux/arm64) image build in GitHub Actions off QEMU emulation: find the emulated steps in the buildkit log, replace the hand-written build job with Docker's reusable workflow docker/github-builder so each platform builds on a native runner, test it on a throwaway branch that cannot publish, add the layer cache and tell the owner what it does to unpinned dependencies, and verify the pushed image, its attestation signatures and every platform instead of trusting a green run."
+    },
+    {
+      "name": "github-actions-release-step-dry-run",
+      "path": "skills/github-actions-release-step-dry-run/SKILL.md",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "summary": "Try a run: step of a GitHub Actions job that the pull request shows as skipped, because the job runs only on a release, a tag or the default branch: make the step extractable (a name, and no expressions in the script), write a fake of the publishing CLI that records its arguments and fails when the call could not have worked, run the step's own text taken from the workflow file locally, then on a real runner through a temporary push-triggered workflow on the pull request branch, remove that workflow, and say what the dry run did not cover."
     }
   ],
   "collections": [
@@ -1626,7 +1635,8 @@
         "macos-memory-attribution",
         "supabase-edge-function-repo-audit",
         "supabase-local-stack-unreplayable-migrations",
-        "github-actions-multiarch-image-native-runners"
+        "github-actions-multiarch-image-native-runners",
+        "github-actions-release-step-dry-run"
       ],
       "summary": "Bundle: every catalog skill in one plugin, except skills whose own plugin ships hooks - install those plugins directly."
     },
@@ -3604,6 +3614,19 @@
         "github-actions-multiarch-image-native-runners"
       ],
       "summary": "Single-skill plugin: github-actions-multiarch-image-native-runners."
+    },
+    {
+      "name": "github-actions-release-step-dry-run",
+      "claude_manifest": "plugins/github-actions-release-step-dry-run/.claude-plugin/plugin.json",
+      "codex_manifest": "plugins/github-actions-release-step-dry-run/.codex-plugin/plugin.json",
+      "hosts": [
+        "claude",
+        "codex"
+      ],
+      "skills": [
+        "github-actions-release-step-dry-run"
+      ],
+      "summary": "Single-skill plugin: github-actions-release-step-dry-run."
     }
   ],
   "defaults": {
